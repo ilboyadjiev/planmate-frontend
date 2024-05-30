@@ -1,0 +1,23 @@
+.calendar-container {
+    display: flex;
+    flex-direction: column;
+    height: 80vh; /* height of the viewport */
+    margin: 0 10rem; /* Add margin to the left and right */
+}
+
+.rbc-calendar {
+    flex: 1; /* Make the FullCalendar take up the remaining space */
+}
+
+.highlight-today {
+    background-color: #98e2f8 !important; /* Highlight today's date with a yellow background */
+    color: #000 !important; /* Ensure text is readable */
+}
+
+.highlight-weekend {
+    background-color: #faebd3 !important; /* Light orange background for weekends */
+}
+
+.highlight-weekday {
+    background-color: #f0f0f0 !important; /* Light grey background for weekdays */
+}

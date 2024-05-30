@@ -1,7 +1,6 @@
-import React, { useState } from 'react';
-import axios from 'axios';
-import bcrypt from 'bcryptjs';
-import config from './config';
+import React, { useState, useContext } from 'react';
+import { AuthContext } from './AuthContext';
+import { useNavigate } from 'react-router-dom';
 
 const Register = () => {
     const [formData, setFormData] = useState({
@@ -17,6 +16,7 @@ const Register = () => {
 
     const [error, setError] = useState(null);
     const [success, setSuccess] = useState(false);
+    const navigate = useNavigate();
 
     const handleChange = (e) => {
         const { name, value } = e.target;
@@ -26,35 +26,28 @@ const Register = () => {
         }));
     };
 
+    const { register } = useContext(AuthContext);
+
     const handleSubmit = async (e) => {
         e.preventDefault();
         try {
-            // Hash the password
-            const hashedPassword = await bcrypt.hash(formData.password, 10);
-            // Prepare the data for the POST request
             const submissionData = {
                 firstName: formData.firstName,
                 lastName: formData.lastName,
                 email: formData.email,
-                password: hashedPassword,
+                password: formData.password,
                 contactData: {
-                    street: formData.street
+                    street: formData.street,
+                    zipcode: formData.zipcode,
+                    country: formData.country,
+                    mobile: formData.mobile
                 }
             };
 
-            const response = await axios.post(`${config.baseUrl}/api/v1/users/register`, submissionData, {
-                headers: {
-                    'Content-Type': 'application/json',
-                },
-            });
+            // Call AuthContext register
+            await register(submissionData);
 
-            console.log('Success:', response.data);
-            setSuccess(true);
-            setError(null);
-            // Store the token or session information if available
-            if (response.data.token) {
-                localStorage.setItem('token', response.data.token);
-            }
+            navigate('/dashboard'); // Redirect to dashboard after successful login
         } catch (error) {
             console.error('Error:', error);
             setSuccess(false);
