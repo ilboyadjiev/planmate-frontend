@@ -1,0 +1,10 @@
+.calendar-container {
+    display: flex;
+    flex-direction: column;
+    height: 100vh; /* Full height of the viewport */
+    margin: 0; /* Remove default margin */
+}
+
+.fc {
+    flex: 1; /* Make the FullCalendar take up the remaining space */
+}
