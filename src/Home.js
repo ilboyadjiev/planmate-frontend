@@ -1,6 +1,7 @@
 import React from 'react';
 import { useNavigate } from 'react-router-dom';
-import './Home.css'; // Assuming you have a CSS file for styling
+import './Home.css';
+import planmateIcon from './planmate-icon.png';
 
 const Home = () => {
   const navigate = useNavigate();
@@ -11,6 +12,10 @@ const Home = () => {
 
   return (
     <div className="home-container">
+      
+      <img src={planmateIcon} alt="PlanMate Icon" className="planmate-icon" 
+      style={{ width: '150px', height: 'auto', margin: '20px 0' }} /> 
+
       <h1>Welcome to PlanMate</h1>
       <div className="button-group">
         <button onClick={() => navigateTo('/register')}>Register</button>

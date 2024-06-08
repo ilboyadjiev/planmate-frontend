@@ -1,16 +1,15 @@
-import React, { useState } from 'react';
-import axios from 'axios';
+import React, { useState, useContext } from 'react';
 import PlanMateCalendar from './PlanMateCalendar';
 import PlanMateDatePicker from './PlanMateDatePicker';
 import PlanMateDateFns from './PlanMateDateFns';
 import { Modal, Button, Form } from 'react-bootstrap';
 import DatePicker from 'react-datepicker';
 import 'react-datepicker/dist/react-datepicker.css';
-import config from './config';
-import moment from 'moment';
+import { createEvent } from './eventService';
+import { AuthContext } from './AuthContext';
 
 const Dashboard = () => {
-    const userEmail = 'ilian@planmate.com'; // Replace with the actual user email, possibly passed down as a prop or fetched from context/state
+    const { user } = useContext(AuthContext);
     const [showModal, setShowModal] = useState(false);
     const [selectedEvent, setSelectedEvent] = useState({
         title: '',
@@ -49,23 +48,10 @@ const Dashboard = () => {
 
     const handleSaveNewEvent = async () => {
         try {
-            const eventToSave = {
-                ...selectedEvent,
-                startTime: moment(selectedEvent.start).format('yyyy-MM-DD HH:mm:ss'),
-                endTime: moment(selectedEvent.end).format('yyyy-MM-DD HH:mm:ss'),
-            };
-
-            // Remove the original start and end fields
-            delete eventToSave.start;
-            delete eventToSave.end;
-
-            await axios.post(`${config.baseUrl}/api/v1/events`, eventToSave);
+            await createEvent(selectedEvent, user.email);
             setShowModal(false);
-
-            // Refetch the events
-            PlanMateCalendar.fetchEvents();
         } catch (error) {
-            console.error('Error creating new event:', error);
+            console.error(error);
         }
     };
 
@@ -77,7 +63,7 @@ const Dashboard = () => {
                     New Event
                 </Button>
             </div>
-            <PlanMateCalendar userEmail={userEmail} />
+            <PlanMateCalendar userEmail={user?.email} />
             <br/>
             <br/>
             <PlanMateDatePicker />

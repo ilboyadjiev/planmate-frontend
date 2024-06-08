@@ -6,7 +6,7 @@ export const AuthContext = createContext();
 
 export const AuthProvider = ({ children }) => {
     const [authToken, setAuthToken] = useState(localStorage.getItem('authToken') || null);
-    const [user, setUser] = useState(null);
+    const [user, setUser] = useState(JSON.parse(localStorage.getItem('user')) || null);
 
     useEffect(() => {
         if (authToken) {
@@ -15,13 +15,15 @@ export const AuthProvider = ({ children }) => {
     }, [authToken]);
 
     const login = async (email, password) => {
+        console.log("API URL: " + config.baseUrl);
         const response = await axios.post(`${config.baseUrl}/api/v1/auth/authenticate`, { email, password });
         setAuthToken(response.data.jwt);
         localStorage.setItem('authToken', response.data.jwt);
-        fetchUserData(email);
+        await fetchUserData(email);
     };
 
     const register = async (submissionData) => {
+        console.log("API URL: " + config.baseUrl);
         await axios.post(`${config.baseUrl}/api/v1/auth/register`, submissionData);
         await login(submissionData.email, submissionData.password);
     };
@@ -37,6 +39,7 @@ export const AuthProvider = ({ children }) => {
         try {
             const response = await axios.get(`${config.baseUrl}/api/v1/users/${email}`);
             setUser(response.data); // Assuming your API returns user data
+            localStorage.setItem('user', JSON.stringify(response.data)); // Store user data in local storage
         } catch (error) {
             console.error('Error fetching user data:', error);
             // Handle error

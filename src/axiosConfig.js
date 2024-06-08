@@ -1,8 +1,8 @@
 import axios from 'axios';
-
+import config from './config';
 
 const instance = axios.create({
-  baseURL: 'http://localhost:8080/planmate',
+  baseURL: config.baseURL,
 });
 
 instance.interceptors.request.use((config) => {

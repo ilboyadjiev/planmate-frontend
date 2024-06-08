@@ -26,7 +26,7 @@ const PlanMateCalendar = ({ userEmail }) => {
 
     const fetchEvents = async () => {
         try {
-            const response = await axios.get(`${config.baseUrl}/api/v1/events`);
+            const response = await axios.get(`${config.baseUrl}/api/v1/events/${userEmail}`);
             const eventsData = response.data.map(event => ({
                 id: event.id,
                 title: event.title,
@@ -85,9 +85,6 @@ const PlanMateCalendar = ({ userEmail }) => {
     
             await axios.put(`${config.baseUrl}/api/v1/events/${selectedEvent.id}`, eventToSave);
             setShowModal(false);
-            // Optionally, you can refetch the events or update the state with the edited event
-            //const updatedEvents = events.map(event => event.id === selectedEvent.id ? selectedEvent : event);
-            //setEvents(updatedEvents);
             fetchEvents();
         } catch (error) {
             console.error('Error updating event:', error);

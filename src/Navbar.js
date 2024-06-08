@@ -1,6 +1,7 @@
 import React, { useContext } from 'react';
 import { Link, NavLink } from 'react-router-dom';
 import { AuthContext } from './AuthContext';
+import planmateIcon from './planmate-icon.png';
 
 const Navbar = () => {
     const { authToken, user, logout } = useContext(AuthContext);
@@ -8,7 +9,14 @@ const Navbar = () => {
     return (
         <nav className="navbar navbar-expand-lg navbar-light bg-light">
             <div className="container">
-                <Link className="navbar-brand" to="/">PlanMate</Link>
+                <Link className="navbar-brand" to="/">
+                    <img 
+                        src={planmateIcon} 
+                        alt="PlanMate Icon" 
+                        style={{ width: '30px', height: '30px', marginRight: '10px' }} 
+                    />
+                    PlanMate
+                </Link>
                 <button className="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbarNav" aria-controls="navbarNav" aria-expanded="false" aria-label="Toggle navigation">
                     <span className="navbar-toggler-icon"></span>
                 </button>
@@ -22,7 +30,7 @@ const Navbar = () => {
                         {authToken ? (
                             <>
                                 <li className="nav-item">
-                                    <span className="nav-link">Welcome, {user && user.email}</span>
+                                    <span className="nav-link">Hello, {user && user.email}</span>
                                 </li>
                                 <li className="nav-item">
                                     <button className="btn btn-link nav-link" onClick={logout}>Logout</button>
