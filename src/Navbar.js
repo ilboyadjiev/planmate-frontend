@@ -30,7 +30,7 @@ const Navbar = () => {
                         {authToken ? (
                             <>
                                 <li className="nav-item">
-                                    <span className="nav-link">Hello, {user && user.email}</span>
+                                    <span className="nav-link">Hello, {user && (user.username || user.email)}</span>
                                 </li>
                                 <li className="nav-item">
                                     <button className="btn btn-link nav-link" onClick={logout}>Logout</button>
