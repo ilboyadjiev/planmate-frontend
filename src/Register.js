@@ -67,7 +67,7 @@ const Register = () => {
             const response = await axios.get(`${config.baseUrl}/api/v1/auth/check-email-exists/${formData.email}`);
             setEmailAvailable(response.data.available ? 'Email is available' : 'Email is already taken');
         } catch (error) {
-            if (error.response.status === 409) {
+            if (error.response?.status === 409) {
                 setEmailAvailable('Email not available');
             } else {
                 setEmailAvailable('Error checking availability');
