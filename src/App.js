@@ -1,16 +1,16 @@
-import React, { useState } from 'react';
-import { BrowserRouter as Router, Route, Routes, Navigate } from 'react-router-dom';
-import Home from './Home';  // Import the Home component
+import React from 'react';
+import { BrowserRouter as Router, Route, Routes } from 'react-router-dom';
+import Home from './Home';
 import Register from './Register';
 import Login from './Login';
 import Dashboard from './Dashboard';
+import EditProfile from './EditProfile';
+import FriendsList from './FriendsList';
 import 'bootstrap/dist/css/bootstrap.min.css';
 import { AuthProvider } from './AuthContext';
 import Navbar from './Navbar';
 
 function App() {
-  const [isAuth, setIsAuth] = useState(false);
-
   
   return (
     <AuthProvider>
@@ -21,6 +21,8 @@ function App() {
           <Route path="/register" element={<Register />} />
           <Route path="/login" element={<Login />} />
           <Route path="/dashboard" element={<Dashboard />} />
+          <Route path="/profile/edit" element={<EditProfile />} />
+          <Route path="/profile/friends" element={<FriendsList />} />
         </Routes>
       </Router>
     </AuthProvider>

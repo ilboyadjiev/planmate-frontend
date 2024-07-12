@@ -32,17 +32,16 @@ export const AuthProvider = ({ children }) => {
         setAuthToken(null);
         localStorage.removeItem('authToken');
         delete axios.defaults.headers.common['Authorization'];
-        setUser(null); // Reset user state upon logout
+        setUser(null); 
     };
 
     const fetchUserData = async (email) => {
         try {
             const response = await axios.get(`${config.baseUrl}/api/v1/users/${email}`);
-            setUser(response.data); // Assuming your API returns user data
+            setUser(response.data); 
             localStorage.setItem('user', JSON.stringify(response.data)); // Store user data in local storage
         } catch (error) {
             console.error('Error fetching user data:', error);
-            // Handle error
         }
     };
 

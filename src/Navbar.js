@@ -26,14 +26,22 @@ const Navbar = () => {
                             <NavLink exact to="/dashboard" className="nav-link">Dashboard</NavLink>
                         </li>
                     </ul>
+                    <div className="mx-auto text-center"> {}
+                        {authToken && (
+                            <span className="nav-link">Hello, {user && (user.username || user.email)}</span>
+                        )}
+                    </div>
                     <ul className="navbar-nav ml-auto">
                         {authToken ? (
                             <>
                                 <li className="nav-item">
-                                    <span className="nav-link">Hello, {user && (user.username || user.email)}</span>
+                                    <NavLink to="/profile/friends" className="nav-link">Friends</NavLink>
                                 </li>
                                 <li className="nav-item">
-                                    <button className="btn btn-link nav-link" onClick={logout}>Logout</button>
+                                    <NavLink to="/profile/edit" className="nav-link">Edit Profile</NavLink>
+                                </li>
+                                <li className="nav-item">
+                                    <button className="btn btn-link nav-link" onClick={logout} to="/">Logout</button>
                                 </li>
                             </>
                         ) : (
