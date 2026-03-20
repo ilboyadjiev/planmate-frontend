@@ -7,7 +7,17 @@ const EditProfile = () => {
     const { user } = useContext(AuthContext);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState(null);
-    const [formData, setFormData] = useState({});
+    const [success, setSuccess] = useState(false);
+    
+    const [formData, setFormData] = useState({
+        firstName: '',
+        lastName: '',
+        email: '',
+        mobile: '',
+        street: '',
+        zipcode: '',
+        country: ''
+    });
 
     useEffect(() => {
         if (user) {
@@ -30,118 +40,111 @@ const EditProfile = () => {
             ...prevData,
             [name]: value,
         }));
+        setSuccess(false); 
     };
 
     const handleSubmit = async (e) => {
         e.preventDefault();
+        setError(null);
+        setSuccess(false);
+        
         try {
-            await axios.put(`${config.baseUrl}/api/v1/users/${user.id}`, formData); // Adjust the URL as needed
-            alert('Profile updated successfully!');
+            const payload = {
+                firstName: formData.firstName,
+                lastName: formData.lastName,
+                email: formData.email,
+                contactData: {
+                    mobile: formData.mobile,
+                    street: formData.street,
+                    zipcode: formData.zipcode,
+                    country: formData.country
+                }
+            };
+
+            await axios.put(`${config.baseUrl}/api/v1/users/${user.id}`, payload); 
+            setSuccess(true);
+            
         } catch (err) {
-            setError(err.message);
+            setError(err.response?.data?.error || 'Failed to update profile. Please try again.');
         }
     };
 
-    if (loading) return <div>Loading...</div>;
-    if (error) return <div>Error: {error}</div>;
-    if (!user) {
-        return <div>Not logged in</div>; 
-    }
+    if (loading) return <div style={{ textAlign: 'center', marginTop: '50px', color: 'var(--text-muted)' }}>Loading profile data...</div>;
+    if (!user) return <div style={{ textAlign: 'center', marginTop: '50px' }}>Not logged in</div>; 
 
     return (
-        <div className="form-container">
-        <br></br>
-        <h1>Edit {user.username}'s profile</h1>
-        <form onSubmit={handleSubmit} className="edit-profile-form">
-                <div className="form-group row">
-                    <div className="column">
-                        <label htmlFor="firstName">First Name:</label>
-                        <input
-                            type="text"
-                            name="firstName"
-                            id="firstName"
-                            value={formData.firstName}
-                            onChange={handleChange}
-                            className="form-control"
+        <div style={{ padding: '40px 20px', display: 'flex', justifyContent: 'center' }}>
+            <div className="form-container" style={{ maxWidth: '800px', width: '100%', margin: 0 }}>
+                
+                <h2 style={{ marginBottom: '8px', fontWeight: '700' }}>Account Settings</h2>
+                <p style={{ color: 'var(--text-muted)', marginBottom: '32px', fontSize: '0.95rem' }}>
+                    Manage your personal information and contact details.
+                </p>
+
+                <form onSubmit={handleSubmit}>
+                    
+                    <h4 style={{ fontSize: '1.1rem', marginBottom: '16px', color: 'var(--primary)' }}>Personal Info</h4>
+                    
+                    <div className="form-row">
+                        <div className="form-group" style={{ marginBottom: 0 }}>
+                            <label htmlFor="firstName">First Name</label>
+                            <input type="text" name="firstName" id="firstName" value={formData.firstName} onChange={handleChange} />
+                        </div>
+                        <div className="form-group" style={{ marginBottom: 0 }}>
+                            <label htmlFor="lastName">Last Name</label>
+                            <input type="text" name="lastName" id="lastName" value={formData.lastName} onChange={handleChange} />
+                        </div>
+                    </div>
+
+                    <div className="form-group">
+                        <label htmlFor="email">Email Address (Read Only)</label>
+                        <input 
+                            type="email" 
+                            name="email" 
+                            id="email" 
+                            value={formData.email} 
+                            disabled 
+                            style={{ backgroundColor: 'rgba(0,0,0,0.05)', cursor: 'not-allowed', color: 'var(--text-muted)' }}
                         />
                     </div>
-                    <div className="column">
-                        <label htmlFor="lastName">Last Name:</label>
-                        <input
-                            type="text"
-                            name="lastName"
-                            id="lastName"
-                            value={formData.lastName}
-                            onChange={handleChange}
-                            className="form-control"
-                        />
+
+                    <hr style={{ margin: '32px 0', borderColor: 'var(--border)' }} />
+
+                    <h4 style={{ fontSize: '1.1rem', marginBottom: '16px', color: 'var(--primary)' }}>Address & Contact</h4>
+
+                    <div className="form-row">
+                        <div className="form-group" style={{ marginBottom: 0 }}>
+                            <label htmlFor="mobile">Mobile Number</label>
+                            <input type="text" name="mobile" id="mobile" value={formData.mobile} onChange={handleChange} />
+                        </div>
+                        <div className="form-group" style={{ marginBottom: 0 }}>
+                            <label htmlFor="street">Street Address</label>
+                            <input type="text" name="street" id="street" value={formData.street} onChange={handleChange} />
+                        </div>
                     </div>
-                </div>
-                <br />
-                <div className="form-group row">
-                    <div className="email-field">
-                        <label htmlFor="email" style={{ fontWeight: 'bold' }}>*Email:</label>
-                        <input
-                            type="email"
-                            name="email"
-                            id="email"
-                            value={formData.email}
-                            onChange={handleChange}
-                            disabled
-                            className="form-control"
-                        />
+
+                    <div className="form-row">
+                        <div className="form-group" style={{ marginBottom: 0 }}>
+                            <label htmlFor="zipcode">Zipcode</label>
+                            <input type="text" name="zipcode" id="zipcode" value={formData.zipcode} onChange={handleChange} />
+                        </div>
+                        <div className="form-group" style={{ marginBottom: 0 }}>
+                            <label htmlFor="country">Country</label>
+                            <input type="text" name="country" id="country" value={formData.country} onChange={handleChange} />
+                        </div>
                     </div>
-                </div>
-                <div className="form-group row">
-                    <div className="column">
-                        <label htmlFor="mobile">Mobile:</label>
-                        <input
-                            type="text"
-                            name="mobile"
-                            id="mobile"
-                            value={formData.mobile}
-                            onChange={handleChange}
-                            className="form-control"
-                        />
+
+                    {error && <div className="availability-message msg-error" style={{ marginBottom: '16px', fontSize: '0.9rem' }}>{error}</div>}
+                    {success && <div className="availability-message msg-success" style={{ marginBottom: '16px', fontSize: '0.9rem', fontWeight: '600' }}>Profile updated successfully!</div>}
+
+                    <div style={{ display: 'flex', justifyContent: 'flex-end', marginTop: '24px' }}>
+                        <button type="submit" className="btn-modern-primary" style={{ padding: '12px 32px' }}>
+                            Save Changes
+                        </button>
                     </div>
-                    <div className="column">
-                        <label htmlFor="street">Street:</label>
-                        <input
-                            type="text"
-                            name="street"
-                            id="street"
-                            value={formData.street}
-                            onChange={handleChange}
-                            className="form-control"
-                        />
-                    </div>
-                </div>
-                <div className="form-group row">
-                    <div className="column">
-                        <label htmlFor="zipcode">Zipcode:</label>
-                        <input
-                            type="text"
-                            name="zipcode"
-                            id="zipcode"
-                            value={formData.zipcode}
-                            onChange={handleChange}
-                            className="form-control"
-                        />
-                    </div>
-                    <div className="column">
-                        <label htmlFor="country">Country:</label>
-                        <input
-                            type="text"
-                            name="country"
-                            id="country"
-                            value={formData.country}
-                            onChange={handleChange}
-                            className="form-control"
-                        />
-                    </div>
-                </div>
-                <button type="submit" className="btn btn-primary">Save Changes</button>
-            </form>
+
+                </form>
+            </div>
         </div>
     );
 };

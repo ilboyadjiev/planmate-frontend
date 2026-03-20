@@ -2,60 +2,44 @@ import React, { useContext } from 'react';
 import { Link, NavLink } from 'react-router-dom';
 import { AuthContext } from './AuthContext';
 import planmateIcon from './planmate-icon.png';
+import './Navbar.css';
 
 const Navbar = () => {
     const { authToken, user, logout } = useContext(AuthContext);
 
     return (
-        <nav className="navbar navbar-expand-lg navbar-light bg-light">
-            <div className="container">
-                <Link className="navbar-brand" to="/">
-                    <img 
-                        src={planmateIcon} 
-                        alt="PlanMate Icon" 
-                        style={{ width: '30px', height: '30px', marginRight: '10px' }} 
-                    />
-                    PlanMate
-                </Link>
-                <button className="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbarNav" aria-controls="navbarNav" aria-expanded="false" aria-label="Toggle navigation">
-                    <span className="navbar-toggler-icon"></span>
-                </button>
-                <div className="collapse navbar-collapse" id="navbarNav">
-                    <ul className="navbar-nav mr-auto">
-                        <li className="nav-item">
-                            <NavLink exact to="/dashboard" className="nav-link">Dashboard</NavLink>
-                        </li>
-                    </ul>
-                    <div className="mx-auto text-center"> {}
-                        {authToken && (
-                            <span className="nav-link">Hello, {user && (user.username || user.email)}</span>
-                        )}
-                    </div>
-                    <ul className="navbar-nav ml-auto">
-                        {authToken ? (
-                            <>
-                                <li className="nav-item">
-                                    <NavLink to="/profile/friends" className="nav-link">Friends</NavLink>
-                                </li>
-                                <li className="nav-item">
-                                    <NavLink to="/profile/edit" className="nav-link">Edit Profile</NavLink>
-                                </li>
-                                <li className="nav-item">
-                                    <button className="btn btn-link nav-link" onClick={logout} to="/">Logout</button>
-                                </li>
-                            </>
-                        ) : (
-                            <>
-                                <li className="nav-item">
-                                    <Link className="nav-link" to="/login">Login</Link>
-                                </li>
-                                <li className="nav-item">
-                                    <Link className="nav-link" to="/register">Register</Link>
-                                </li>
-                            </>
-                        )}
-                    </ul>
+        <nav className="modern-navbar">
+            <Link className="navbar-brand" to="/">
+                <img src={planmateIcon} alt="PlanMate Logo" />
+                PlanMate
+            </Link>
+
+            {authToken && (
+                <div className="navbar-links">
+                    <NavLink to="/dashboard" className="nav-link">Dashboard</NavLink>
+                    <NavLink to="/profile/friends" className="nav-link">Friends</NavLink>
                 </div>
+            )}
+
+            <div className="navbar-actions">
+                {authToken ? (
+                    <>
+                        <span className="user-greeting">
+                            Hello, {user?.firstName || user?.username || 'User'}
+                        </span>
+                        <NavLink to="/profile/edit" className="nav-link">Profile</NavLink>
+                        <button className="btn-modern-secondary" style={{ padding: '8px 16px', fontSize: '0.9rem' }} onClick={logout}>
+                            Logout
+                        </button>
+                    </>
+                ) : (
+                    <>
+                        <Link className="nav-link" to="/login">Login</Link>
+                        <Link className="btn-modern-primary" style={{ padding: '8px 16px', fontSize: '0.9rem', textDecoration: 'none' }} to="/register">
+                            Register
+                        </Link>
+                    </>
+                )}
             </div>
         </nav>
     );

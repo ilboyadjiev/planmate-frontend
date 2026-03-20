@@ -1,54 +1,89 @@
-.home-container {
-    text-align: center;
-    margin-top: 50px;
-  }
-  
-  .button-group {
-    margin-top: 20px;
-  }
-  
-  .button-group button {
-    margin: 10px;
-    padding: 10px 20px;
-    font-size: 16px;
-    cursor: pointer;
-  }
-
-/* Form */
-.form-container {
+/* Home.css */
+.hero-container {
+  min-height: calc(100vh - 70px); /* Account for navbar */
   display: flex;
-  flex-direction: column;
+  justify-content: center;
   align-items: center;
-  justify-content: flex-start;
-  height: 120vh; 
+  background: radial-gradient(circle at top right, #EEF2FF 0%, var(--bg-color) 60%);
+  padding: 20px;
 }
 
-.form-group {
-  margin: 20px 0;
-  text-align: left;
+.hero-content {
+  text-align: center;
+  max-width: 600px;
+  animation: fadeUp 0.6s ease-out;
 }
 
-.form-group input {
-  width: 100%;
-  padding: 10px;
-  margin-top: 5px;
-  margin-right: 5px;
-  flex: 1
+.hero-logo {
+  width: 100px;
+  height: auto;
+  margin-bottom: 24px;
+  filter: drop-shadow(0 10px 15px rgba(0, 0, 0, 0.1));
 }
 
-.form-group button {
-  margin-top: 6px;
-  margin-left: 10px;
-  padding: 10px 20px;
-  font-size: 14px;
+.hero-title {
+  font-size: 3.5rem;
+  font-weight: 800;
+  letter-spacing: -0.02em;
+  line-height: 1.1;
+  color: var(--text-main);
+  margin-bottom: 16px;
+}
+
+.hero-title .highlight {
+  color: var(--primary);
+}
+
+.hero-subtitle {
+  font-size: 1.25rem;
+  color: var(--text-muted);
+  margin-bottom: 40px;
+  line-height: 1.6;
+}
+
+.hero-buttons {
+  display: flex;
+  gap: 16px;
+  justify-content: center;
+}
+
+.btn-modern-primary {
+  background-color: var(--primary);
+  color: white;
+  padding: 14px 28px;
+  border-radius: 30px;
+  font-size: 1.1rem;
+  font-weight: 600;
+  border: none;
   cursor: pointer;
+  transition: all 0.2s;
+  box-shadow: 0 4px 14px 0 rgba(79, 70, 229, 0.39);
 }
 
-.search-bar {
-  width: 100%;
-  padding: 10px;
-  border: 1px solid #ccc;
-  border-radius: 4px;
-  margin-bottom: 20px;
-  font-size: 16px;
+.btn-modern-primary:hover {
+  background-color: var(--primary-hover);
+  transform: translateY(-2px);
+  box-shadow: 0 6px 20px rgba(79, 70, 229, 0.4);
+}
+
+.btn-modern-secondary {
+  background-color: white;
+  color: var(--text-main);
+  padding: 14px 28px;
+  border-radius: 30px;
+  font-size: 1.1rem;
+  font-weight: 600;
+  border: 1px solid var(--border);
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.btn-modern-secondary:hover {
+  background-color: #F3F4F6;
+  border-color: #D1D5DB;
+}
+
+@keyframes fadeUp {
+  from { opacity: 0; transform: translateY(20px); }
+  to { opacity: 1; transform: translateY(0); }
 }

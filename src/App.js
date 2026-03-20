@@ -9,6 +9,7 @@ import FriendsList from './FriendsList';
 import 'bootstrap/dist/css/bootstrap.min.css';
 import { AuthProvider } from './AuthContext';
 import Navbar from './Navbar';
+import ProtectedRoute from './ProtectedRoute';
 
 function App() {
   
@@ -20,9 +21,31 @@ function App() {
           <Route path="/" element={<Home />} />
           <Route path="/register" element={<Register />} />
           <Route path="/login" element={<Login />} />
-          <Route path="/dashboard" element={<Dashboard />} />
-          <Route path="/profile/edit" element={<EditProfile />} />
-          <Route path="/profile/friends" element={<FriendsList />} />
+          
+          <Route 
+            path="/dashboard" 
+            element={
+              <ProtectedRoute>
+                <Dashboard />
+              </ProtectedRoute>
+            } 
+          />
+          <Route 
+            path="/profile/edit" 
+            element={
+              <ProtectedRoute>
+                <EditProfile />
+              </ProtectedRoute>
+            } 
+          />
+          <Route 
+            path="/profile/friends" 
+            element={
+              <ProtectedRoute>
+                <FriendsList />
+              </ProtectedRoute>
+            } 
+          />
         </Routes>
       </Router>
     </AuthProvider>

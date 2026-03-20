@@ -4,159 +4,223 @@ import config from './config';
 import { AuthContext } from './AuthContext';
 
 const FriendsList = () => {
+    const { user } = useContext(AuthContext);
     const [friends, setFriends] = useState([]);
     const [pendingRequests, setPendingRequests] = useState([]);
     const [searchTerm, setSearchTerm] = useState('');
     const [searchResults, setSearchResults] = useState([]);
     const [error, setError] = useState(null);
-    const { user } = useContext(AuthContext);
+    const [successMsg, setSuccessMsg] = useState('');
+    const [loading, setLoading] = useState(true);
+
+    const fetchFriends = async () => {
+        if (!user || !user.id) return;
+        try {
+            const response = await axios.get(`${config.baseUrl}/api/v1/users/${user.id}/friends`);
+            setFriends(response.data.filter(friendship => friendship.status === 'accepted'));
+            setPendingRequests(response.data.filter(friendship => friendship.status === 'pending'));
+            setLoading(false);
+        } catch (err) {
+            setError('Failed to load friends list.');
+            setLoading(false);
+        }
+    };
 
     useEffect(() => {
-        const fetchFriends = async () => {
-            try {
-                const response = await axios.get(`${config.baseUrl}/api/v1/users/${user.id}/friends`);
-                setFriends(response.data.filter(friendship => friendship.status === 'accepted'));
-                setPendingRequests(response.data.filter(friendship => friendship.status === 'pending'));
-            } catch (err) {
-                setError(err);
-            }
-        };
-
         fetchFriends();
-    }, [user.id]);
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [user]);
 
-    const handleSearch = async () => {
-        if (searchTerm) {
-            try {
-                const response = await axios.get(`${config.baseUrl}/api/v1/users/search?term=${searchTerm}`);
-                setSearchResults(response.data);
-            } catch (err) {
-                setError(err);
-            }
-        } else {
+    const handleSearch = async (e) => {
+        e.preventDefault();
+        setError(null);
+        setSuccessMsg('');
+        
+        if (!searchTerm.trim()) {
             setSearchResults([]);
+            return;
+        }
+
+        try {
+            const response = await axios.get(`${config.baseUrl}/api/v1/users/search?term=${searchTerm}`);
+            const filteredResults = response.data.filter(u => u.id !== user.id);
+            setSearchResults(filteredResults);
+            
+            if (filteredResults.length === 0) {
+                setError("No users found matching that search.");
+            }
+        } catch (err) {
+            setError('Error searching for users.');
         }
     };
 
     const sendFriendRequest = async (userId) => {
         try {
+            setError(null);
             await axios.post(`${config.baseUrl}/api/v1/friends/request/${userId}`, {});
-            // Optionally refresh pending requests after sending a request
-            const response = await axios.get(`${config.baseUrl}/api/v1/users/${user.id}/friends`);
-            setPendingRequests(response.data.filter(friendship => friendship.status === 'pending'));
+            setSuccessMsg('Friend request sent successfully!');
+            setSearchResults([]); 
+            setSearchTerm('');
+            fetchFriends();
         } catch (err) {
-            setError(err);
+            setError(err.response?.data?.error || 'Failed to send friend request.');
         }
     };
 
     const acceptFriendRequest = async (friendshipId) => {
         try {
-            await axios.put(`${config.baseUrl}/api/v1/friends/accept/${friendshipId}`, { });
-            // Fetch updated friends and pending requests after accepting
-            const response = await axios.get(`${config.baseUrl}/api/v1/users/${user.id}/friends`);
-            setFriends(response.data.filter(friendship => friendship.status === 'accepted'));
-            setPendingRequests(response.data.filter(friendship => friendship.status === 'pending'));
+            setError(null);
+            await axios.put(`${config.baseUrl}/api/v1/friends/accept/${friendshipId}`, {});
+            setSuccessMsg('Friend request accepted!');
+            fetchFriends();
         } catch (err) {
-            console.error('Error accepting friend request:', err);
+            setError('Error accepting friend request.');
         }
     };
 
+    const getFriendData = (friendship) => {
+        return friendship.userA.id === user.id ? friendship.userB : friendship.userA;
+    };
+
+    if (loading) return <div style={{ textAlign: 'center', marginTop: '50px', color: 'var(--text-muted)' }}>Loading network...</div>;
+
     return (
-        <div className="form-container">
-            <br />
-            <h1>Friends List</h1>
-            {error && <p className="error-message">{error.message}</p>}
+        <div style={{ padding: '40px 20px', display: 'flex', justifyContent: 'center' }}>
+            <div className="form-container" style={{ maxWidth: '800px', width: '100%', margin: 0 }}>
+                
+                <h2 style={{ marginBottom: '8px', fontWeight: '700' }}>Network</h2>
+                <p style={{ color: 'var(--text-muted)', marginBottom: '32px', fontSize: '0.95rem' }}>
+                    Find friends and manage your connections.
+                </p>
 
-            <div className="search-bar-container">
-                <input
-                    type="text"
-                    placeholder="Search for users..."
-                    value={searchTerm}
-                    onChange={(e) => setSearchTerm(e.target.value)}
-                    onBlur={handleSearch}
-                    className="search-bar"
-                />
-                <button onClick={handleSearch}>Search</button>
-            </div>
+                <form onSubmit={handleSearch} style={{ display: 'flex', gap: '12px', marginBottom: '32px' }}>
+                    <input
+                        type="text"
+                        placeholder="Search by username or email..."
+                        value={searchTerm}
+                        onChange={(e) => setSearchTerm(e.target.value)}
+                        style={{ flexGrow: 1 }}
+                    />
+                    <button type="submit" className="btn-modern-secondary" style={{ padding: '10px 24px' }}>
+                        Search
+                    </button>
+                </form>
 
-            <div className="friends-section">
-                <h2>Friends</h2>
-                {friends.length > 0 ? (
-                friends.map((friendship, index) => (
-                    <div key={index} className="friend-card">
-                        <div className="form-group row">
-                            <div className="column">
-                                <label htmlFor={`friendName${index}`}>Friend Name:</label>
-                                <input
-                                    type="text"
-                                    id={`friendName${index}`}
-                                    value={friendship.userA.email === user.email ? friendship.userB.username || friendship.userB.email : friendship.userA.username || friendship.userA.email}
-                                    disabled
-                                    style={{ color: 'gray' }}
-                                />
-                            </div>
+                {error && <div className="availability-message msg-error" style={{ marginBottom: '24px' }}>{error}</div>}
+                {successMsg && <div className="availability-message msg-success" style={{ marginBottom: '24px' }}>{successMsg}</div>}
+
+                {searchResults.length > 0 && (
+                    <div style={{ marginBottom: '40px' }}>
+                        <h4 style={{ fontSize: '1.1rem', marginBottom: '16px', color: 'var(--primary)' }}>Search Results</h4>
+                        <div style={{ border: '1px solid var(--border)', borderRadius: '12px', overflow: 'hidden' }}>
+                            {searchResults.map((result) => {
+                                const isFriend = friends.some(f => getFriendData(f).id === result.id);
+                                const isPending = pendingRequests.some(f => getFriendData(f).id === result.id);
+
+                                let actionContent;
+                                if (isFriend) {
+                                    actionContent = <span style={{ fontSize: '0.85rem', color: 'var(--text-muted)', fontWeight: '500', paddingRight: '8px' }}>Friend</span>;
+                                } else if (isPending) {
+                                    actionContent = <span style={{ fontSize: '0.85rem', color: '#F59E0B', fontWeight: '500', paddingRight: '8px' }}>Pending</span>;
+                                } else {
+                                    actionContent = (
+                                        <button onClick={() => sendFriendRequest(result.id)} className="btn-modern-primary" style={{ padding: '6px 16px', fontSize: '0.85rem' }}>
+                                            Add Friend
+                                        </button>
+                                    );
+                                }
+
+                                return (
+                                    <UserListItem 
+                                        key={result.id} 
+                                        userData={result} 
+                                        actionButton={actionContent} 
+                                    />
+                                );
+                            })}
                         </div>
                     </div>
-                ))) : (
-                    <p>No friends yet.</p>
                 )}
-            </div>
 
-            <br />
+                {pendingRequests.length > 0 && (
+                    <div style={{ marginBottom: '40px' }}>
+                        <h4 style={{ fontSize: '1.1rem', marginBottom: '16px', color: '#F59E0B' }}>Pending Requests</h4>
+                        <div style={{ border: '1px solid var(--border)', borderRadius: '12px', overflow: 'hidden' }}>
+                            {pendingRequests.map((friendship) => {
+                                const friend = getFriendData(friendship);
+                                const isIncoming = friendship.userA.id !== user.id; 
 
-            <div className="pending-requests-section">
-                <h2>Pending Requests</h2>
-                {pendingRequests.length > 0 ? (
-                    pendingRequests.map((friendship, index) => {
-                        const isUserA = friendship.userA.id === user.id;
-                        const requestUsername = isUserA ? friendship.userB.username || friendship.userB.email : friendship.userA.username || friendship.userA.email;
-                        const requestDirection = isUserA ? "Request To:" : "Request From:";
-
-                        return (
-                            <div key={index} className="friend-card">
-                                <div className="form-group row">
-                                    <div className="column">
-                                        <label htmlFor={`requestName${index}`}>{requestDirection}</label>
-                                        <input
-                                            type="text"
-                                            id={`requestName${index}`}
-                                            value={requestUsername}
-                                            disabled
-                                            style={{ color: 'gray' }}
-                                        />
-                                    </div>
-                                    {!isUserA && (
-                                        <div className="column">
-                                            <button 
-                                                onClick={() => acceptFriendRequest(friendship.id)}
-                                                className="btn btn-primary"
-                                            >
-                                                Accept Request
+                                return (
+                                    <UserListItem 
+                                        key={friendship.id} 
+                                        userData={friend} 
+                                        subText={isIncoming ? "Wants to be your friend" : "Request sent"}
+                                        actionButton={isIncoming ? (
+                                            <button onClick={() => acceptFriendRequest(friendship.id)} className="btn-modern-primary" style={{ padding: '6px 16px', fontSize: '0.85rem' }}>
+                                                Accept
                                             </button>
-                                        </div>
-                                    )}
-                                </div>
-                            </div>
-                        );
-                    })
-                ) : (
-                    <p>No pending requests.</p>
-                )}
-            </div>
-
-            <div className="search-results-section">
-                <h2>Search Results</h2>
-                {searchResults.length > 0 ? (
-                    searchResults.map((result, index) => (
-                        <div key={index} className="search-result">
-                            <span>{result.username || result.email}</span>
-                            <button onClick={() => sendFriendRequest(result.id)}>Send Friend Request</button>
+                                        ) : (
+                                            <span style={{ fontSize: '0.85rem', color: 'var(--text-muted)', fontWeight: '500', paddingRight: '8px' }}>Pending...</span>
+                                        )} 
+                                    />
+                                );
+                            })}
                         </div>
-                    ))
-                ) : (
-                    <p>No users found.</p>
+                    </div>
                 )}
+
+                <div>
+                    <h4 style={{ fontSize: '1.1rem', marginBottom: '16px', color: 'var(--text-main)' }}>My Friends ({friends.length})</h4>
+                    {friends.length > 0 ? (
+                        <div style={{ border: '1px solid var(--border)', borderRadius: '12px', overflow: 'hidden' }}>
+                            {friends.map((friendship) => {
+                                const friend = getFriendData(friendship);
+                                return <UserListItem key={friendship.id} userData={friend} />;
+                            })}
+                        </div>
+                    ) : (
+                        <div style={{ padding: '32px', textAlign: 'center', backgroundColor: 'var(--bg-color)', borderRadius: '12px', color: 'var(--text-muted)' }}>
+                            You don't have any friends added yet. Use the search bar above to find people!
+                        </div>
+                    )}
+                </div>
+
             </div>
+        </div>
+    );
+};
+
+const UserListItem = ({ userData, subText, actionButton }) => {
+    const initial = (userData.firstName || userData.username || '?').charAt(0).toUpperCase();
+    
+    return (
+        <div style={{ 
+            display: 'flex', 
+            alignItems: 'center', 
+            justifyContent: 'space-between', 
+            padding: '16px', 
+            borderBottom: '1px solid var(--border)',
+            backgroundColor: 'var(--surface)'
+        }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '16px' }}>
+                <div style={{ 
+                    width: '40px', height: '40px', borderRadius: '50%', 
+                    backgroundColor: 'var(--primary)', color: 'white', 
+                    display: 'flex', alignItems: 'center', justifyContent: 'center', 
+                    fontWeight: 'bold', fontSize: '1.1rem' 
+                }}>
+                    {initial}
+                </div>
+                <div>
+                    <div style={{ fontWeight: '600', color: 'var(--text-main)' }}>
+                        {userData.firstName} {userData.lastName} <span style={{ fontWeight: '400', color: 'var(--text-muted)' }}>@{userData.username}</span>
+                    </div>
+                    <div style={{ fontSize: '0.85rem', color: 'var(--text-muted)' }}>
+                        {subText || userData.email}
+                    </div>
+                </div>
+            </div>
+            {actionButton && <div>{actionButton}</div>}
         </div>
     );
 };

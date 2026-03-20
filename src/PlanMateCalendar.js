@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import axios from 'axios';
 import config from './config';
-import './PlanMateCalendar.css'; // Import the CSS file for custom styling
+import './PlanMateCalendar.css'; 
 import { Calendar, momentLocalizer } from 'react-big-calendar';
 import moment from 'moment';
 import 'react-big-calendar/lib/css/react-big-calendar.css';
@@ -11,39 +11,44 @@ import 'react-datepicker/dist/react-datepicker.css';
 
 const localizer = momentLocalizer(moment);
 
-// Set the first day of the week to Monday
 moment.updateLocale('en', {
-    week: {
-        dow: 1, // Monday is the first day of the week
-        doy: 1,
-    },
+    week: { dow: 1, doy: 1 },
 });
 
 const PlanMateCalendar = ({ userEmail }) => {
     const [events, setEvents] = useState([]);
     const [selectedEvent, setSelectedEvent] = useState(null);
     const [showModal, setShowModal] = useState(false);
+    const [currentDate, setCurrentDate] = useState(new Date());
 
-    const fetchEvents = async () => {
+    const fetchEvents = async (dateToFetch) => {
         try {
-            const response = await axios.get(`${config.baseUrl}/api/v1/events/${userEmail}`);
+            const start = moment(dateToFetch).subtract(1, 'months').startOf('month').format('YYYY-MM-DD 00:00:00');
+            const end = moment(dateToFetch).add(1, 'months').endOf('month').format('YYYY-MM-DD 23:59:59');
+
+            const response = await axios.get(`${config.baseUrl}/api/v1/events/range`, {
+                params: { start, end }
+            });
+
             const eventsData = response.data.map(event => ({
                 id: event.id,
                 title: event.title,
                 start: event.startTime ? new Date(event.startTime) : null,
                 end: event.endTime ? new Date(event.endTime) : null,
-                description: event.description,
-                participants: event.participants,
-                allDay: false, // assuming events are not all day
+                description: event.description || '',
+                participants: event.participants || [], 
+                allDay: false, 
             }));
+            
             setEvents(eventsData);
         } catch (error) {
-            console.error('Error fetching events:', error);
+            console.error('Error fetching events by range:', error);
         }
     };
 
     useEffect(() => {
-        fetchEvents();
+        fetchEvents(currentDate);
+        // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [userEmail]);
 
     const handleSelectEvent = (event) => {
@@ -58,64 +63,51 @@ const PlanMateCalendar = ({ userEmail }) => {
 
     const handleInputChange = (e) => {
         const { name, value } = e.target;
-        setSelectedEvent(prevEvent => ({
-            ...prevEvent,
-            [name]: value
-        }));
+        setSelectedEvent(prevEvent => ({ ...prevEvent, [name]: value }));
     };
 
     const handleDateChange = (date, field) => {
-        setSelectedEvent(prevEvent => ({
-            ...prevEvent,
-            [field]: date
-        }));
+        setSelectedEvent(prevEvent => ({ ...prevEvent, [field]: date }));
     };
 
     const handleSaveChanges = async () => {
         try {
+            const participantIdsArray = Array.isArray(selectedEvent.participants)
+                ? selectedEvent.participants.map(p => typeof p === 'object' ? p.id : parseInt(p, 10)).filter(id => !isNaN(id))
+                : [];
+
             const eventToSave = {
-                ...selectedEvent,
-                startTime: moment(selectedEvent.start).format('yyyy-MM-DD HH:mm:ss'),
-                endTime: moment(selectedEvent.end).format('yyyy-MM-DD HH:mm:ss'),
+                id: selectedEvent.id,
+                title: selectedEvent.title,
+                description: selectedEvent.description,
+                startTime: moment(selectedEvent.start).format('YYYY-MM-DD HH:mm:ss'),
+                endTime: moment(selectedEvent.end).format('YYYY-MM-DD HH:mm:ss'),
+                participantIds: participantIdsArray
             };
-    
-            // Remove the original start and end fields
-            delete eventToSave.start;
-            delete eventToSave.end;
     
             await axios.put(`${config.baseUrl}/api/v1/events/${selectedEvent.id}`, eventToSave);
             setShowModal(false);
-            fetchEvents();
+            fetchEvents(currentDate);
         } catch (error) {
             console.error('Error updating event:', error);
         }
     };
 
-    // const formatDate = (date) => {
-    //     return moment(date).format('HH:mm DD.MMM');
-    // };
-
-    // Function to add custom properties to each day cell
     const dayPropGetter = (date) => {
         const today = new Date();
-        const day = date.getDay();
-        if (
-            date.getDate() === today.getDate() &&
-            date.getMonth() === today.getMonth() &&
-            date.getFullYear() === today.getFullYear()
-        ) {
-            return {
-                className: 'highlight-today',
-            };
-        } else if (day === 0 || day === 6) { // Sunday = 0, Saturday = 6
-            return {
-                className: 'highlight-weekend',
-            };
-        } else {
-            return {
-                className: 'highlight-weekday',
-            };
+        if (date.getDate() === today.getDate() && date.getMonth() === today.getMonth() && date.getFullYear() === today.getFullYear()) {
+            return { className: 'custom-today' };
         }
+        return {}; 
+    };
+
+    const eventPropGetter = (event) => {
+        return {
+            className: 'custom-event',
+            style: {
+                backgroundColor: '#4F46E5', borderRadius: '6px', border: 'none', opacity: 0.9, color: 'white',
+            }
+        };
     };
 
     return (
@@ -127,72 +119,72 @@ const PlanMateCalendar = ({ userEmail }) => {
                 endAccessor="end"
                 style={{ height: 700 }}
                 dayPropGetter={dayPropGetter}
+                eventPropGetter={eventPropGetter}
                 onSelectEvent={handleSelectEvent}
+                date={currentDate}
+                onNavigate={(newDate) => {
+                    setCurrentDate(newDate);
+                    fetchEvents(newDate);
+                }}
             />
 
-            <Modal show={showModal} onHide={handleCloseModal}>
+            <Modal show={showModal} onHide={handleCloseModal} contentClassName="modern-modal" centered>
                 <Modal.Header closeButton>
-                    <Modal.Title>Edit Event Details</Modal.Title>
+                    <Modal.Title>Event Details</Modal.Title>
                 </Modal.Header>
                 <Modal.Body>
                     {selectedEvent && (
                         <Form>
-                            <Form.Group controlId="formTitle">
-                                <Form.Label>Title</Form.Label>
-                                <Form.Control
-                                    type="text"
-                                    name="title"
-                                    value={selectedEvent.title}
-                                    onChange={handleInputChange}
-                                />
+                            <Form.Group controlId="formTitle" style={{ marginBottom: '16px' }}>
+                                <Form.Label style={{ fontWeight: '600' }}>Event Title</Form.Label>
+                                <Form.Control type="text" name="title" value={selectedEvent.title} onChange={handleInputChange} />
                             </Form.Group>
-                            <Form.Group controlId="formStartTime">
-                                <Form.Label>Start Time</Form.Label>
-                                <DatePicker
-                                    selected={new Date(selectedEvent.start)}
-                                    onChange={date => handleDateChange(date, 'start')}
-                                    showTimeSelect
-                                    dateFormat="HH:mm dd/MM/yyyy"
-                                    className="form-control"
-                                />
+
+                            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '16px', marginBottom: '16px' }}>
+                                <Form.Group controlId="formStartTime">
+                                    <Form.Label style={{ fontWeight: '600' }}>Start Time</Form.Label>
+                                    <DatePicker selected={new Date(selectedEvent.start)} onChange={date => handleDateChange(date, 'start')} showTimeSelect dateFormat="HH:mm dd/MM/yyyy" className="form-control" />
+                                </Form.Group>
+                                <Form.Group controlId="formEndTime">
+                                    <Form.Label style={{ fontWeight: '600' }}>End Time</Form.Label>
+                                    <DatePicker selected={new Date(selectedEvent.end)} onChange={date => handleDateChange(date, 'end')} showTimeSelect dateFormat="HH:mm dd/MM/yyyy" className="form-control" />
+                                </Form.Group>
+                            </div>
+
+                            <Form.Group controlId="formDescription" style={{ marginBottom: '24px' }}>
+                                <Form.Label style={{ fontWeight: '600' }}>Description</Form.Label>
+                                <Form.Control as="textarea" name="description" rows={3} value={selectedEvent.description} onChange={handleInputChange} />
                             </Form.Group>
-                            <Form.Group controlId="formEndTime">
-                                <Form.Label>End Time</Form.Label>
-                                <DatePicker
-                                    selected={new Date(selectedEvent.end)}
-                                    onChange={date => handleDateChange(date, 'end')}
-                                    showTimeSelect
-                                    dateFormat="HH:mm dd/MM/yyyy"
-                                    className="form-control"
-                                />
-                            </Form.Group>
-                            <Form.Group controlId="formDescription">
-                                <Form.Label>Description</Form.Label>
-                                <Form.Control
-                                    as="textarea"
-                                    name="description"
-                                    rows={3}
-                                    value={selectedEvent.description}
-                                    onChange={handleInputChange}
-                                />
-                            </Form.Group>
+
+                            {/* Render participants */}
                             <Form.Group controlId="formParticipants">
-                                <Form.Label>Participants</Form.Label>
-                                <Form.Control
-                                    type="text"
-                                    name="participants"
-                                    value={selectedEvent.participants}
-                                    onChange={handleInputChange}
-                                />
+                                <Form.Label style={{ fontWeight: '600', color: 'var(--primary)' }}>Participants</Form.Label>
+                                <div style={{ display: 'flex', flexWrap: 'wrap', gap: '8px', padding: '8px 0' }}>
+                                    {Array.isArray(selectedEvent.participants) && selectedEvent.participants.length > 0 ? (
+                                        selectedEvent.participants.map(p => (
+                                            <div key={p.id} style={{ 
+                                                background: 'rgba(79, 70, 229, 0.15)', color: '#818cf8', border: '1px solid rgba(79, 70, 229, 0.3)',
+                                                padding: '6px 14px', borderRadius: '16px', fontSize: '0.85rem', fontWeight: '500' 
+                                            }}>
+                                                @{p.username || p.firstName || 'User'}
+                                            </div>
+                                        ))
+                                    ) : (
+                                        <div style={{ color: 'var(--text-muted)', fontSize: '0.9rem' }}>
+                                            No other participants
+                                        </div>
+                                    )}
+                                </div>
                             </Form.Group>
+
                         </Form>
                     )}
                 </Modal.Body>
                 <Modal.Footer>
-                    <Button variant="secondary" onClick={handleCloseModal}>
+                    <Button variant="secondary" onClick={handleCloseModal} style={{ background: 'transparent', border: 'none', color: 'var(--text-muted)' }}>
                         Close
                     </Button>
-                    <Button variant="primary" onClick={handleSaveChanges}>
+                    <Button variant="primary" onClick={handleSaveChanges} className="btn-modern-primary" style={{ padding: '8px 24px' }}>
                         Save Changes
                     </Button>
                 </Modal.Footer>
