@@ -7,6 +7,7 @@ import DatePicker from 'react-datepicker';
 import 'react-datepicker/dist/react-datepicker.css';
 import { createEvent } from './eventService';
 import { AuthContext } from './AuthContext';
+import { createLocalEvent } from './localEventService';
 
 const Dashboard = () => {
     const { user } = useContext(AuthContext);
@@ -77,10 +78,14 @@ const Dashboard = () => {
 
     const handleSaveNewEvent = async () => {
         try {
+            // offline
             if (!user) {
-                alert("Still loading your profile data. Please wait a second.");
+                createLocalEvent(selectedEvent);
+                setShowModal(false);
+                window.location.reload(); 
                 return;
             }
+            // online
             await createEvent(selectedEvent, user.email);
             setShowModal(false);
             window.location.reload(); 

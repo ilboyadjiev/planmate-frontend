@@ -4,10 +4,11 @@ import config from './config';
 import { AuthContext } from './AuthContext';
 
 const EditProfile = () => {
-    const { user } = useContext(AuthContext);
+    const { user, logout } = useContext(AuthContext);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState(null);
     const [success, setSuccess] = useState(false);
+    const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
     
     const [formData, setFormData] = useState({
         firstName: '',
@@ -66,6 +67,16 @@ const EditProfile = () => {
             
         } catch (err) {
             setError(err.response?.data?.error || 'Failed to update profile. Please try again.');
+        }
+    };
+
+    const handleDeleteAccount = async () => {
+        try {
+            await axios.delete(`${config.baseUrl}/api/v1/users/${user.id}`);
+            logout();
+        } catch (err) {
+            setError('Failed to delete account. Please try again or contact support.');
+            setShowDeleteConfirm(false);
         }
     };
 
@@ -144,6 +155,32 @@ const EditProfile = () => {
                     </div>
 
                 </form>
+
+                <hr style={{ margin: '48px 0 32px 0', borderColor: 'var(--border)' }} />
+                
+                <div style={{ border: '1px solid rgba(239, 68, 68, 0.3)', backgroundColor: 'rgba(239, 68, 68, 0.05)', borderRadius: '12px', padding: '24px' }}>
+                    <h4 style={{ fontSize: '1.1rem', color: '#EF4444', marginBottom: '8px' }}>Danger Zone</h4>
+                    <p style={{ color: 'var(--text-muted)', fontSize: '0.9rem', marginBottom: '16px' }}>
+                        Permanently delete your account and all associated calendar data. This action cannot be undone.
+                    </p>
+                    
+                    {!showDeleteConfirm ? (
+                        <button onClick={() => setShowDeleteConfirm(true)} style={{ backgroundColor: 'transparent', border: '1px solid #EF4444', color: '#EF4444', padding: '8px 16px', borderRadius: '8px', fontWeight: '600', transition: '0.2s' }}>
+                            Delete Account
+                        </button>
+                    ) : (
+                        <div style={{ display: 'flex', gap: '12px', alignItems: 'center' }}>
+                            <span style={{ color: '#EF4444', fontWeight: '600', fontSize: '0.9rem' }}>Are you absolutely sure?</span>
+                            <button onClick={handleDeleteAccount} style={{ backgroundColor: '#EF4444', border: 'none', color: 'white', padding: '8px 16px', borderRadius: '8px', fontWeight: '600' }}>
+                                Yes, Delete My Data
+                            </button>
+                            <button onClick={() => setShowDeleteConfirm(false)} className="btn-modern-secondary" style={{ padding: '8px 16px' }}>
+                                Cancel
+                            </button>
+                        </div>
+                    )}
+                </div>
+
             </div>
         </div>
     );

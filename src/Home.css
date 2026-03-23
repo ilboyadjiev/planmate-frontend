@@ -87,3 +87,41 @@
   from { opacity: 0; transform: translateY(20px); }
   to { opacity: 1; transform: translateY(0); }
 }
+
+.download-section {
+  margin-top: 48px;
+  padding-top: 32px;
+  border-top: 1px solid rgba(0, 0, 0, 0.08);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  animation: fadeUp 0.8s ease-out;
+}
+
+.download-text {
+  color: var(--text-muted);
+  font-size: 0.95rem;
+  font-weight: 500;
+  margin-bottom: 16px;
+}
+
+.btn-modern-download {
+  display: inline-flex;
+  align-items: center;
+  background-color: #111827;
+  color: white;
+  padding: 12px 24px;
+  border-radius: 12px;
+  font-size: 0.95rem;
+  font-weight: 600;
+  text-decoration: none;
+  transition: all 0.2s;
+  box-shadow: var(--shadow-sm);
+}
+
+.btn-modern-download:hover {
+  background-color: #1F2937;
+  transform: translateY(-2px);
+  color: white;
+  box-shadow: var(--shadow-md);
+}

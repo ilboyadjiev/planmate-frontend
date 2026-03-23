@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useContext } from 'react';
 import axios from 'axios';
 import config from './config';
 import './PlanMateCalendar.css'; 
@@ -8,6 +8,8 @@ import 'react-big-calendar/lib/css/react-big-calendar.css';
 import { Modal, Button, Form } from 'react-bootstrap';
 import DatePicker from 'react-datepicker';
 import 'react-datepicker/dist/react-datepicker.css';
+import { getLocalEvents, updateLocalEvent } from './localEventService';
+import { AuthContext } from './AuthContext';
 
 const localizer = momentLocalizer(moment);
 
@@ -20,9 +22,18 @@ const PlanMateCalendar = ({ userEmail }) => {
     const [selectedEvent, setSelectedEvent] = useState(null);
     const [showModal, setShowModal] = useState(false);
     const [currentDate, setCurrentDate] = useState(new Date());
+    const { user } = useContext(AuthContext);
 
     const fetchEvents = async (dateToFetch) => {
         try {
+            // Offline
+            if (!user) {
+                const localData = getLocalEvents();
+                setEvents(localData);
+                return;
+            }
+
+            // Online
             const start = moment(dateToFetch).subtract(1, 'months').startOf('month').format('YYYY-MM-DD 00:00:00');
             const end = moment(dateToFetch).add(1, 'months').endOf('month').format('YYYY-MM-DD 23:59:59');
 
@@ -72,6 +83,15 @@ const PlanMateCalendar = ({ userEmail }) => {
 
     const handleSaveChanges = async () => {
         try {
+            // Offline
+            if (!user) {
+                updateLocalEvent(selectedEvent);
+                setShowModal(false);
+                fetchEvents(currentDate);
+                return;
+            }
+
+            // Online
             const participantIdsArray = Array.isArray(selectedEvent.participants)
                 ? selectedEvent.participants.map(p => typeof p === 'object' ? p.id : parseInt(p, 10)).filter(id => !isNaN(id))
                 : [];
