@@ -27,6 +27,9 @@ jobs:
             push: true
             platforms: linux/amd64 
             tags: iliandocker/planmate-docker-repo:planmate-frontend
+            build-args: |
+              REACT_APP_BACKEND_BASE_URL=${{ secrets.REACT_APP_BACKEND_BASE_URL }}
+              REACT_APP_GOOGLE_CLIENT_ID=${{ secrets.REACT_APP_GOOGLE_CLIENT_ID }}
 
       - name: Deploy to GCP VM
         uses: appleboy/ssh-action@v1.0.3
@@ -35,7 +38,7 @@ jobs:
             username: ${{ secrets.GCP_SSH_USERNAME }}
             key: ${{ secrets.GCP_SSH_KEY }}
             script: |
-              cd ~/planmate
+              cd /home/ilian1097/planmate
               sudo docker-compose pull frontend
               sudo docker-compose up -d --remove-orphans frontend
               sudo docker image prune -f
@@ -45,7 +48,7 @@ jobs:
           echo "Waiting for React Frontend to respond..."
           for i in {1..15}; do
             # Checking the root domain to see if the web app is up
-            HTTP_STATUS=$(curl -s -o /dev/null -w "%{http_code}" https://planmate.org || echo "000")
+            HTTP_STATUS=$(curl -s -o /dev/null -w "%{http_code}" https://www.planmate.org || echo "000")
             if [ "$HTTP_STATUS" == "200" ]; then
               echo "Health check passed! Frontend is live."
               exit 0

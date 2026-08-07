@@ -96,9 +96,7 @@ export const AuthProvider = ({ children }) => {
             firstName: response.data.firstName || 'User'
         };
         
-        fetchUserData(finalEmail, fallbackUser.email);
-
-        await fetchUserData(finalEmail, fallbackUser);
+        await fetchUserData(finalEmail, fallbackUser.email);
     };
 
     const login = async (email, password) => {
