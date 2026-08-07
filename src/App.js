@@ -13,53 +13,57 @@ import ProtectedRoute from './ProtectedRoute';
 import CookieBanner from './CookieBanner';
 import Impressum from './legal/Impressum';
 import Privacy from './legal/Privacy';
+import { GoogleOAuthProvider } from '@react-oauth/google';
+import config from './config';
 
 function App() {
   
   return (
-    <AuthProvider>
-      <Router>
-        <Navbar />
-        <CookieBanner />
-        <Routes>
-          <Route path="/" element={<Home />} />
-          <Route path="/register" element={<Register />} />
-          <Route path="/login" element={<Login />} />
-          <Route path="/impressum" element={<Impressum />} />
-          <Route path="/privacy" element={<Privacy />} />
-          
-          <Route 
-            path="/dashboard" 
-            element={
-                <Dashboard />
-            } 
-          />
-          <Route 
-            path="/profile/edit" 
-            element={
-              <ProtectedRoute>
-                <EditProfile />
-              </ProtectedRoute>
-            } 
-          />
-          <Route 
-            path="/profile/friends" 
-            element={
-              <ProtectedRoute>
-                <FriendsList />
-              </ProtectedRoute>
-            } 
-          />
-        </Routes>
-        <footer style={{ textAlign: 'center', padding: '32px 20px', borderTop: '1px solid var(--border)', marginTop: '60px' }}>
-            <div style={{ display: 'flex', justifyContent: 'center', gap: '24px', marginBottom: '8px' }}>
-                <Link to="/impressum" style={{ color: 'var(--text-muted)', textDecoration: 'none', fontSize: '0.9rem' }}>Impressum</Link>
-                <Link to="/privacy" style={{ color: 'var(--text-muted)', textDecoration: 'none', fontSize: '0.9rem' }}>Privacy Policy</Link>
-            </div>
-            <p style={{ color: 'rgba(255,255,255,0.3)', fontSize: '0.8rem', margin: 0 }}>© {new Date().getFullYear()} PlanMate. Built in Munich.</p>
-        </footer>
-      </Router>
-    </AuthProvider>
+    <GoogleOAuthProvider clientId={config.googleClientId}>
+      <AuthProvider>
+        <Router>
+          <Navbar />
+          <CookieBanner />
+          <Routes>
+            <Route path="/" element={<Home />} />
+            <Route path="/register" element={<Register />} />
+            <Route path="/login" element={<Login />} />
+            <Route path="/impressum" element={<Impressum />} />
+            <Route path="/privacy" element={<Privacy />} />
+            
+            <Route 
+              path="/dashboard" 
+              element={
+                  <Dashboard />
+              } 
+            />
+            <Route 
+              path="/profile/edit" 
+              element={
+                <ProtectedRoute>
+                  <EditProfile />
+                </ProtectedRoute>
+              } 
+            />
+            <Route 
+              path="/profile/friends" 
+              element={
+                <ProtectedRoute>
+                  <FriendsList />
+                </ProtectedRoute>
+              } 
+            />
+          </Routes>
+          <footer style={{ textAlign: 'center', padding: '32px 20px', borderTop: '1px solid var(--border)', marginTop: '60px' }}>
+              <div style={{ display: 'flex', justifyContent: 'center', gap: '24px', marginBottom: '8px' }}>
+                  <Link to="/impressum" style={{ color: 'var(--text-muted)', textDecoration: 'none', fontSize: '0.9rem' }}>Impressum</Link>
+                  <Link to="/privacy" style={{ color: 'var(--text-muted)', textDecoration: 'none', fontSize: '0.9rem' }}>Privacy Policy</Link>
+              </div>
+              <p style={{ color: 'rgba(255,255,255,0.3)', fontSize: '0.8rem', margin: 0 }}>© {new Date().getFullYear()} PlanMate. Built in Munich.</p>
+          </footer>
+        </Router>
+      </AuthProvider>
+    </GoogleOAuthProvider>
   );
 }
 

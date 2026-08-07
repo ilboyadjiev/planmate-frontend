@@ -76,13 +76,7 @@ export const AuthProvider = ({ children }) => {
     // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [authToken]); 
 
-    const login = async (email, password) => {
-        const response = await axios.post(`${config.baseUrl}/api/v1/auth/login`, { 
-            username: email, 
-            email: email, 
-            password: password 
-        });
-        
+    const handleAuthSuccess = async (response, providedEmail = null) => {
         const access = response.data.accessToken || response.data.jwt;
         const refresh = response.data.refreshToken;
         
@@ -93,17 +87,36 @@ export const AuthProvider = ({ children }) => {
         
         axios.defaults.headers.common['Authorization'] = `Bearer ${access}`;
         
+        const finalEmail = response.data.email || response.data.username || providedEmail;
+        
         const fallbackUser = {
             id: response.data.id || null,
-            email: email,
-            username: response.data.username || email, 
+            email: finalEmail,
+            username: response.data.username || finalEmail, 
             firstName: response.data.firstName || 'User'
         };
         
-        setUser(fallbackUser);
-        localStorage.setItem('user', JSON.stringify(fallbackUser));
+        fetchUserData(finalEmail, fallbackUser.email);
 
-        await fetchUserData(email, fallbackUser);
+        await fetchUserData(finalEmail, fallbackUser);
+    };
+
+    const login = async (email, password) => {
+        const response = await axios.post(`${config.baseUrl}/api/v1/auth/login`, { 
+            username: email, 
+            email: email, 
+            password: password 
+        });
+        
+        await handleAuthSuccess(response, email);
+    };
+
+    const googleLogin = async (googleCredential) => {
+        const response = await axios.post(`${config.baseUrl}/api/v1/auth/google`, { 
+            token: googleCredential 
+        });
+        
+        await handleAuthSuccess(response);
     };
 
     const register = async (submissionData) => {
@@ -134,7 +147,7 @@ export const AuthProvider = ({ children }) => {
     };
 
     return (
-        <AuthContext.Provider value={{ authToken, user, login, register, logout }}>
+        <AuthContext.Provider value={{ authToken, user, login, register, logout, googleLogin }}>
             {children}
         </AuthContext.Provider>
     );
