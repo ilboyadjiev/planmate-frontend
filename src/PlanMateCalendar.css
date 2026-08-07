@@ -42,7 +42,7 @@
 }
 
 .rbc-off-range-bg {
-    background: rgba(0, 0, 0, 0.2);
+    background: rgba(0, 0, 0, 0.2) !important;
 }
 
 .rbc-off-range .rbc-date-cell {
