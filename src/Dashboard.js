@@ -1,4 +1,4 @@
-import React, { useState, useContext, useEffect } from 'react';
+import React, { useState, useContext, useEffect, useRef } from 'react';
 import axios from 'axios';
 import config from './config';
 import PlanMateCalendar from './PlanMateCalendar';
@@ -17,12 +17,18 @@ const Dashboard = () => {
     const [searchQuery, setSearchQuery] = useState('');
     const [selectedFriends, setSelectedFriends] = useState([]);
 
+    const [locationQuery, setLocationQuery] = useState('');
+    const [locationSuggestions, setLocationSuggestions] = useState([]);
+    const [showLocationDropdown, setShowLocationDropdown] = useState(false);
+    const searchTimeoutRef = useRef(null);
+
     const [selectedEvent, setSelectedEvent] = useState({
         title: '',
         start: new Date(),
         end: new Date(),
         description: '',
-        participants: ''
+        participants: '',
+        location: null,
     });
 
     useEffect(() => {
@@ -75,6 +81,50 @@ const Dashboard = () => {
         f.firstName?.toLowerCase().includes(searchQuery.toLowerCase())) &&
         !selectedFriends.find(sf => sf.id === f.id)
     );
+
+    const handleLocationInputChange = (e) => {
+        const value = e.target.value;
+        setLocationQuery(value);
+        
+        if (!value) {
+            setSelectedEvent(prev => ({ ...prev, location: null }));
+        }
+
+        if (searchTimeoutRef.current) clearTimeout(searchTimeoutRef.current);
+
+        if (!value || value.trim().length < 3) {
+            setLocationSuggestions([]);
+            setShowLocationDropdown(false);
+            return;
+        }
+
+        searchTimeoutRef.current = setTimeout(async () => {
+            try {
+                const res = await axios.get(`${config.baseUrl}/api/v1/locations/autocomplete`, {
+                    params: { q: value }
+                });
+                setLocationSuggestions(res.data);
+                setShowLocationDropdown(true);
+            } catch (err) {
+                console.error("Failed to fetch location suggestions", err);
+            }
+        }, 300);
+    };
+
+    const handleSelectLocation = (suggestion) => {
+        setLocationQuery(suggestion.displayName);
+        setSelectedEvent(prev => ({
+            ...prev,
+            location: {
+                name: suggestion.displayName.split(',')[0],
+                street: suggestion.street,
+                city: suggestion.city,
+                zipcode: suggestion.zipcode,
+                country: suggestion.country
+            }
+        }));
+        setShowLocationDropdown(false);
+    };
 
     const handleSaveNewEvent = async () => {
         try {
@@ -131,6 +181,32 @@ const Dashboard = () => {
                         <Form.Group controlId="formDescription" style={{ marginBottom: '24px' }}>
                             <Form.Label style={{ fontWeight: '600' }}>Description</Form.Label>
                             <Form.Control as="textarea" name="description" rows={3} value={selectedEvent.description} onChange={handleInputChange} placeholder="Details about the event..." />
+                        </Form.Group>
+
+                        <Form.Group controlId="formLocation" style={{ marginBottom: '16px', position: 'relative' }}>
+                            <Form.Label style={{ fontWeight: '600', color: 'var(--text-main)' }}>Location</Form.Label>
+                            <Form.Control 
+                                type="text" 
+                                value={locationQuery} 
+                                onChange={handleLocationInputChange} 
+                                placeholder="Start typing an address or place..." 
+                                autoComplete="off"
+                            />
+                            
+                            {showLocationDropdown && locationSuggestions.length > 0 && (
+                                <div className="friend-search-results" style={{ maxHeight: '200px', overflowY: 'auto' }}>
+                                    {locationSuggestions.map((item, idx) => (
+                                        <div 
+                                            key={idx} 
+                                            className="friend-search-item" 
+                                            onClick={() => handleSelectLocation(item)}
+                                            style={{ padding: '10px 14px', cursor: 'pointer', borderBottom: '1px solid var(--border)' }}
+                                        >
+                                            <div style={{ fontSize: '0.9rem', fontWeight: '500' }}>{item.displayName}</div>
+                                        </div>
+                                    ))}
+                                </div>
+                            )}
                         </Form.Group>
 
                         <Form.Group controlId="formParticipants" style={{ position: 'relative' }}>
