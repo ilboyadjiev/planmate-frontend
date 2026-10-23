@@ -17,7 +17,7 @@ moment.updateLocale('en', {
     week: { dow: 1, doy: 1 },
 });
 
-const PlanMateCalendar = ({ userEmail }) => {
+const PlanMateCalendar = ({ userEmail, refreshKey }) => {
     const [events, setEvents] = useState([]);
     const [selectedEvent, setSelectedEvent] = useState(null);
     const [showModal, setShowModal] = useState(false);
@@ -26,19 +26,22 @@ const PlanMateCalendar = ({ userEmail }) => {
 
     const fetchEvents = async (dateToFetch) => {
         try {
-            // Offline
+            // Offline (Guest mode)
             if (!user) {
                 const localData = getLocalEvents();
                 setEvents(localData);
                 return;
             }
 
-            // Online
-            const start = moment(dateToFetch).subtract(1, 'months').startOf('month').format('YYYY-MM-DD 00:00:00');
-            const end = moment(dateToFetch).add(1, 'months').endOf('month').format('YYYY-MM-DD 23:59:59');
+            const start = moment(dateToFetch).subtract(1, 'months').startOf('month').toISOString();
+            const end = moment(dateToFetch).add(1, 'months').endOf('month').toISOString();
 
-            const response = await axios.get(`${config.baseUrl}/api/v1/events/range`, {
-                params: { start, end }
+            const response = await axios.get(`${config.baseUrl}/api/v2/events/range`, {
+                params: { 
+                    creatorId: userEmail,
+                    start: start, 
+                    end: end 
+                }
             });
 
             const eventsData = response.data.map(event => ({
@@ -60,7 +63,7 @@ const PlanMateCalendar = ({ userEmail }) => {
     useEffect(() => {
         fetchEvents(currentDate);
         // eslint-disable-next-line react-hooks/exhaustive-deps
-    }, [userEmail]);
+    }, [userEmail, refreshKey]);
 
     const handleSelectEvent = (event) => {
         setSelectedEvent(event);
@@ -99,13 +102,15 @@ const PlanMateCalendar = ({ userEmail }) => {
             const eventToSave = {
                 id: selectedEvent.id,
                 title: selectedEvent.title,
+                creatorId: userEmail,
                 description: selectedEvent.description,
-                startTime: moment(selectedEvent.start).format('YYYY-MM-DD HH:mm:ss'),
-                endTime: moment(selectedEvent.end).format('YYYY-MM-DD HH:mm:ss'),
-                participantIds: participantIdsArray
+                startTime: new Date(selectedEvent.start).toISOString(),
+                endTime: new Date(selectedEvent.end).toISOString(),
+                participantIds: participantIdsArray,
+                location: selectedEvent.location
             };
     
-            await axios.put(`${config.baseUrl}/api/v1/events/${selectedEvent.id}`, eventToSave);
+            await axios.put(`${config.baseUrl}/api/v2/events/${selectedEvent.id}`, eventToSave);
             setShowModal(false);
             fetchEvents(currentDate);
         } catch (error) {

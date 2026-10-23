@@ -10,13 +10,15 @@ export const createEvent = async (eventData, userEmail) => {
 
         const eventToSave = {
             title: eventData.title,
+            creatorId: userEmail,
             description: eventData.description,
-            startTime: moment(eventData.start).format('YYYY-MM-DD HH:mm:ss'),
-            endTime: moment(eventData.end).format('YYYY-MM-DD HH:mm:ss'),
-            participantIds: participantIdsArray
+            startTime: new Date(eventData.start).toISOString(),
+            endTime: new Date(eventData.end).toISOString(),
+            participantIds: participantIdsArray,
+            location: eventData.location
         };
 
-        await axios.post(`${config.baseUrl}/api/v1/events`, eventToSave);
+        await axios.post(`${config.baseUrl}/api/v2/events`, eventToSave);
     } catch (error) {
         console.error('Error creating new event:', error);
         throw error;

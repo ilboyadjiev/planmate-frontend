@@ -130,3 +130,37 @@
 .friend-search-item:last-child {
     border-bottom: none;
 }
+
+.ai-markdown-content p {
+    margin-bottom: 12px;
+}
+
+.ai-markdown-content p:last-child {
+    margin-bottom: 0;
+}
+
+.ai-markdown-content h3 {
+    font-size: 1.05rem;
+    font-weight: 700;
+    color: #4F46E5;
+    margin-top: 16px;
+    margin-bottom: 8px;
+    border-bottom: 1px solid rgba(79, 70, 229, 0.2);
+    padding-bottom: 4px;
+    display: inline-block;
+}
+
+.ai-markdown-content ul {
+    padding-left: 20px;
+    margin-bottom: 16px;
+    margin-top: 8px;
+}
+
+.ai-markdown-content li {
+    margin-bottom: 8px;
+}
+
+.ai-markdown-content strong {
+    color: #1e293b;
+    font-weight: 600;
+}

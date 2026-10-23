@@ -2,12 +2,14 @@ import React, { useState, useContext, useEffect, useRef } from 'react';
 import axios from 'axios';
 import config from './config';
 import PlanMateCalendar from './PlanMateCalendar';
+import DiscoveryFeed from './DiscoveryFeed';
 import { Modal, Button, Form } from 'react-bootstrap';
 import DatePicker from 'react-datepicker';
 import 'react-datepicker/dist/react-datepicker.css';
 import { createEvent } from './eventService';
 import { AuthContext } from './AuthContext';
 import { createLocalEvent } from './localEventService';
+import ReactMarkdown from 'react-markdown';
 
 const Dashboard = () => {
     const { user } = useContext(AuthContext);
@@ -21,6 +23,11 @@ const Dashboard = () => {
     const [locationSuggestions, setLocationSuggestions] = useState([]);
     const [showLocationDropdown, setShowLocationDropdown] = useState(false);
     const searchTimeoutRef = useRef(null);
+
+    const [aiSummary, setAiSummary] = useState('');
+    const [isLoadingSummary, setIsLoadingSummary] = useState(false);
+
+    const [refreshKey, setRefreshKey] = useState(0);
 
     const [selectedEvent, setSelectedEvent] = useState({
         title: '',
@@ -40,6 +47,15 @@ const Dashboard = () => {
                     setFriends(friendList);
                 })
                 .catch(err => console.error("Could not fetch friends for event invite", err));
+
+            setIsLoadingSummary(true);
+            axios.get(`${config.baseUrl}/api/v1/events/ai-summary`)
+                .then(res => setAiSummary(res.data))
+                .catch(err => {
+                    console.error("Could not fetch AI summary", err);
+                    setAiSummary("Unable to load your daily briefing at this time.");
+                })
+                .finally(() => setIsLoadingSummary(false));
         }
     }, [user]);
 
@@ -86,9 +102,7 @@ const Dashboard = () => {
         const value = e.target.value;
         setLocationQuery(value);
         
-        if (!value) {
-            setSelectedEvent(prev => ({ ...prev, location: null }));
-        }
+        setSelectedEvent(prev => ({ ...prev, location: null }));
 
         if (searchTimeoutRef.current) clearTimeout(searchTimeoutRef.current);
 
@@ -132,16 +146,39 @@ const Dashboard = () => {
             if (!user) {
                 createLocalEvent(selectedEvent);
                 setShowModal(false);
-                window.location.reload(); 
+                setRefreshKey(prev => prev + 1);
                 return;
             }
             // online
             await createEvent(selectedEvent, user.email);
             setShowModal(false);
-            window.location.reload(); 
+            setRefreshKey(prev => prev + 1);
         } catch (error) {
             console.error('Failed to create event:', error);
             alert("Error creating event. Check the console.");
+        }
+    };
+
+    const handleAddFromFeed = async (feedEvent) => {
+        try {
+            if (!user) {
+                // We'll update localEventService later, but for now just mock it
+                alert("Event added to local calendar! (Guest mode)");
+                return;
+            }
+
+            await createEvent({
+                title: feedEvent.title,
+                start: feedEvent.startTime,
+                end: feedEvent.endTime,
+                description: feedEvent.description,
+                participants: '' 
+            }, user.email);
+            
+            alert("Added to your calendar!");
+            setRefreshKey(prev => prev + 1);
+        } catch (err) {
+            console.error("Failed to add feed event", err);
         }
     };
 
@@ -153,8 +190,54 @@ const Dashboard = () => {
                     + New Event
                 </Button>
             </div>
+
+            {/* AI Daily Briefing (Only shows if logged in) */}
+            {user && (
+                <div style={{
+                    background: 'linear-gradient(135deg, rgba(79, 70, 229, 0.1), rgba(168, 85, 247, 0.1))',
+                    border: '1px solid rgba(168, 85, 247, 0.2)',
+                    borderRadius: '12px',
+                    padding: '16px 20px',
+                    marginBottom: '24px',
+                    display: 'flex',
+                    gap: '12px',
+                    alignItems: 'flex-start'
+                }}>
+                    <span style={{ fontSize: '1.5rem', marginTop: '2px' }}>✨</span>
+                    <div>
+                        <h4 style={{ margin: '0 0 8px 0', fontSize: '1.1rem', fontWeight: '600', color: '#4F46E5' }}>
+                            Daily Briefing
+                        </h4>
+                        {isLoadingSummary ? (
+                            <p style={{ margin: 0, color: '#64748b', fontSize: '0.95rem' }}>
+                                Asking Gemini...
+                            </p>
+                        ) : (
+                            <div className="ai-markdown-content" style={{ color: '#334155', fontSize: '0.95rem', lineHeight: '1.6' }}>
+                                <ReactMarkdown>{aiSummary}</ReactMarkdown>
+                            </div>
+                        )}
+                    </div>
+                </div>
+            )}
             
-            <PlanMateCalendar userEmail={user?.username || user?.email} />
+            {/* PLANMATE 2.0 TWO-COLUMN LAYOUT (Shows for everyone) */}
+            <div style={{ 
+                display: 'grid', 
+                gridTemplateColumns: '350px 1fr',
+                gap: '24px',
+                alignItems: 'start'
+            }}>
+                {/* Left Column: The Discovery Feed */}
+                <div style={{ height: '700px' }}> 
+                    <DiscoveryFeed onAddEvent={handleAddFromFeed} />
+                </div>
+
+                {/* Right Column: The Calendar */}
+                <div style={{ minWidth: 0, height: '700px' }}>
+                    <PlanMateCalendar userEmail={user?.username || user?.email} refreshKey={refreshKey} />
+                </div>
+            </div>
 
             <Modal show={showModal} onHide={handleCloseModal} contentClassName="modern-modal" centered>
                 <Modal.Header closeButton>
