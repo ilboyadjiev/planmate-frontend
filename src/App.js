@@ -1,20 +1,20 @@
 import { React } from 'react';
 import { BrowserRouter as Router, Route, Routes, Link } from 'react-router-dom';
-import Home from './Home';
-import Register from './Register';
-import Login from './Login';
-import Dashboard from './Dashboard';
-import EditProfile from './EditProfile';
-import FriendsList from './FriendsList';
+import Home from './pages/Home';
+import Register from './pages/Register';
+import Login from './pages/Login';
+import Dashboard from './pages/Dashboard';
+import EditProfile from './pages/EditProfile';
+import FriendsList from './pages/FriendsList';
 import 'bootstrap/dist/css/bootstrap.min.css';
-import { AuthProvider } from './AuthContext';
-import Navbar from './Navbar';
-import ProtectedRoute from './ProtectedRoute';
-import CookieBanner from './CookieBanner';
-import Impressum from './legal/Impressum';
-import Privacy from './legal/Privacy';
+import { AuthProvider } from './context/AuthContext';
+import Navbar from './components/Navbar';
+import ProtectedRoute from './components/ProtectedRoute';
+import CookieBanner from './components/CookieBanner';
+import Impressum from './pages/legal/Impressum';
+import Privacy from './pages/legal/Privacy';
 import { GoogleOAuthProvider } from '@react-oauth/google';
-import config from './config';
+import config from './config/config';
 
 function App() {
   

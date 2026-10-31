@@ -2,22 +2,29 @@
 @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
 
 :root {
-  --primary: #4F46E5;
-  --primary-hover: #4338CA;
-  --bg-color: #F9FAFB;
-  --surface: #FFFFFF;
-  --text-main: #111827;
-  --text-muted: #6B7280;
-  --border: #E5E7EB;
+  --primary: #F06A25;
+  --primary-hover: #D95616;
+  --secondary: #4F46E5;
+  --secondary-hover: #4338CA;
+  
+  --bg-color: #0B0F19;
+  --surface: #161B2B;
+  
+  --text-main: #F3F4F6;
+  --text-muted: #9CA3AF;
+  --border: rgba(255, 255, 255, 0.1);
   --radius: 12px;
-  --shadow-sm: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
-  --shadow-md: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+  --shadow-sm: 0 1px 2px 0 rgba(0, 0, 0, 0.3);
+  --shadow-md: 0 4px 12px rgba(0, 0, 0, 0.4);
 }
 
 body {
   margin: 0;
-  font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
-  background-color: var(--bg-color);
+  font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+  
+  background: linear-gradient(135deg, #0B0F19 0%, #151A2D 100%);
+  background-attachment: fixed;
+  
   color: var(--text-main);
   -webkit-font-smoothing: antialiased;
 }
@@ -29,7 +36,8 @@ body {
 input.form-control, 
 input[type="text"], 
 input[type="email"], 
-input[type="password"] {
+input[type="password"],
+textarea.form-control {
   box-sizing: border-box;
   width: 100%;
   border: 1px solid var(--border);
@@ -38,14 +46,42 @@ input[type="password"] {
   font-size: 15px;
   transition: all 0.2s ease;
   box-shadow: var(--shadow-sm);
+  background-color: rgba(255, 255, 255, 0.05) !important;
+  color: var(--text-main) !important;
+  border: 1px solid var(--border) !important;
 }
 
 input.form-control:focus,
 input[type="text"]:focus,
 input[type="email"]:focus {
+  background-color: rgba(255, 255, 255, 0.08) !important;
+  border-color: var(--primary) !important;
+  box-shadow: 0 0 0 3px rgba(240, 106, 37, 0.2) !important;
   outline: none;
+  color: var(--text-main) !important;
+}
+
+input.form-control::placeholder,
+textarea.form-control::placeholder {
+  color: rgba(255, 255, 255, 0.3) !important;
+  opacity: 1;
+}
+
+.form-switch .form-check-input {
+  background-color: rgba(255, 255, 255, 0.15);
+  border-color: rgba(255, 255, 255, 0.1);
+  background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='-4 -4 8 8'%3e%3ccircle r='3' fill='rgba%28255, 255, 255, 0.6%29'/%3e%3c/svg%3e");
+}
+
+.form-switch .form-check-input:checked {
+  background-color: var(--primary);
   border-color: var(--primary);
-  box-shadow: 0 0 0 3px rgba(79, 70, 229, 0.2);
+  background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='-4 -4 8 8'%3e%3ccircle r='3' fill='%23fff'/%3e%3c/svg%3e");
+}
+
+.form-switch .form-check-input:focus {
+  box-shadow: 0 0 0 3px rgba(240, 106, 37, 0.2);
+  border-color: var(--primary);
 }
 
 button.btn-primary,
@@ -129,7 +165,7 @@ button.btn-primary:hover,
   display: flex;
   justify-content: center;
   align-items: center;
-  background: radial-gradient(circle at top right, #EEF2FF 0%, var(--bg-color) 60%);
+  background: radial-gradient(circle at top right, rgba(79, 70, 229, 0.15) 0%, transparent 60%);
   padding: 20px;
   animation: fadeUp 0.6s ease-out;
 }
@@ -190,4 +226,82 @@ button.btn-primary:hover,
 
 .friend-search-item:hover {
   background: rgba(79, 70, 229, 0.2);
+}
+
+/* --- Dashboard Layout & Responsive Drawer --- */
+.dashboard-layout {
+  display: grid;
+  grid-template-columns: 350px 1fr;
+  gap: 24px;
+  align-items: start;
+}
+
+.mobile-calendar-toggle,
+.drawer-header,
+.drawer-overlay {
+  display: none;
+}
+
+/* Mobile Breakpoint */
+@media (max-width: 900px) {
+  .dashboard-layout {
+    display: block; /* Break the grid so Discovery Feed takes full width */
+  }
+
+  .mobile-calendar-toggle {
+    display: inline-flex;
+    padding: 8px 16px;
+    font-size: 0.9rem;
+  }
+
+  /* The Sliding Drawer */
+  .dashboard-calendar-drawer {
+    position: fixed;
+    top: 0;
+    right: -100%;
+    width: 90%;
+    max-width: 650px;
+    height: 100vh;
+    background-color: var(--bg-color);
+    z-index: 1050;
+    transition: right 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    box-shadow: -5px 0 25px rgba(0, 0, 0, 0.7);
+    padding: 20px;
+    overflow-y: auto;
+  }
+
+  .dashboard-calendar-drawer.open {
+    right: 0;
+  }
+
+  .drawer-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 16px;
+    padding-bottom: 12px;
+    border-bottom: 1px solid var(--border);
+  }
+
+  .close-drawer-btn {
+    background: transparent;
+    border: none;
+    color: var(--text-muted);
+    font-size: 1.5rem;
+    cursor: pointer;
+    line-height: 1;
+  }
+
+  /* Dimmed Background Overlay */
+  .drawer-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100vh;
+    background: rgba(0, 0, 0, 0.6);
+    backdrop-filter: blur(2px);
+    z-index: 1040;
+    display: block;
+  }
 }

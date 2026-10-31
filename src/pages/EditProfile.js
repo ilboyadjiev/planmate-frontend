@@ -1,7 +1,7 @@
 import React, { useContext, useEffect, useState } from 'react';
 import axios from 'axios';
-import config from './config';
-import { AuthContext } from './AuthContext';
+import config from '../config/config';
+import { AuthContext } from '../context/AuthContext';
 import { useGoogleLogin } from '@react-oauth/google';
 
 const EditProfile = () => {

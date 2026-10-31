@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useContext } from 'react';
 import axios from 'axios';
-import config from './config';
-import { AuthContext } from './AuthContext';
+import config from '../config/config';
+import { AuthContext } from '../context/AuthContext';
 
 const FriendsList = () => {
     const { user } = useContext(AuthContext);

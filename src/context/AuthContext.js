@@ -1,12 +1,12 @@
 import React, { createContext, useState, useEffect, useRef } from 'react';
 import axios from 'axios';
-import config from './config';
+import config from '../config/config';
 
 export const AuthContext = createContext();
 
 export const AuthProvider = ({ children }) => {
     const [authToken, setAuthToken] = useState(localStorage.getItem('authToken') || null);
-    const [refreshToken, setRefreshToken] = useState(localStorage.getItem('refreshToken') || null);
+    const [, setRefreshToken] = useState(localStorage.getItem('refreshToken') || null);
     const [user, setUser] = useState(JSON.parse(localStorage.getItem('user')) || null);
     
     const interceptorId = useRef(null);
@@ -97,6 +97,21 @@ export const AuthProvider = ({ children }) => {
         };
         
         await fetchUserData(finalEmail, fallbackUser.email);
+
+        const guestId = localStorage.getItem('planmate_guest_id');
+        if (guestId) {
+            try {
+                await axios.post(`${config.baseUrl}/api/v2/events/merge`, null, {
+                    params: { 
+                        guestId: guestId, 
+                        realUserId: finalEmail 
+                    }
+                });
+                localStorage.removeItem('planmate_guest_id'); 
+            } catch (mergeError) {
+                console.error("Failed to merge guest events:", mergeError);
+            }
+        }
     };
 
     const login = async (email, password) => {

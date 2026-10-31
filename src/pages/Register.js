@@ -1,8 +1,8 @@
 import React, { useState, useContext } from 'react';
-import { AuthContext } from './AuthContext';
+import { AuthContext } from '../context/AuthContext';
 import { useNavigate } from 'react-router-dom';
 import axios from 'axios';
-import config from './config';
+import config from '../config/config';
 
 const Register = () => {
     const [formData, setFormData] = useState({

@@ -19,6 +19,39 @@
     background: #1f1f22;
 }
 
+.rbc-time-view,
+.rbc-time-header,
+.rbc-time-content,
+.rbc-time-gutter,
+.rbc-timeslot-group,
+.rbc-time-header-content,
+.rbc-day-bg,
+.rbc-month-row,
+.rbc-header {
+    border-color: rgba(255, 255, 255, 0.08) !important;
+}
+
+.rbc-time-slot {
+    border-top: 1px dashed rgba(255, 255, 255, 0.03) !important;
+}
+
+.rbc-time-gutter .rbc-timeslot-group {
+    border-bottom: none !important;
+}
+
+.rbc-label {
+    color: var(--text-muted);
+    font-size: 0.8rem;
+    padding: 0 8px;
+    font-weight: 500;
+}
+
+/* Style the "Current Time" red line to match your brand Orange */
+.rbc-current-time-indicator {
+    background-color: var(--primary) !important;
+    height: 2px !important;
+}
+
 .rbc-day-bg + .rbc-day-bg, .rbc-month-row + .rbc-month-row, .rbc-header + .rbc-header {
     border-color: rgba(255, 255, 255, 0.05) !important;
 }

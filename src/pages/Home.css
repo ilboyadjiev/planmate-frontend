@@ -4,7 +4,7 @@
   display: flex;
   justify-content: center;
   align-items: center;
-  background: radial-gradient(circle at top right, #EEF2FF 0%, var(--bg-color) 60%);
+  background: radial-gradient(circle at top right, rgba(79, 70, 229, 0.15) 0%, transparent 60%);
   padding: 20px;
 }
 
@@ -57,30 +57,32 @@
   border: none;
   cursor: pointer;
   transition: all 0.2s;
-  box-shadow: 0 4px 14px 0 rgba(79, 70, 229, 0.39);
+  box-shadow: 0 4px 14px 0 rgba(240, 106, 37, 0.35); 
 }
 
 .btn-modern-primary:hover {
   background-color: var(--primary-hover);
   transform: translateY(-2px);
-  box-shadow: 0 6px 20px rgba(79, 70, 229, 0.4);
+  box-shadow: 0 6px 20px rgba(240, 106, 37, 0.5);
 }
 
 .btn-modern-secondary {
-  background-color: white;
-  color: var(--text-main);
+  background-color: var(--secondary);
+  color: white;
   padding: 14px 28px;
   border-radius: 30px;
   font-size: 1.1rem;
   font-weight: 600;
-  border: 1px solid var(--border);
+  border: none;
   cursor: pointer;
   transition: all 0.2s;
+  box-shadow: 0 4px 14px 0 rgba(79, 70, 229, 0.3);
 }
 
 .btn-modern-secondary:hover {
-  background-color: #F3F4F6;
-  border-color: #D1D5DB;
+  background-color: var(--secondary-hover);
+  transform: translateY(-2px);
+  box-shadow: 0 6px 20px rgba(79, 70, 229, 0.4);
 }
 
 @keyframes fadeUp {
@@ -108,7 +110,7 @@
 .btn-modern-download {
   display: inline-flex;
   align-items: center;
-  background-color: #111827;
+  background-color: rgba(255, 255, 255, 0.08);
   color: white;
   padding: 12px 24px;
   border-radius: 12px;
@@ -117,6 +119,7 @@
   text-decoration: none;
   transition: all 0.2s;
   box-shadow: var(--shadow-sm);
+  border: 1px solid rgba(255, 255, 255, 0.1);
 }
 
 .btn-modern-download:hover {

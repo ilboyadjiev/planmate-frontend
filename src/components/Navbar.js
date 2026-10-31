@@ -1,7 +1,7 @@
 import React, { useContext, useState } from 'react';
 import { Link, NavLink, useNavigate } from 'react-router-dom';
-import { AuthContext } from './AuthContext';
-import planmateIcon from './planmate-icon.png';
+import { AuthContext } from '../context/AuthContext';
+import planmateIcon from '../assets/planmate-icon.png';
 import './Navbar.css';
 import { Modal, Button } from 'react-bootstrap';
 
