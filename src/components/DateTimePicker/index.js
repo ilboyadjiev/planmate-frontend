@@ -85,7 +85,7 @@ const DateTimePicker = ({ start, end, onChange }) => {
                             style={{ 
                                 padding: '8.5px 12px', border: '1px solid var(--border)', borderRadius: '8px', 
                                 background: 'rgba(255, 255, 255, 0.05)', cursor: 'pointer', textAlign: 'center', 
-                                fontWeight: '600', color: 'var(--text-main)', userSelect: 'none', height: '40px',
+                                fontWeight: '600', color: '#818cf8', userSelect: 'none', height: '40px',
                                 display: 'flex', alignItems: 'center', justifyContent: 'center',
                                 transition: 'border 0.2s'
                             }}

@@ -18,11 +18,12 @@ const SlidingTimePicker = ({ show, onHide, value, onChange }) => {
                     Select Time
                 </h4>
                 
-                <div style={{ border: '1px solid rgba(255,255,255,0.05)', borderRadius: '12px', overflow: 'hidden' }}>
+                <div style={{ display: 'flex', justifyContent: 'center', border: '1px solid rgba(255,255,255,0.05)', borderRadius: '12px', overflow: 'hidden' }}>
                     <MultiSectionDigitalClock
                         value={tempValue}
                         onChange={(newValue) => setTempValue(newValue)}
                         ampm={true}
+                        sx={{ width: 'max-content', margin: '0 auto' }}
                     />
                 </div>
 

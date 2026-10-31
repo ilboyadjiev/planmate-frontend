@@ -5,8 +5,11 @@ import moment from 'moment';
 
 const DiscoveryFeed = ({ onAddEvent }) => {
     const [feedEvents, setFeedEvents] = useState([]);
-    const [activeTag, setActiveTag] = useState('#munich'); // Default local tag
+    const [activeTag, setActiveTag] = useState('#munich');
     const [loading, setLoading] = useState(false);
+    
+    const [page, setPage] = useState(0);
+    const [totalPages, setTotalPages] = useState(0);
 
     const popularTags = ['#munich', '#gaming', '#tech', '#music', '#food'];
 
@@ -15,9 +18,14 @@ const DiscoveryFeed = ({ onAddEvent }) => {
             setLoading(true);
             try {
                 const res = await axios.get(`${config.baseUrl}/api/v2/events/feed`, {
-                    params: { tag: activeTag }
+                    params: { 
+                        tag: activeTag,
+                        page: page,
+                        size: 3
+                    }
                 });
-                setFeedEvents(res.data);
+                setFeedEvents(res.data.events);
+                setTotalPages(res.data.totalPages);
             } catch (err) {
                 console.error("Could not fetch discovery feed", err);
             } finally {
@@ -26,7 +34,12 @@ const DiscoveryFeed = ({ onAddEvent }) => {
         };
 
         fetchFeed();
-    }, [activeTag]);
+    }, [activeTag, page]);
+
+    const handleTagChange = (tag) => {
+        setActiveTag(tag);
+        setPage(0);
+    };
 
     return (
         <div style={{ 
@@ -44,7 +57,7 @@ const DiscoveryFeed = ({ onAddEvent }) => {
                 {popularTags.map(tag => (
                     <span 
                         key={tag} 
-                        onClick={() => setActiveTag(tag)}
+                        onClick={() => handleTagChange(tag)}
                         style={{
                             padding: '4px 12px',
                             borderRadius: '20px',
@@ -62,15 +75,15 @@ const DiscoveryFeed = ({ onAddEvent }) => {
                 ))}
             </div>
 
-            {/* Event List */}
-            <div style={{ overflowY: 'auto', flex: 1, paddingRight: '4px' }}>
+            {/* Event List Container */}
+            <div style={{ overflowY: 'auto', flex: 1, paddingRight: '4px', minHeight: '350px' }}>
                 {loading ? (
                     <p style={{ color: 'var(--text-muted)' }}>Loading events...</p>
                 ) : feedEvents.length === 0 ? (
                     <p style={{ color: 'var(--text-muted)' }}>No upcoming events for {activeTag}.</p>
                 ) : (
                     feedEvents.map(event => (
-                        <div key={event.id} style={{ 
+                        <div key={event.id || event._id} style={{ 
                             padding: '16px', 
                             marginBottom: '12px', 
                             borderRadius: '8px', 
@@ -104,6 +117,36 @@ const DiscoveryFeed = ({ onAddEvent }) => {
                     ))
                 )}
             </div>
+
+            {!loading && totalPages > 0 && (
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginTop: '16px', paddingTop: '16px', borderTop: '1px solid var(--border)' }}>
+                    <button 
+                        onClick={() => setPage(p => Math.max(0, p - 1))}
+                        disabled={page === 0}
+                        style={{ 
+                            background: 'transparent', border: 'none', color: page === 0 ? 'var(--text-muted)' : 'var(--primary)', 
+                            fontWeight: '600', cursor: page === 0 ? 'not-allowed' : 'pointer', opacity: page === 0 ? 0.5 : 1 
+                        }}
+                    >
+                        &larr; Prev
+                    </button>
+                    
+                    <span style={{ color: 'var(--text-muted)', fontSize: '0.85rem' }}>
+                        {page + 1} / {totalPages}
+                    </span>
+                    
+                    <button 
+                        onClick={() => setPage(p => Math.min(totalPages - 1, p + 1))}
+                        disabled={page >= totalPages - 1}
+                        style={{ 
+                            background: 'transparent', border: 'none', color: page >= totalPages - 1 ? 'var(--text-muted)' : 'var(--primary)', 
+                            fontWeight: '600', cursor: page >= totalPages - 1 ? 'not-allowed' : 'pointer', opacity: page >= totalPages - 1 ? 0.5 : 1 
+                        }}
+                    >
+                        Next &rarr;
+                    </button>
+                </div>
+            )}
         </div>
     );
 };

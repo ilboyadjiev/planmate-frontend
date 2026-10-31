@@ -58,64 +58,65 @@ const DateTimePicker = ({ start, end, onChange }) => {
         <div style={{ background: 'var(--surface)', padding: '16px', borderRadius: '12px', border: '1px solid var(--border)', marginBottom: '24px' }}>
             
             {/* Start Date & Time */}
-            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '16px' }}>
-                <Form.Group>
-                    <Form.Label style={{ fontWeight: '600', fontSize: '0.9rem', color: 'var(--text-muted)' }}>Kick off at:</Form.Label>
+            <Form.Group style={{ marginBottom: '16px' }}>
+                <Form.Label style={{ fontWeight: '600', fontSize: '0.9rem', color: 'var(--text-muted)' }}>Kick off at:</Form.Label>
+                <div style={{ display: 'flex', gap: '12px' }}>
                     <Form.Control 
                         type="date" 
                         value={getDateString(start)} 
                         onChange={handleStartDateChange} 
-                        style={{ borderRadius: '8px', cursor: 'pointer' }} 
+                        style={{ borderRadius: '8px', cursor: 'pointer', flex: 1 }} 
                     />
-                </Form.Group>
-
-                <Form.Group>
-                    <Form.Label style={{ fontWeight: '600', fontSize: '0.9rem', color: 'var(--text-muted)' }}></Form.Label>
                     <div 
                         onClick={() => setActiveClock('start')}
                         style={{ 
-                            padding: '6px 12px', border: '1px solid var(--border)', borderRadius: '8px', 
-                            background: 'var(--background)', cursor: 'pointer', textAlign: 'center', 
-                            fontWeight: '600', color: '#4F46E5', userSelect: 'none' 
+                            padding: '0 16px', border: '1px solid var(--border)', borderRadius: '8px', 
+                            background: 'var(--background)', cursor: 'pointer', display: 'flex', 
+                            alignItems: 'center', justifyContent: 'center',
+                            fontWeight: '600', color: '#4F46E5', userSelect: 'none', minWidth: '100px', whiteSpace: 'nowrap'
                         }}
                     >
                         {formatTime12Hour(start)}
                     </div>
-                </Form.Group>
-            </div>
+                </div>
+            </Form.Group>
 
             <hr style={{ borderColor: 'var(--border)', margin: '16px 0' }} />
             
             {/* End Date & Time */}
-            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '16px' }}>
-                <Form.Group>
-                    <Form.Label style={{ fontWeight: '600', fontSize: '0.9rem', color: 'var(--text-muted)' }}>Wrap it up by:</Form.Label>
+            <Form.Group>
+                <Form.Label style={{ fontWeight: '600', fontSize: '0.9rem', color: 'var(--text-muted)' }}>Wrap it up by:</Form.Label>
+                <div style={{ display: 'flex', gap: '12px' }}>
                     <Form.Control 
                         type="date" 
                         value={getDateString(end)} 
                         onChange={handleEndDateChange} 
-                        style={{ borderRadius: '8px', cursor: 'pointer' }} 
+                        style={{ borderRadius: '8px', cursor: 'pointer', flex: 1 }} 
                     />
-                </Form.Group>
-
-                <Form.Group>
-                    <Form.Label style={{ fontWeight: '600', fontSize: '0.9rem', color: 'var(--text-muted)' }}></Form.Label>
                     <div 
                         onClick={() => setActiveClock('end')}
                         style={{ 
-                            padding: '6px 12px', border: '1px solid var(--border)', borderRadius: '8px', 
-                            background: 'var(--background)', cursor: 'pointer', textAlign: 'center', 
-                            fontWeight: '600', color: 'var(--text-main)', userSelect: 'none' 
+                            padding: '0 16px', border: '1px solid var(--border)', borderRadius: '8px', 
+                            background: 'var(--background)', cursor: 'pointer', display: 'flex', 
+                            alignItems: 'center', justifyContent: 'center',
+                            fontWeight: '600', color: 'var(--text-main)', userSelect: 'none', minWidth: '100px', whiteSpace: 'nowrap'
                         }}
                     >
                         {formatTime12Hour(end)}
                     </div>
-                </Form.Group>
-            </div>
+                </div>
+            </Form.Group>
 
             {/* Shared Floating MUI Android Clock Modal */}
             <Modal show={!!activeClock} onHide={() => setActiveClock(null)} centered size="sm">
-                <div style={{ background: '#fff', borderRadius: '8px', overflow: 'hidden' }}>
+                <div style={{ 
+                    background: 'var(--surface)',
+                    borderRadius: '8px', 
+                    overflow: 'hidden',
+                    display: 'flex',
+                    justifyContent: 'center',
+                    width: '100%'
+                }}>
                     <LocalizationProvider dateAdapter={AdapterDayjs}>
                         <StaticTimePicker 
                             displayStaticWrapperAs="mobile"
@@ -126,10 +127,27 @@ const DateTimePicker = ({ start, end, onChange }) => {
                             slotProps={{
                                 toolbar: { hidden: false }, 
                             }}
+                            sx={{
+                                width: '100%',
+                                backgroundColor: 'transparent',
+                                '& .MuiPickersLayout-contentWrapper': {
+                                    display: 'flex',
+                                    justifyContent: 'center',
+                                    width: '100%'
+                                },
+                                '& .MuiMultiSectionDigitalClock-root': {
+                                    width: 'max-content',
+                                    margin: '0 auto'
+                                },
+                                '& .MuiPickersToolbar-root': {
+                                    alignItems: 'center'
+                                }
+                            }}
                         />
                     </LocalizationProvider>
                 </div>
             </Modal>
+
         </div>
     );
 };
