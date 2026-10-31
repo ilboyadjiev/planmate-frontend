@@ -1,4 +1,4 @@
-import React, { useState, useRef } from 'react';
+import React, { useState, useRef, useEffect } from 'react';
 import { Form } from 'react-bootstrap';
 import axios from 'axios';
 import config from '../config/config';
@@ -7,12 +7,27 @@ const LocationSearch = ({ initialQuery, onSelectLocation }) => {
     const [query, setQuery] = useState(initialQuery || '');
     const [suggestions, setSuggestions] = useState([]);
     const [showDropdown, setShowDropdown] = useState(false);
+    
     const searchTimeoutRef = useRef(null);
+    const wrapperRef = useRef(null);
+
+    useEffect(() => {
+        function handleClickOutside(event) {
+            if (wrapperRef.current && !wrapperRef.current.contains(event.target)) {
+                setShowDropdown(false);
+            }
+        }
+        
+        document.addEventListener("mousedown", handleClickOutside);
+        return () => {
+            document.removeEventListener("mousedown", handleClickOutside);
+        };
+    }, []);
 
     const handleSearch = (e) => {
         const value = e.target.value;
         setQuery(value);
-        onSelectLocation(null); // Clear formal location until they select a new one
+        onSelectLocation(null); 
 
         if (searchTimeoutRef.current) clearTimeout(searchTimeoutRef.current);
 
@@ -44,11 +59,12 @@ const LocationSearch = ({ initialQuery, onSelectLocation }) => {
     };
 
     return (
-        <div style={{ position: 'relative' }}>
+        <div ref={wrapperRef} style={{ position: 'relative' }}>
             <Form.Control 
                 type="text" 
                 value={query} 
                 onChange={handleSearch} 
+                onFocus={() => { if (suggestions.length > 0) setShowDropdown(true); }} // Re-open on focus if results exist
                 placeholder="Search location..." 
                 autoComplete="off" 
             />
