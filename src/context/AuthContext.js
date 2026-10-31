@@ -6,7 +6,6 @@ export const AuthContext = createContext();
 
 export const AuthProvider = ({ children }) => {
     const [authToken, setAuthToken] = useState(localStorage.getItem('authToken') || null);
-    const [, setRefreshToken] = useState(localStorage.getItem('refreshToken') || null);
     const [user, setUser] = useState(JSON.parse(localStorage.getItem('user')) || null);
     
     const interceptorId = useRef(null);
@@ -22,6 +21,21 @@ export const AuthProvider = ({ children }) => {
             axios.interceptors.response.eject(interceptorId.current);
         }
 
+        // Variables for concurrency handling
+        let isRefreshing = false;
+        let failedQueue = [];
+
+        const processQueue = (error, token = null) => {
+            failedQueue.forEach(prom => {
+                if (error) {
+                    prom.reject(error);
+                } else {
+                    prom.resolve(token);
+                }
+            });
+            failedQueue = [];
+        };
+
         interceptorId.current = axios.interceptors.response.use(
             (response) => response, 
             async (error) => {
@@ -34,7 +48,18 @@ export const AuthProvider = ({ children }) => {
                         return Promise.reject(error);
                     }
 
+                    // If a refresh is already in progress, queue this request until it finishes
+                    if (isRefreshing) {
+                        return new Promise(function(resolve, reject) {
+                            failedQueue.push({ resolve, reject });
+                        }).then(token => {
+                            originalRequest.headers['Authorization'] = `Bearer ${token}`;
+                            return axios(originalRequest);
+                        }).catch(err => Promise.reject(err));
+                    }
+
                     originalRequest._retry = true; 
+                    isRefreshing = true;
 
                     try {
                         const currentRefreshToken = localStorage.getItem('refreshToken');
@@ -49,16 +74,21 @@ export const AuthProvider = ({ children }) => {
                         const newRefreshToken = res.data.refreshToken || currentRefreshToken;
 
                         setAuthToken(newAccessToken);
-                        setRefreshToken(newRefreshToken);
                         localStorage.setItem('authToken', newAccessToken);
                         localStorage.setItem('refreshToken', newRefreshToken);
 
                         axios.defaults.headers.common['Authorization'] = `Bearer ${newAccessToken}`;
                         originalRequest.headers['Authorization'] = `Bearer ${newAccessToken}`;
 
+                        // Release the queued requests
+                        processQueue(null, newAccessToken);
+                        isRefreshing = false;
+
                         return axios(originalRequest);
                     } catch (refreshError) {
                         console.error("Session expired entirely. Logging out.");
+                        processQueue(refreshError, null);
+                        isRefreshing = false;
                         logout();
                         return Promise.reject(refreshError);
                     }
@@ -73,17 +103,33 @@ export const AuthProvider = ({ children }) => {
                 axios.interceptors.response.eject(interceptorId.current);
             }
         };
-    // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [authToken]); 
+
+    const fetchUserData = async (email, fallbackUser) => {
+        try {
+            const response = await axios.get(`${config.baseUrl}/api/v1/users/profile`, { params: { email: email } });
+            if (response.data && typeof response.data === 'object' && Object.keys(response.data).length > 0) {
+                setUser(response.data); 
+                localStorage.setItem('user', JSON.stringify(response.data)); 
+            } else {
+                throw new Error("Server returned empty user data");
+            }
+        } catch (error) {
+            console.warn('Using fallback user data.');
+            if (fallbackUser) {
+                setUser(fallbackUser);
+                localStorage.setItem('user', JSON.stringify(fallbackUser));
+            }
+        }
+    };
 
     const handleAuthSuccess = async (response, providedEmail = null) => {
         const access = response.data.accessToken || response.data.jwt;
         const refresh = response.data.refreshToken;
         
         setAuthToken(access);
-        setRefreshToken(refresh);
         localStorage.setItem('authToken', access);
-        localStorage.setItem('refreshToken', refresh);
+        if (refresh) localStorage.setItem('refreshToken', refresh);
         
         axios.defaults.headers.common['Authorization'] = `Bearer ${access}`;
         
@@ -96,16 +142,13 @@ export const AuthProvider = ({ children }) => {
             firstName: response.data.firstName || 'User'
         };
         
-        await fetchUserData(finalEmail, fallbackUser.email);
+        await fetchUserData(finalEmail, fallbackUser);
 
         const guestId = localStorage.getItem('planmate_guest_id');
         if (guestId) {
             try {
                 await axios.post(`${config.baseUrl}/api/v2/events/merge`, null, {
-                    params: { 
-                        guestId: guestId, 
-                        realUserId: finalEmail 
-                    }
+                    params: { guestId: guestId, realUserId: finalEmail }
                 });
                 localStorage.removeItem('planmate_guest_id'); 
             } catch (mergeError) {
@@ -116,19 +159,13 @@ export const AuthProvider = ({ children }) => {
 
     const login = async (email, password) => {
         const response = await axios.post(`${config.baseUrl}/api/v1/auth/login`, { 
-            username: email, 
-            email: email, 
-            password: password 
+            username: email, email: email, password: password 
         });
-        
         await handleAuthSuccess(response, email);
     };
 
     const googleLogin = async (googleCredential) => {
-        const response = await axios.post(`${config.baseUrl}/api/v1/auth/google`, { 
-            token: googleCredential 
-        });
-        
+        const response = await axios.post(`${config.baseUrl}/api/v1/auth/google`, { token: googleCredential });
         await handleAuthSuccess(response);
     };
 
@@ -139,7 +176,6 @@ export const AuthProvider = ({ children }) => {
 
     const logout = () => {
         setAuthToken(null);
-        setRefreshToken(null);
         setUser(null); 
         localStorage.removeItem('authToken');
         localStorage.removeItem('refreshToken');
@@ -147,16 +183,6 @@ export const AuthProvider = ({ children }) => {
         delete axios.defaults.headers.common['Authorization'];
         
         window.location.href = '/login';
-    };
-
-    const fetchUserData = async (email, fallbackUser) => {
-        try {
-            const response = await axios.get(`${config.baseUrl}/api/v1/users/${encodeURIComponent(email)}`);
-            setUser(response.data); 
-            localStorage.setItem('user', JSON.stringify(response.data)); 
-        } catch (error) {
-            console.warn('Using fallback user data.');
-        }
     };
 
     return (
