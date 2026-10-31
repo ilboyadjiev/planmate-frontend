@@ -1,4 +1,4 @@
-import React, { useEffect, useState, useContext } from 'react';
+import React, { useEffect, useState, useContext, useRef } from 'react';
 import axios from 'axios';
 import config from '../config/config';
 import './PlanMateCalendar.css'; 
@@ -22,19 +22,71 @@ const PlanMateCalendar = ({ userEmail, refreshKey, onSlotSelect }) => {
     
     const [aiSummary, setAiSummary] = useState('');
     const [isLoadingSummary, setIsLoadingSummary] = useState(false);
+    const fetchLock = useRef(false);
 
     const { user } = useContext(AuthContext);
 
-    // Fetch AI Summary
-    useEffect(() => {
-        if (user && user.id) {
-            setIsLoadingSummary(true);
-            axios.get(`${config.baseUrl}/api/v1/events/ai-summary`)
-                .then(res => setAiSummary(res.data))
-                .catch(() => setAiSummary("Unable to load summary."))
-                .finally(() => setIsLoadingSummary(false));
+    const fetchAiSummary = async (forceRefresh = false) => {
+        if (!user || !user.id) return;
+        
+        if (fetchLock.current) return;
+        
+        const today = new Date().toISOString().split('T')[0]; 
+        const cacheKey = `planmate_ai_summary_${user.username || user.email}`;
+
+        // Check local browser cache first
+        if (!forceRefresh) {
+            const cachedData = localStorage.getItem(cacheKey);
+            if (cachedData) {
+                try {
+                    const parsed = JSON.parse(cachedData);
+                    if (parsed.date === today) {
+                        setAiSummary(parsed.summary);
+                        return; 
+                    }
+                } catch (e) {
+                    console.error("Cache parsing error", e);
+                }
+            }
         }
+
+        // Fetch fresh data
+        fetchLock.current = true;
+        setIsLoadingSummary(true);
+        try {
+            const res = await axios.get(`${config.baseUrl}/api/v2/ai/summary`, {
+                params: { force: forceRefresh }
+            });
+            
+            const summaryText = res.data.summary;
+            setAiSummary(summaryText);
+            
+            // Log metadata for debugging
+            console.log(`AI Summary generated at: ${res.data.creationDate}`);
+            console.log(`Next refresh available at: ${res.data.nextAvailableRefresh}`);
+            console.log(`Remaining AI calls today: ${res.data.remainingDailyCalls}`);
+            
+            localStorage.setItem(cacheKey, JSON.stringify({ date: today, summary: summaryText }));
+        } catch (error) {
+            setAiSummary("Unable to load summary.");
+        } finally {
+            setIsLoadingSummary(false);
+            fetchLock.current = false;
+        }
+    };
+
+    // Trigger 1: Initial load
+    useEffect(() => {
+        fetchAiSummary(false);
     }, [user]);
+
+    // Trigger 2: An event was added from Dashboard or edited inside Calendar
+    useEffect(() => {
+        if (refreshKey > 0 || internalRefresh > 0) {
+            fetchAiSummary(true);
+        }
+    }, [refreshKey, internalRefresh]);
+
 
     // Fetch Events
     useEffect(() => {
