@@ -9,6 +9,7 @@ import { getGuestId } from '../services/guestService';
 import { AuthContext } from '../context/AuthContext';
 import EventModal from './EventModal';
 import ReactMarkdown from 'react-markdown';
+import CalendarToolbar from './CalendarToolbar';
 
 const localizer = momentLocalizer(moment);
 moment.updateLocale('en', { week: { dow: 1, doy: 1 } });
@@ -196,6 +197,9 @@ const PlanMateCalendar = ({ userEmail, refreshKey, onSlotSelect }) => {
             <Calendar
                 localizer={localizer}
                 events={events}
+                components={{
+                    toolbar: CalendarToolbar
+                }}
                 startAccessor="start" 
                 endAccessor="end"
                 style={{ height: 700 }}

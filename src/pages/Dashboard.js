@@ -95,7 +95,7 @@ const Dashboard = () => {
                     style={{ alignSelf: 'flex-start' }}
                 >
                     <div className="drawer-header">
-                        <h3 style={{ margin: 0, color: 'var(--text-main)', fontSize: '1.2rem', fontWeight: '700' }}>My Schedule</h3>
+                        <h3 style={{ margin: 0, color: 'var(--text-main)', fontSize: '1.2rem', fontWeight: '700' }}>📅 My Calendar</h3>
                         <button className="close-drawer-btn" onClick={() => setShowMobileCalendar(false)}>✕</button>
                     </div>
                     
