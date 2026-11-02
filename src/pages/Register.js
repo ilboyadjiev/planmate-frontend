@@ -1,8 +1,7 @@
 import React, { useState, useContext } from 'react';
 import { AuthContext } from '../context/AuthContext';
 import { useNavigate } from 'react-router-dom';
-import axios from 'axios';
-import config from '../config/config';
+import api from '../api/client';
 
 const Register = () => {
     const [formData, setFormData] = useState({
@@ -42,7 +41,7 @@ const Register = () => {
         const setStatus = type === 'email' ? setEmailStatus : setUserStatus;
         try {
             const endpoint = type === 'email' ? 'check-email-exists' : 'check-username-exists';
-            const response = await axios.get(`${config.baseUrl}/api/v1/auth/${endpoint}/${value}`);
+            const response = await api.get(`/v1/auth/${endpoint}/${encodeURIComponent(value)}`);
             setStatus(response.data.available ? 'success' : 'error');
         } catch (error) {
             setStatus('error');

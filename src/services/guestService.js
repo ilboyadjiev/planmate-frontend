@@ -5,7 +5,8 @@ export const getGuestId = () => {
     let guestId = localStorage.getItem(GUEST_KEY);
     
     if (!guestId) {
-        guestId = 'guest_' + Math.random().toString(36).substring(2, 15) + Math.random().toString(36).substring(2, 15);
+        // The guest id is the only credential for a guest's events, so it must be unguessable.
+        guestId = 'guest_' + crypto.randomUUID();
         localStorage.setItem(GUEST_KEY, guestId);
     }
     

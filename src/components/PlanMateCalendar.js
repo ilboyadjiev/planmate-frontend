@@ -1,6 +1,5 @@
-import React, { useEffect, useState, useContext, useRef } from 'react';
-import axios from 'axios';
-import config from '../config/config';
+import React, { useEffect, useState, useContext, useRef, useCallback } from 'react';
+import api from '../api/client';
 import './PlanMateCalendar.css'; 
 import { Calendar, momentLocalizer } from 'react-big-calendar';
 import moment from 'moment';
@@ -27,7 +26,7 @@ const PlanMateCalendar = ({ userEmail, refreshKey, onSlotSelect }) => {
 
     const { user } = useContext(AuthContext);
 
-    const fetchAiSummary = async (forceRefresh = false) => {
+    const fetchAiSummary = useCallback(async (forceRefresh = false) => {
         if (!user || !user.id) return;
         
         if (fetchLock.current) return;
@@ -55,17 +54,12 @@ const PlanMateCalendar = ({ userEmail, refreshKey, onSlotSelect }) => {
         fetchLock.current = true;
         setIsLoadingSummary(true);
         try {
-            const res = await axios.get(`${config.baseUrl}/api/v2/ai/summary`, {
+            const res = await api.get('/v2/ai/summary', {
                 params: { force: forceRefresh }
             });
             
             const summaryText = res.data.summary;
             setAiSummary(summaryText);
-            
-            // Log metadata for debugging
-            console.log(`AI Summary generated at: ${res.data.creationDate}`);
-            console.log(`Next refresh available at: ${res.data.nextAvailableRefresh}`);
-            console.log(`Remaining AI calls today: ${res.data.remainingDailyCalls}`);
             
             localStorage.setItem(cacheKey, JSON.stringify({ date: today, summary: summaryText }));
         } catch (error) {
@@ -74,31 +68,31 @@ const PlanMateCalendar = ({ userEmail, refreshKey, onSlotSelect }) => {
             setIsLoadingSummary(false);
             fetchLock.current = false;
         }
-    };
+    }, [user]);
 
     // Trigger 1: Initial load
     useEffect(() => {
         fetchAiSummary(false);
-    }, [user]);
+    }, [fetchAiSummary]);
 
     // Trigger 2: An event was added from Dashboard or edited inside Calendar
     useEffect(() => {
         if (refreshKey > 0 || internalRefresh > 0) {
             fetchAiSummary(true);
         }
-    }, [refreshKey, internalRefresh]);
+    }, [refreshKey, internalRefresh, fetchAiSummary]);
 
 
     // Fetch Events
     useEffect(() => {
         const fetchEvents = async () => {
             try {
-                const activeCreatorId = user ? (user.username || user.email) : getGuestId();
                 const start = moment(currentDate).subtract(1, 'months').startOf('month').toISOString();
                 const end = moment(currentDate).add(1, 'months').endOf('month').toISOString();
 
-                const response = await axios.get(`${config.baseUrl}/api/v2/events/range`, {
-                    params: { creatorId: activeCreatorId, start, end }
+                const response = await api.get('/v2/events/range', {
+                    // Logged-in users are identified by their token; guests by their guest id
+                    params: user ? { start, end } : { creatorId: getGuestId(), start, end }
                 });
 
                 setEvents(response.data.map(event => ({
@@ -139,7 +133,7 @@ const PlanMateCalendar = ({ userEmail, refreshKey, onSlotSelect }) => {
                 tags: formData.tags,
             };
     
-            await axios.put(`${config.baseUrl}/api/v2/events/${formData.id}`, eventToSave);
+            await api.put(`/v2/events/${formData.id}`, eventToSave);
             setShowModal(false);
             setInternalRefresh(prev => prev + 1);
         } catch (error) { console.error('Error updating event:', error); }

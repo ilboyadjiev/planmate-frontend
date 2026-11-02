@@ -1,5 +1,4 @@
-import axios from 'axios';
-import config from '../config/config';
+import api from '../api/client';
 
 export const createEvent = async (eventData, userEmail) => {
     try {
@@ -19,7 +18,7 @@ export const createEvent = async (eventData, userEmail) => {
             tags: eventData.tags,
         };
 
-        await axios.post(`${config.baseUrl}/api/v2/events`, eventToSave);
+        await api.post('/v2/events', eventToSave);
     } catch (error) {
         console.error('Error creating new event:', error);
         throw error;

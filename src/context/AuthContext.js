@@ -1,188 +1,104 @@
-import React, { createContext, useState, useEffect, useRef } from 'react';
-import axios from 'axios';
-import config from '../config/config';
+import React, { createContext, useState, useEffect, useCallback } from 'react';
+import { useNavigate } from 'react-router-dom';
+import api, { tokenStore, configureAuthHandlers, accessTokenFrom } from '../api/client';
 
 export const AuthContext = createContext();
 
+const USER_KEY = 'user';
+const GUEST_KEY = 'planmate_guest_id';
+
+const readStoredUser = () => {
+    try {
+        return JSON.parse(localStorage.getItem(USER_KEY));
+    } catch {
+        return null;
+    }
+};
+
+// Must be rendered inside <Router> (uses useNavigate).
 export const AuthProvider = ({ children }) => {
-    const [authToken, setAuthToken] = useState(localStorage.getItem('authToken') || null);
-    const [user, setUser] = useState(JSON.parse(localStorage.getItem('user')) || null);
-    
-    const interceptorId = useRef(null);
+    const [authToken, setAuthToken] = useState(tokenStore.getAccess());
+    const [user, setUser] = useState(readStoredUser);
+    const navigate = useNavigate();
+
+    const clearSession = useCallback(() => {
+        tokenStore.clear();
+        localStorage.removeItem(USER_KEY);
+        setAuthToken(null);
+        setUser(null);
+    }, []);
+
+    const logout = useCallback(() => {
+        clearSession();
+        navigate('/login');
+    }, [clearSession, navigate]);
 
     useEffect(() => {
-        if (authToken) {
-            axios.defaults.headers.common['Authorization'] = `Bearer ${authToken}`;
-        } else {
-            delete axios.defaults.headers.common['Authorization'];
-        }
+        configureAuthHandlers({
+            onTokenRefreshed: setAuthToken,
+            onSessionExpired: logout,
+        });
+    }, [logout]);
 
-        if (interceptorId.current !== null) {
-            axios.interceptors.response.eject(interceptorId.current);
-        }
-
-        // Variables for concurrency handling
-        let isRefreshing = false;
-        let failedQueue = [];
-
-        const processQueue = (error, token = null) => {
-            failedQueue.forEach(prom => {
-                if (error) {
-                    prom.reject(error);
-                } else {
-                    prom.resolve(token);
-                }
-            });
-            failedQueue = [];
-        };
-
-        interceptorId.current = axios.interceptors.response.use(
-            (response) => response, 
-            async (error) => {
-                const originalRequest = error.config;
-
-                if (error.response?.status === 401 && !originalRequest._retry) {
-                    
-                    if (originalRequest.url.includes('/auth/refresh')) {
-                        logout();
-                        return Promise.reject(error);
-                    }
-
-                    // If a refresh is already in progress, queue this request until it finishes
-                    if (isRefreshing) {
-                        return new Promise(function(resolve, reject) {
-                            failedQueue.push({ resolve, reject });
-                        }).then(token => {
-                            originalRequest.headers['Authorization'] = `Bearer ${token}`;
-                            return axios(originalRequest);
-                        }).catch(err => Promise.reject(err));
-                    }
-
-                    originalRequest._retry = true; 
-                    isRefreshing = true;
-
-                    try {
-                        const currentRefreshToken = localStorage.getItem('refreshToken');
-                        if (!currentRefreshToken) throw new Error("No refresh token available");
-
-                        const cleanAxios = axios.create();
-                        const res = await cleanAxios.post(`${config.baseUrl}/api/v1/auth/refresh`, { 
-                            refreshToken: currentRefreshToken 
-                        });
-
-                        const newAccessToken = res.data.accessToken || res.data.jwt;
-                        const newRefreshToken = res.data.refreshToken || currentRefreshToken;
-
-                        setAuthToken(newAccessToken);
-                        localStorage.setItem('authToken', newAccessToken);
-                        localStorage.setItem('refreshToken', newRefreshToken);
-
-                        axios.defaults.headers.common['Authorization'] = `Bearer ${newAccessToken}`;
-                        originalRequest.headers['Authorization'] = `Bearer ${newAccessToken}`;
-
-                        // Release the queued requests
-                        processQueue(null, newAccessToken);
-                        isRefreshing = false;
-
-                        return axios(originalRequest);
-                    } catch (refreshError) {
-                        console.error("Session expired entirely. Logging out.");
-                        processQueue(refreshError, null);
-                        isRefreshing = false;
-                        logout();
-                        return Promise.reject(refreshError);
-                    }
-                }
-
-                return Promise.reject(error);
-            }
-        );
-
-        return () => {
-            if (interceptorId.current !== null) {
-                axios.interceptors.response.eject(interceptorId.current);
-            }
-        };
-    }, [authToken]); 
-
-    const fetchUserData = async (email, fallbackUser) => {
+    const fetchUserData = async (fallbackUser) => {
         try {
-            const response = await axios.get(`${config.baseUrl}/api/v1/users/profile`, { params: { email: email } });
+            // The server returns the profile of the token's owner
+            const response = await api.get('/v1/users/profile');
             if (response.data && typeof response.data === 'object' && Object.keys(response.data).length > 0) {
-                setUser(response.data); 
-                localStorage.setItem('user', JSON.stringify(response.data)); 
+                setUser(response.data);
+                localStorage.setItem(USER_KEY, JSON.stringify(response.data));
             } else {
-                throw new Error("Server returned empty user data");
+                throw new Error('Server returned empty user data');
             }
         } catch (error) {
             console.warn('Using fallback user data.');
             if (fallbackUser) {
                 setUser(fallbackUser);
-                localStorage.setItem('user', JSON.stringify(fallbackUser));
+                localStorage.setItem(USER_KEY, JSON.stringify(fallbackUser));
             }
         }
     };
 
     const handleAuthSuccess = async (response, providedEmail = null) => {
-        const access = response.data.accessToken || response.data.jwt;
-        const refresh = response.data.refreshToken;
-        
+        const access = accessTokenFrom(response.data);
+        tokenStore.set(access, response.data.refreshToken);
         setAuthToken(access);
-        localStorage.setItem('authToken', access);
-        if (refresh) localStorage.setItem('refreshToken', refresh);
-        
-        axios.defaults.headers.common['Authorization'] = `Bearer ${access}`;
-        
+
         const finalEmail = response.data.email || response.data.username || providedEmail;
-        
         const fallbackUser = {
             id: response.data.id || null,
             email: finalEmail,
-            username: response.data.username || finalEmail, 
-            firstName: response.data.firstName || 'User'
+            username: response.data.username || finalEmail,
+            firstName: response.data.firstName || 'User',
         };
-        
-        await fetchUserData(finalEmail, fallbackUser);
 
-        const guestId = localStorage.getItem('planmate_guest_id');
+        await fetchUserData(fallbackUser);
+
+        const guestId = localStorage.getItem(GUEST_KEY);
         if (guestId) {
             try {
-                await axios.post(`${config.baseUrl}/api/v2/events/merge`, null, {
-                    params: { guestId: guestId, realUserId: finalEmail }
-                });
-                localStorage.removeItem('planmate_guest_id'); 
+                // The server merges into the logged-in account
+                await api.post('/v2/events/merge', null, { params: { guestId } });
+                localStorage.removeItem(GUEST_KEY);
             } catch (mergeError) {
-                console.error("Failed to merge guest events:", mergeError);
+                console.error('Failed to merge guest events:', mergeError);
             }
         }
     };
 
     const login = async (email, password) => {
-        const response = await axios.post(`${config.baseUrl}/api/v1/auth/login`, { 
-            username: email, email: email, password: password 
-        });
+        const response = await api.post('/v1/auth/login', { username: email, email, password });
         await handleAuthSuccess(response, email);
     };
 
     const googleLogin = async (googleCredential) => {
-        const response = await axios.post(`${config.baseUrl}/api/v1/auth/google`, { token: googleCredential });
+        const response = await api.post('/v1/auth/google', { token: googleCredential });
         await handleAuthSuccess(response);
     };
 
     const register = async (submissionData) => {
-        await axios.post(`${config.baseUrl}/api/v1/auth/register`, submissionData);
+        await api.post('/v1/auth/register', submissionData);
         await login(submissionData.email, submissionData.password);
-    };
-
-    const logout = () => {
-        setAuthToken(null);
-        setUser(null); 
-        localStorage.removeItem('authToken');
-        localStorage.removeItem('refreshToken');
-        localStorage.removeItem('user');
-        delete axios.defaults.headers.common['Authorization'];
-        
-        window.location.href = '/login';
     };
 
     return (

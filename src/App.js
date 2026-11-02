@@ -1,4 +1,3 @@
-import { React } from 'react';
 import { BrowserRouter as Router, Route, Routes, Link } from 'react-router-dom';
 import Home from './pages/Home';
 import Register from './pages/Register';
@@ -20,8 +19,8 @@ function App() {
   
   return (
     <GoogleOAuthProvider clientId={config.googleClientId}>
-      <AuthProvider>
-        <Router>
+      <Router>
+        <AuthProvider>
           <Navbar />
           <CookieBanner />
           <Routes>
@@ -61,8 +60,8 @@ function App() {
               </div>
               <p style={{ color: 'rgba(255,255,255,0.3)', fontSize: '0.8rem', margin: 0 }}>© {new Date().getFullYear()} PlanMate. Built in Munich.</p>
           </footer>
-        </Router>
-      </AuthProvider>
+        </AuthProvider>
+      </Router>
     </GoogleOAuthProvider>
   );
 }

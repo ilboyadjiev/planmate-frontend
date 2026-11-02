@@ -1,6 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import axios from 'axios';
-import config from '../config/config';
+import api from '../api/client';
 import moment from 'moment';
 
 const DiscoveryFeed = ({ onAddEvent }) => {
@@ -17,7 +16,7 @@ const DiscoveryFeed = ({ onAddEvent }) => {
         const fetchFeed = async () => {
             setLoading(true);
             try {
-                const res = await axios.get(`${config.baseUrl}/api/v2/events/feed`, {
+                const res = await api.get('/v2/events/feed', {
                     params: { 
                         tag: activeTag,
                         page: page,

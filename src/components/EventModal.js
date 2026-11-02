@@ -1,7 +1,6 @@
 import React, { useState, useEffect, useContext } from 'react';
 import { Modal, Button, Form } from 'react-bootstrap';
-import axios from 'axios';
-import config from '../config/config';
+import api from '../api/client';
 import { AuthContext } from '../context/AuthContext';
 import DateTimePicker from './DateTimePicker/index';
 import VisibilityToggle from './VisibilityToggle';
@@ -22,7 +21,7 @@ const EventModal = ({ show, onHide, initialData, onSave, isNewEvent }) => {
             setSearchQuery('');
             
             if (user && user.id) {
-                axios.get(`${config.baseUrl}/api/v1/users/${user.id}/friends`)
+                api.get(`/v1/users/${user.id}/friends`)
                     .then(res => {
                         const accepted = res.data.filter(f => f.status === 'accepted');
                         setFriends(accepted.map(f => f.userA.id === user.id ? f.userB : f.userA));

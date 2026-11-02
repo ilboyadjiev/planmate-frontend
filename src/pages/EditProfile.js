@@ -1,6 +1,5 @@
 import React, { useContext, useEffect, useState } from 'react';
-import axios from 'axios';
-import config from '../config/config';
+import api from '../api/client';
 import { AuthContext } from '../context/AuthContext';
 import { useGoogleLogin } from '@react-oauth/google';
 
@@ -66,7 +65,7 @@ const EditProfile = () => {
                 }
             };
 
-            await axios.put(`${config.baseUrl}/api/v1/users/${user.id}`, payload); 
+            await api.put(`/v1/users/${user.id}`, payload); 
             setSuccess(true);
             
         } catch (err) {
@@ -76,7 +75,7 @@ const EditProfile = () => {
 
     const handleDeleteAccount = async () => {
         try {
-            await axios.delete(`${config.baseUrl}/api/v1/users/${user.id}`);
+            await api.delete(`/v1/users/${user.id}`);
             logout();
         } catch (err) {
             setError('Failed to delete account. Please try again or contact support.');
@@ -91,7 +90,7 @@ const EditProfile = () => {
             setIsSyncing(true);
             setCalendarStatus(null);
             try {                
-                await axios.post(`${config.baseUrl}/api/v1/calendar/sync`, {
+                await api.post('/v1/calendar/sync', {
                     token: tokenResponse.access_token || tokenResponse.code
                 });
                 

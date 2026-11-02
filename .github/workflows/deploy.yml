@@ -1,12 +1,49 @@
-name: Build and Deploy Frontend
+name: CI and Deploy Frontend
 
 on:
   push:
     branches: [ "main" ]
+  pull_request:
+    branches: [ "main" ]
+
+env:
+  IMAGE: iliandocker/planmate-docker-repo
 
 jobs:
-  build-and-deploy:
+  ci:
+    name: Lint, test, build
     runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Lint
+        run: npm run lint
+
+      - name: Test
+        run: npm test -- --watchAll=false
+
+      # CI=true is set by GitHub Actions, so CRA treats build warnings as errors.
+      - name: Build
+        run: npm run build
+
+  build-and-deploy:
+    name: Build image and deploy
+    needs: ci
+    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+    runs-on: ubuntu-latest
+    concurrency:
+      group: deploy-frontend
+      cancel-in-progress: false
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
@@ -20,41 +57,47 @@ jobs:
           username: ${{ secrets.DOCKERHUB_USERNAME }}
           password: ${{ secrets.DOCKERHUB_TOKEN }}
 
+      # Two tags: the moving tag docker-compose on the VM pulls, plus an immutable
+      # per-commit tag for traceability and rollback.
       - name: Build and push Frontend Image
         uses: docker/build-push-action@v5
         with:
-            context: .
-            push: true
-            platforms: linux/amd64 
-            tags: iliandocker/planmate-docker-repo:planmate-frontend
-            build-args: |
-              REACT_APP_BACKEND_BASE_URL=${{ secrets.REACT_APP_BACKEND_BASE_URL }}
-              REACT_APP_GOOGLE_CLIENT_ID=${{ secrets.REACT_APP_GOOGLE_CLIENT_ID }}
+          context: .
+          push: true
+          platforms: linux/amd64
+          tags: |
+            ${{ env.IMAGE }}:planmate-frontend
+            ${{ env.IMAGE }}:planmate-frontend-${{ github.sha }}
+          build-args: |
+            REACT_APP_BACKEND_BASE_URL=${{ secrets.REACT_APP_BACKEND_BASE_URL }}
+            REACT_APP_GOOGLE_CLIENT_ID=${{ secrets.REACT_APP_GOOGLE_CLIENT_ID }}
+            GIT_SHA=${{ github.sha }}
 
       - name: Deploy to GCP VM
         uses: appleboy/ssh-action@v1.0.3
         with:
-            host: ${{ secrets.GCP_VM_IP }}
-            username: ${{ secrets.GCP_SSH_USERNAME }}
-            key: ${{ secrets.GCP_SSH_KEY }}
-            script: |
-              cd /home/ilian1097/planmate
-              sudo docker-compose pull frontend
-              sudo docker-compose up -d --remove-orphans frontend
-              sudo docker image prune -f
+          host: ${{ secrets.GCP_VM_IP }}
+          username: ${{ secrets.GCP_SSH_USERNAME }}
+          key: ${{ secrets.GCP_SSH_KEY }}
+          script: |
+            cd /home/ilian1097/planmate
+            sudo docker-compose pull frontend
+            sudo docker-compose up -d --remove-orphans frontend
+            sudo docker image prune -f
 
-      - name: Verify Health Check
+      - name: Verify the new build is live
         run: |
-          echo "Waiting for React Frontend to respond..."
+          echo "Waiting for build ${GITHUB_SHA} to be served..."
           for i in {1..15}; do
-            # Checking the root domain to see if the web app is up
-            HTTP_STATUS=$(curl -s -o /dev/null -w "%{http_code}" https://www.planmate.org || echo "000")
-            if [ "$HTTP_STATUS" == "200" ]; then
-              echo "Health check passed! Frontend is live."
+            # Cache-busting query so no intermediate cache hands back an old version.json
+            BODY=$(curl -fsS "https://www.planmate.org/version.json?ts=$(date +%s)" || true)
+            if echo "$BODY" | grep -q "\"sha\":\"${GITHUB_SHA}\""; then
+              echo "Smoke test passed: ${GITHUB_SHA} is live."
               exit 0
             fi
-            echo "App not ready yet (Status: $HTTP_STATUS). Retrying... ($i/15)"
+            echo "Not live yet (got: ${BODY:-no response}). Retrying... ($i/15)"
             sleep 10
           done
-          echo "Health check failed."
+          echo "Smoke test failed: the site is not serving ${GITHUB_SHA}."
+          echo "Roll back with: docker pull ${IMAGE}:planmate-frontend-<previous-sha>, retag as :planmate-frontend, push, and re-run compose."
           exit 1

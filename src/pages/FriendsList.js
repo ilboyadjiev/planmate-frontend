@@ -1,6 +1,5 @@
 import React, { useState, useEffect, useContext } from 'react';
-import axios from 'axios';
-import config from '../config/config';
+import api from '../api/client';
 import { AuthContext } from '../context/AuthContext';
 
 const FriendsList = () => {
@@ -16,7 +15,7 @@ const FriendsList = () => {
     const fetchFriends = async () => {
         if (!user || !user.id) return;
         try {
-            const response = await axios.get(`${config.baseUrl}/api/v1/users/${user.id}/friends`);
+            const response = await api.get(`/v1/users/${user.id}/friends`);
             setFriends(response.data.filter(friendship => friendship.status === 'accepted'));
             setPendingRequests(response.data.filter(friendship => friendship.status === 'pending'));
             setLoading(false);
@@ -42,7 +41,7 @@ const FriendsList = () => {
         }
 
         try {
-            const response = await axios.get(`${config.baseUrl}/api/v1/users/search?term=${searchTerm}`);
+            const response = await api.get('/v1/users/search', { params: { term: searchTerm } });
             const filteredResults = response.data.filter(u => u.id !== user.id);
             setSearchResults(filteredResults);
             
@@ -57,7 +56,7 @@ const FriendsList = () => {
     const sendFriendRequest = async (userId) => {
         try {
             setError(null);
-            await axios.post(`${config.baseUrl}/api/v1/friends/request/${userId}`, {});
+            await api.post(`/v1/friends/request/${userId}`, {});
             setSuccessMsg('Friend request sent successfully!');
             setSearchResults([]); 
             setSearchTerm('');
@@ -70,7 +69,7 @@ const FriendsList = () => {
     const acceptFriendRequest = async (friendshipId) => {
         try {
             setError(null);
-            await axios.put(`${config.baseUrl}/api/v1/friends/accept/${friendshipId}`, {});
+            await api.put(`/v1/friends/accept/${friendshipId}`, {});
             setSuccessMsg('Friend request accepted!');
             fetchFriends();
         } catch (err) {

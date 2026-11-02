@@ -1,7 +1,6 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { Form } from 'react-bootstrap';
-import axios from 'axios';
-import config from '../config/config';
+import api from '../api/client';
 
 const LocationSearch = ({ initialQuery, onSelectLocation }) => {
     const [query, setQuery] = useState(initialQuery || '');
@@ -39,7 +38,7 @@ const LocationSearch = ({ initialQuery, onSelectLocation }) => {
 
         searchTimeoutRef.current = setTimeout(async () => {
             try {
-                const res = await axios.get(`${config.baseUrl}/api/v1/locations/autocomplete`, { params: { q: value } });
+                const res = await api.get('/v1/locations/autocomplete', { params: { q: value } });
                 setSuggestions(res.data);
                 setShowDropdown(true);
             } catch (err) { console.error(err); }
