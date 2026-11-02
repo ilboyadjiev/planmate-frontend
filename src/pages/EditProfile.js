@@ -4,7 +4,7 @@ import { AuthContext } from '../context/AuthContext';
 import { useGoogleLogin } from '@react-oauth/google';
 
 const EditProfile = () => {
-    const { user, logout } = useContext(AuthContext);
+    const { user, logout, updateCurrentUser } = useContext(AuthContext);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState(null);
     const [success, setSuccess] = useState(false);
@@ -56,7 +56,6 @@ const EditProfile = () => {
             const payload = {
                 firstName: formData.firstName,
                 lastName: formData.lastName,
-                email: formData.email,
                 contactData: {
                     mobile: formData.mobile,
                     street: formData.street,
@@ -65,7 +64,9 @@ const EditProfile = () => {
                 }
             };
 
-            await api.put(`/v1/users/${user.id}`, payload); 
+            const response = await api.put(`/v1/users/${user.id}`, payload);
+            // Keep the navbar, calendar etc. in sync with what the server saved
+            updateCurrentUser(response.data);
             setSuccess(true);
             
         } catch (err) {

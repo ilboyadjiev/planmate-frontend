@@ -2,7 +2,7 @@ import React, { useState, useContext, useEffect } from 'react';
 import PlanMateCalendar from '../components/PlanMateCalendar';
 import DiscoveryFeed from '../components/DiscoveryFeed';
 import EventModal from '../components/EventModal';
-import { Button } from 'react-bootstrap';
+import { Button, Toast, ToastContainer } from 'react-bootstrap';
 import { createEvent } from '../services/eventService';
 import { AuthContext } from '../context/AuthContext';
 import { getGuestId } from '../services/guestService';
@@ -20,6 +20,7 @@ const Dashboard = () => {
         participants: [], location: null, isPublic: false, tags: []
     };
     const [selectedEvent, setSelectedEvent] = useState(defaultEvent);
+    const [notice, setNotice] = useState(null); // { type: 'success' | 'error', text }
 
     useEffect(() => {
         const handleResize = () => {
@@ -29,32 +30,25 @@ const Dashboard = () => {
         return () => window.removeEventListener('resize', handleResize);
     }, []);
 
+    // Errors propagate to EventModal, which shows them and keeps the form open
     const handleSaveNewEvent = async (formData) => {
-        try {
-            const creatorId = user ? (user.username || user.email) : getGuestId();
-            const participantsStr = formData.participants.map(p => p.id).join(',');
-            
-            await createEvent({ ...formData, participants: participantsStr }, creatorId);
-            
-            setShowModal(false);
-            setRefreshKey(prev => prev + 1);
-        } catch (error) {
-            console.error('Failed to create event:', error);
-            alert("Error creating event.");
-        }
+        await createEvent(formData, user ? null : getGuestId());
+        setShowModal(false);
+        setRefreshKey(prev => prev + 1);
     };
 
     const handleAddFromFeed = async (feedEvent) => {
         try {
-            const creatorId = user ? (user.username || user.email) : getGuestId();
             await createEvent({
                 title: feedEvent.title, start: feedEvent.startTime, end: feedEvent.endTime,
-                description: feedEvent.description, participants: '', location: feedEvent.location,
+                description: feedEvent.description, participants: [], location: feedEvent.location,
                 isPublic: false, tags: feedEvent.tags
-            }, creatorId);
-            alert("Added to your calendar!");
+            }, user ? null : getGuestId());
+            setNotice({ type: 'success', text: `"${feedEvent.title}" was added to your calendar.` });
             setRefreshKey(prev => prev + 1);
-        } catch (err) { console.error(err); }
+        } catch (err) {
+            setNotice({ type: 'error', text: 'Could not add the event to your calendar. Please try again.' });
+        }
     };
 
     const handleCalendarSlotSelect = (start, end) => {
@@ -109,6 +103,20 @@ const Dashboard = () => {
                     <div className="drawer-overlay" onClick={() => setShowMobileCalendar(false)}></div>
                 )}
             </div>
+
+            <ToastContainer position="bottom-end" className="p-3" style={{ position: 'fixed', zIndex: 2000 }}>
+                <Toast
+                    show={!!notice}
+                    onClose={() => setNotice(null)}
+                    delay={4000}
+                    autohide
+                    bg={notice?.type === 'error' ? 'danger' : 'success'}
+                >
+                    <Toast.Body style={{ color: 'white' }} role={notice?.type === 'error' ? 'alert' : 'status'}>
+                        {notice?.text}
+                    </Toast.Body>
+                </Toast>
+            </ToastContainer>
 
             <EventModal 
                 show={showModal} 

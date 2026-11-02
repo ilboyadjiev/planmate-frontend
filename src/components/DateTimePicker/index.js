@@ -2,12 +2,13 @@ import React, { useState } from 'react';
 import ThemeWrapper from './ThemeWrapper';
 import StyledDatePicker from './StyledDatePicker';
 import SlidingTimePicker from './SlidingTimePicker';
+import { describeDuration } from './duration';
 
 const formatTime12Hour = (dateObj) => {
     return new Date(dateObj).toLocaleTimeString([], { hour: 'numeric', minute: '2-digit', hour12: true });
 };
 
-const DateTimePicker = ({ start, end, onChange }) => {
+const DateTimePicker = ({ start, end, onChange, error }) => {
     const [activeClock, setActiveClock] = useState(null); 
 
     const handleStartChange = (newDate, isTime = false) => {
@@ -39,7 +40,10 @@ const DateTimePicker = ({ start, end, onChange }) => {
 
     return (
         <ThemeWrapper>
-            <div style={{ background: 'var(--surface)', padding: '16px', borderRadius: '12px', border: '1px solid var(--border)', marginBottom: '24px' }}>
+            <div
+                className={error ? 'field-invalid' : undefined}
+                style={{ background: 'var(--surface)', padding: '16px', borderRadius: '12px', border: '1px solid var(--border)', marginBottom: '24px' }}
+            >
                 
                 {/* Start Date & Time */}
                 <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '16px', marginBottom: '16px' }}>
@@ -97,12 +101,23 @@ const DateTimePicker = ({ start, end, onChange }) => {
                     </div>
                 </div>
 
+                {describeDuration(start, end) && (
+                    <div
+                        aria-live="polite"
+                        style={{ marginTop: '14px', paddingTop: '12px', borderTop: '1px dashed var(--border)', textAlign: 'center', color: 'var(--text-muted)', fontSize: '0.9rem', fontWeight: '500' }}
+                    >
+                        ⏱️ {describeDuration(start, end)}
+                    </div>
+                )}
+
                 <SlidingTimePicker 
                     show={!!activeClock} 
                     onHide={() => setActiveClock(null)} 
                     value={activeClock === 'start' ? start : end}
                     onChange={(d) => activeClock === 'start' ? handleStartChange(d, true) : handleEndChange(d, true)}
                 />
+
+                {error && <div id="datetime-error" className="field-error" role="alert">{error}</div>}
             </div>
         </ThemeWrapper>
     );

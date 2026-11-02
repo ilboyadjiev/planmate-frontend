@@ -95,14 +95,18 @@ const PlanMateCalendar = ({ userEmail, refreshKey, onSlotSelect }) => {
                     params: user ? { start, end } : { creatorId: getGuestId(), start, end }
                 });
 
+                // Events I created are editable; events I was invited to are read-only
+                const myOwnerId = user ? user.email : getGuestId();
                 setEvents(response.data.map(event => ({
                     ...event,
                     start: event.startTime ? new Date(event.startTime) : null,
                     end: event.endTime ? new Date(event.endTime) : null,
                     isPublic: event.isPublic !== undefined ? event.isPublic : true,
                     tags: event.tags || [],
-                    participants: event.participants || [],
-                    allDay: false, 
+                    // The server stores participant user ids; EventModal resolves the names
+                    participants: (event.participantIds || []).map(id => ({ id })),
+                    isOwn: event.creatorId === myOwnerId,
+                    allDay: false,
                 })));
             } catch (error) { console.error('Error fetching events:', error); }
         };
@@ -115,28 +119,25 @@ const PlanMateCalendar = ({ userEmail, refreshKey, onSlotSelect }) => {
         setShowModal(true);
     };
 
+    // Errors propagate to EventModal, which shows them and keeps the form open
     const handleSaveChanges = async (formData) => {
-        try {
-            const activeCreatorId = user ? (user.username || user.email) : getGuestId();
-            const participantIdsArray = (formData.participants || []).map(p => typeof p === 'object' ? p.id : parseInt(p, 10)).filter(id => !isNaN(id));
+        const eventToSave = {
+            id: formData.id,
+            title: formData.title,
+            // Only guests identify themselves this way; logged-in users are identified by their token
+            creatorId: user ? undefined : getGuestId(),
+            description: formData.description,
+            startTime: new Date(formData.start).toISOString(),
+            endTime: new Date(formData.end).toISOString(),
+            participantIds: (formData.participants || []).map(p => String(p.id)),
+            location: formData.location,
+            isPublic: formData.isPublic,
+            tags: formData.tags,
+        };
 
-            const eventToSave = {
-                id: formData.id,
-                title: formData.title,
-                creatorId: activeCreatorId,
-                description: formData.description,
-                startTime: new Date(formData.start).toISOString(),
-                endTime: new Date(formData.end).toISOString(),
-                participantIds: participantIdsArray,
-                location: formData.location,
-                isPublic: formData.isPublic,
-                tags: formData.tags,
-            };
-    
-            await api.put(`/v2/events/${formData.id}`, eventToSave);
-            setShowModal(false);
-            setInternalRefresh(prev => prev + 1);
-        } catch (error) { console.error('Error updating event:', error); }
+        await api.put(`/v2/events/${formData.id}`, eventToSave);
+        setShowModal(false);
+        setInternalRefresh(prev => prev + 1);
     };
 
     const getScrollToTime = () => {
@@ -198,7 +199,13 @@ const PlanMateCalendar = ({ userEmail, refreshKey, onSlotSelect }) => {
                 endAccessor="end"
                 style={{ height: 700 }}
                 dayPropGetter={d => (d.toDateString() === new Date().toDateString() ? { className: 'custom-today' } : {})}
-                eventPropGetter={() => ({ style: { backgroundColor: '#4F46E5', borderRadius: '6px', border: 'none', color: 'white' } })}
+                eventPropGetter={event => ({
+                    className: event.isOwn ? 'event-own' : 'event-invited',
+                    style: event.isOwn
+                        ? { backgroundColor: '#4F46E5', borderRadius: '6px', border: 'none', color: 'white' }
+                        : { backgroundColor: 'rgba(79, 70, 229, 0.15)', borderRadius: '6px', border: '1px dashed #818cf8', color: '#c7d2fe' },
+                })}
+                tooltipAccessor={event => (event.isOwn ? event.title : `${event.title} (invited)`)}
                 onSelectEvent={handleSelectEvent}
                 date={currentDate}
                 onNavigate={d => { setCurrentDate(d); }}
@@ -214,6 +221,7 @@ const PlanMateCalendar = ({ userEmail, refreshKey, onSlotSelect }) => {
                     initialData={selectedEvent} 
                     onSave={handleSaveChanges} 
                     isNewEvent={false} 
+                    readOnly={!selectedEvent.isOwn}
                 />
             )}
         </div>

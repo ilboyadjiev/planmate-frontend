@@ -1,26 +1,22 @@
 import api from '../api/client';
 
-export const createEvent = async (eventData, userEmail) => {
-    try {
-        const participantIdsArray = eventData.participants
-            ? eventData.participants.split(',').map(id => parseInt(id.trim(), 10)).filter(id => !isNaN(id))
-            : [];
+/**
+ * Creates an event. Logged-in users are identified by their token; guests pass their guest id.
+ * eventData.participants is a list of friends ({ id, ... }).
+ */
+export const createEvent = async (eventData, guestId = null) => {
+    const eventToSave = {
+        title: eventData.title,
+        creatorId: guestId || undefined,
+        description: eventData.description,
+        startTime: new Date(eventData.start).toISOString(),
+        endTime: new Date(eventData.end).toISOString(),
+        participantIds: (eventData.participants || []).map(p => String(p.id)),
+        location: eventData.location,
+        isPublic: eventData.isPublic,
+        tags: eventData.tags,
+    };
 
-        const eventToSave = {
-            title: eventData.title,
-            creatorId: userEmail,
-            description: eventData.description,
-            startTime: new Date(eventData.start).toISOString(),
-            endTime: new Date(eventData.end).toISOString(),
-            participantIds: participantIdsArray,
-            location: eventData.location,
-            isPublic: eventData.isPublic,
-            tags: eventData.tags,
-        };
-
-        await api.post('/v2/events', eventToSave);
-    } catch (error) {
-        console.error('Error creating new event:', error);
-        throw error;
-    }
+    const response = await api.post('/v2/events', eventToSave);
+    return response.data;
 };

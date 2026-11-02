@@ -160,6 +160,21 @@ button.btn-primary:hover,
 .msg-success { color: #10B981; }
 .msg-error { color: #EF4444; }
 
+/* Validation message shown directly below the field it belongs to */
+.field-error {
+  display: block;
+  color: #EF4444;
+  font-size: 0.8rem;
+  font-weight: 500;
+  margin-top: 6px;
+}
+
+.field-invalid,
+.field-invalid:focus {
+  border-color: #EF4444 !important;
+  box-shadow: 0 0 0 0.2rem rgba(239, 68, 68, 0.2) !important;
+}
+
 .auth-page-wrapper {
   min-height: calc(100vh - 70px);
   display: flex;

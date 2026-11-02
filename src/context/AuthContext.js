@@ -40,6 +40,12 @@ export const AuthProvider = ({ children }) => {
         });
     }, [logout]);
 
+    /** Replaces the cached profile, e.g. after the user edited it. */
+    const updateCurrentUser = useCallback((updatedUser) => {
+        setUser(updatedUser);
+        localStorage.setItem(USER_KEY, JSON.stringify(updatedUser));
+    }, []);
+
     const fetchUserData = async (fallbackUser) => {
         try {
             // The server returns the profile of the token's owner
@@ -102,7 +108,7 @@ export const AuthProvider = ({ children }) => {
     };
 
     return (
-        <AuthContext.Provider value={{ authToken, user, login, register, logout, googleLogin }}>
+        <AuthContext.Provider value={{ authToken, user, login, register, logout, googleLogin, updateCurrentUser }}>
             {children}
         </AuthContext.Provider>
     );
