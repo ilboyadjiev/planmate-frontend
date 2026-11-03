@@ -330,3 +330,48 @@ button.btn-primary:hover,
     display: block;
   }
 }
+
+/* Answering an invitation (EventModal) */
+.rsvp-block {
+  margin-bottom: 20px;
+  padding: 14px;
+  border-radius: 12px;
+  background: rgba(255, 255, 255, 0.04);
+  border: 1px solid var(--border);
+}
+
+.rsvp-question {
+  font-weight: 600;
+  margin-bottom: 10px;
+}
+
+.rsvp-buttons {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 8px;
+}
+
+.rsvp-button {
+  min-height: 44px;
+  border-radius: 8px;
+  border: 1px solid var(--border);
+  background: transparent;
+  color: var(--text-main);
+  font-weight: 600;
+  cursor: pointer;
+  transition: background 0.2s, border-color 0.2s;
+}
+
+.rsvp-button:hover:not(:disabled) { background: rgba(255, 255, 255, 0.06); }
+.rsvp-button:disabled { cursor: wait; opacity: 0.7; }
+.rsvp-button:focus-visible { outline: 2px solid #FDBA74; outline-offset: 2px; }
+
+.rsvp-accepted[aria-pressed="true"] { background: #10B981; border-color: #10B981; color: #052E1C; }
+.rsvp-maybe[aria-pressed="true"] { background: rgba(79, 70, 229, 0.25); border: 1px dashed #818cf8; color: #E0E7FF; }
+.rsvp-declined[aria-pressed="true"] { background: rgba(239, 68, 68, 0.15); border-color: rgba(239, 68, 68, 0.5); color: #FCA5A5; }
+
+.participant-response { font-weight: 500; }
+.participant-response.response-accepted { color: #6EE7B7; }
+.participant-response.response-maybe { color: #C7D2FE; }
+.participant-response.response-declined { color: #FCA5A5; }
+.participant-response.response-pending { color: var(--text-muted); }

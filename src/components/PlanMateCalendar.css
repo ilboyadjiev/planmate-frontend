@@ -296,3 +296,48 @@
 
     .toolbar-view-group .toolbar-button { flex: 1; }
 }
+
+/* Invitations nobody has answered yet: same as "maybe", plus a dot that asks for an answer */
+.rbc-event.event-status-pending .rbc-event-content::before,
+.calendar-legend-swatch.event-status-pending::before {
+    content: '';
+    display: inline-block;
+    width: 7px;
+    height: 7px;
+    margin-right: 5px;
+    border-radius: 50%;
+    background: var(--primary);
+    vertical-align: middle;
+}
+
+.calendar-legend {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px 16px;
+    margin: 12px 0 0;
+    padding: 0;
+    list-style: none;
+    font-size: 0.8rem;
+    color: var(--text-muted);
+}
+
+.calendar-legend li {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+}
+
+.calendar-legend-swatch {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 22px;
+    height: 12px;
+    text-decoration: none !important;
+}
+
+.calendar-legend-swatch.event-status-pending::before {
+    width: 5px;
+    height: 5px;
+    margin: 0;
+}

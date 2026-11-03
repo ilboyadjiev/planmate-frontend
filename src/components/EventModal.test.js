@@ -95,3 +95,27 @@ test('all invalid fields are reported at once, each below its own field', () => 
     expect(messages).toEqual(['title-error', 'datetime-error']);
     expect(screen.getByText(/end must be after the start/i)).toBeInTheDocument();
 });
+
+test('invitees answer from the details view and see everyone\'s answers', async () => {
+    const onRespond = jest.fn().mockResolvedValue();
+    const answered = { ...invitedEvent, viewerRole: 'invited', myResponse: 'pending', participants: [{ id: '2' }, { id: '3' }], responses: { 3: 'declined' } };
+    renderAs(bob, <EventModal show initialData={answered} onSave={jest.fn()} onHide={jest.fn()} readOnly onRespond={onRespond} />);
+
+    expect(await screen.findByText(/not answered yet/i)).toBeInTheDocument(); // Bob himself
+    expect(screen.getByText(/can't go$/i, { selector: '.participant-response' })).toBeInTheDocument(); // participant 3
+    const going = screen.getByRole('button', { name: 'Going' });
+    expect(going).toHaveAttribute('aria-pressed', 'false');
+
+    fireEvent.click(going);
+    expect(onRespond).toHaveBeenCalledWith('accepted');
+});
+
+test('a failed answer is reported below the answer buttons', async () => {
+    const onRespond = jest.fn().mockRejectedValue(new Error('offline'));
+    renderAs(bob, <EventModal show initialData={{ ...invitedEvent, viewerRole: 'invited', myResponse: 'maybe' }} onSave={jest.fn()} onHide={jest.fn()} readOnly onRespond={onRespond} />);
+
+    expect(screen.getByRole('button', { name: 'Maybe' })).toHaveAttribute('aria-pressed', 'true');
+    fireEvent.click(screen.getByRole('button', { name: "Can't go" }));
+
+    expect(await screen.findByText(/could not be saved/i)).toHaveAttribute('id', 'rsvp-error');
+});

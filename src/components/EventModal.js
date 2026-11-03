@@ -5,6 +5,7 @@ import { AuthContext } from '../context/AuthContext';
 import DateTimePicker from './DateTimePicker/index';
 import VisibilityToggle from './VisibilityToggle';
 import LocationSearch from './LocationSearch';
+import { RESPONSES, RESPONSE_LABELS } from './calendarStatus';
 
 const labelStyle = { fontWeight: '600', color: 'var(--text-main)' };
 const chipStyle = {
@@ -52,11 +53,17 @@ const Section = ({ label, children }) => (
     </div>
 );
 
+/** A participant's answer next to their name, e.g. "@bob · Going". */
+const ResponseNote = ({ response }) => (
+    <span className={`participant-response response-${response}`}>· {RESPONSE_LABELS[response]}</span>
+);
+
 /**
  * Create/edit form for the event creator, or a read-only details view (readOnly) for invited participants.
  * onSave may return a promise; if it rejects, the error is shown in the modal and the form stays open.
+ * onRespond(response), given for invitees, records their answer (accepted, maybe, declined) and may reject.
  */
-const EventModal = ({ show, onHide, initialData, onSave, isNewEvent, readOnly = false }) => {
+const EventModal = ({ show, onHide, initialData, onSave, isNewEvent, readOnly = false, onRespond }) => {
     const { user } = useContext(AuthContext);
 
     const [formData, setFormData] = useState(initialData);
@@ -65,6 +72,8 @@ const EventModal = ({ show, onHide, initialData, onSave, isNewEvent, readOnly = 
     const [searchQuery, setSearchQuery] = useState('');
     const [errors, setErrors] = useState({}); // { title, time, participants, form }
     const [saving, setSaving] = useState(false);
+    const [responding, setResponding] = useState(false);
+    const [respondError, setRespondError] = useState('');
 
     useEffect(() => {
         if (show) {
@@ -72,6 +81,7 @@ const EventModal = ({ show, onHide, initialData, onSave, isNewEvent, readOnly = 
             setTagInput('');
             setSearchQuery('');
             setErrors({});
+            setRespondError('');
 
             if (user && user.id) {
                 api.get(`/v1/users/${user.id}/friends`)
@@ -91,6 +101,21 @@ const EventModal = ({ show, onHide, initialData, onSave, isNewEvent, readOnly = 
         const friend = friendsById.get(String(p.id));
         const name = p.username || p.firstName || friend?.username || friend?.firstName;
         return name ? `@${name}` : 'Another participant';
+    };
+
+    // Answers are only known for saved events; people added in this edit have not been asked yet
+    const responseOf = (p) => (formData?.responses ? formData.responses[String(p.id)] || 'pending' : null);
+
+    const handleRespond = async (response) => {
+        setResponding(true);
+        setRespondError('');
+        try {
+            await onRespond(response);
+        } catch (err) {
+            setRespondError('Your answer could not be saved. Please try again.');
+        } finally {
+            setResponding(false);
+        }
     };
 
     const organizerName = () => {
@@ -178,6 +203,21 @@ const EventModal = ({ show, onHide, initialData, onSave, isNewEvent, readOnly = 
                     <div style={{ ...chipStyle, display: 'inline-flex', marginBottom: '20px' }}>
                         {formData.viewerRole === 'going' ? "You're going" : "You're invited"} · only the organizer can make changes
                     </div>
+                    {onRespond && (
+                        <div className="rsvp-block">
+                            <div id="rsvp-label" className="rsvp-question">Will you be there?</div>
+                            <div className="rsvp-buttons" role="group" aria-labelledby="rsvp-label">
+                                {RESPONSES.map(({ value, label }) => (
+                                    <button key={value} type="button" className={`rsvp-button rsvp-${value}`}
+                                        aria-pressed={formData.myResponse === value} disabled={responding}
+                                        onClick={() => handleRespond(value)}>
+                                        {label}
+                                    </button>
+                                ))}
+                            </div>
+                            <FieldError id="rsvp-error" message={respondError} />
+                        </div>
+                    )}
                     <Section label="When">{formatRange(formData.start, formData.end)}</Section>
                     <Section label="Organizer">{organizerName()}</Section>
                     {formData.location && <Section label="Location">{formatLocation(formData.location)}</Section>}
@@ -187,7 +227,12 @@ const EventModal = ({ show, onHide, initialData, onSave, isNewEvent, readOnly = 
                     {participants.length > 0 && (
                         <Section label="Participants">
                             <div style={{ display: 'flex', flexWrap: 'wrap', gap: '8px' }}>
-                                {participants.map(p => <div key={p.id} style={chipStyle}>{participantName(p)}</div>)}
+                                {participants.map(p => (
+                                    <div key={p.id} style={chipStyle}>
+                                        {participantName(p)}
+                                        {responseOf(p) && <ResponseNote response={responseOf(p)} />}
+                                    </div>
+                                ))}
                             </div>
                         </Section>
                     )}
@@ -266,6 +311,7 @@ const EventModal = ({ show, onHide, initialData, onSave, isNewEvent, readOnly = 
                                 {(formData.participants || []).map(p => (
                                     <div key={p.id} style={chipStyle}>
                                         {participantName(p)}
+                                        {!isNewEvent && responseOf(p) && <ResponseNote response={responseOf(p)} />}
                                         <button type="button" style={removeButtonStyle} aria-label={`Remove ${participantName(p)}`} onClick={() => toggleParticipant(p)}>×</button>
                                     </div>
                                 ))}

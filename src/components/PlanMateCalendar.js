@@ -9,6 +9,7 @@ import { AuthContext } from '../context/AuthContext';
 import EventModal from './EventModal';
 import ReactMarkdown from 'react-markdown';
 import CalendarToolbar from './CalendarToolbar';
+import { myResponse, eventStatus, statusLabel, STATUS_STYLES, STATUS_LEGEND } from './calendarStatus';
 
 const localizer = momentLocalizer(moment);
 moment.updateLocale('en', { week: { dow: 1, doy: 1 } });
@@ -99,6 +100,7 @@ const PlanMateCalendar = ({ userEmail, refreshKey, onSlotSelect, onCreateEvent }
                 const myOwnerId = user ? user.email : getGuestId();
                 setEvents(response.data.map(event => ({
                     ...event,
+                    myResponse: myResponse(event, user?.id),
                     start: event.startTime ? new Date(event.startTime) : null,
                     end: event.endTime ? new Date(event.endTime) : null,
                     isPublic: event.isPublic !== undefined ? event.isPublic : true,
@@ -137,6 +139,16 @@ const PlanMateCalendar = ({ userEmail, refreshKey, onSlotSelect, onCreateEvent }
 
         await api.put(`/v2/events/${formData.id}`, eventToSave);
         setShowModal(false);
+        setInternalRefresh(prev => prev + 1);
+    };
+
+    // An invitee answers; the modal stays open showing the new answer, and the calendar recolours the event
+    const handleRespond = async (event, response) => {
+        const res = await api.put(`/v2/events/${event.id}/response`, { response });
+        const updated = { ...event, responses: res.data.responses || {}, myResponse: response };
+        setSelectedEvent(updated);
+        setEvents(prev => prev.map(e => (e.id === event.id ? updated : e)));
+        // The daily briefing covers invites too; this also refreshes it (subject to the server's cooldown)
         setInternalRefresh(prev => prev + 1);
     };
 
@@ -202,13 +214,11 @@ const PlanMateCalendar = ({ userEmail, refreshKey, onSlotSelect, onCreateEvent }
                 endAccessor="end"
                 style={{ height: 700 }}
                 dayPropGetter={d => (d.toDateString() === new Date().toDateString() ? { className: 'custom-today' } : {})}
-                eventPropGetter={event => ({
-                    className: event.isOwn ? 'event-own' : 'event-invited',
-                    style: event.isOwn
-                        ? { backgroundColor: '#4F46E5', borderRadius: '6px', border: 'none', color: 'white' }
-                        : { backgroundColor: 'rgba(79, 70, 229, 0.15)', borderRadius: '6px', border: '1px dashed #818cf8', color: '#c7d2fe' },
-                })}
-                tooltipAccessor={event => (event.isOwn ? event.title : `${event.title} (${event.viewerRole === 'going' ? 'going' : 'invited'})`)}
+                eventPropGetter={event => {
+                    const status = eventStatus(event);
+                    return { className: `event-status-${status}`, style: STATUS_STYLES[status] };
+                }}
+                tooltipAccessor={event => (event.isOwn ? event.title : `${event.title} (${statusLabel(eventStatus(event))})`)}
                 onSelectEvent={handleSelectEvent}
                 date={currentDate}
                 onNavigate={d => { setCurrentDate(d); }}
@@ -216,6 +226,17 @@ const PlanMateCalendar = ({ userEmail, refreshKey, onSlotSelect, onCreateEvent }
                 onSelectSlot={slotInfo => onSlotSelect && onSlotSelect(slotInfo.start, slotInfo.end)}
                 scrollToTime={getScrollToTime()}
             />
+
+            {user && (
+                <ul className="calendar-legend" aria-label="Event colours">
+                    {STATUS_LEGEND.map(({ status, label }) => (
+                        <li key={status}>
+                            <span className={`calendar-legend-swatch event-status-${status}`} style={STATUS_STYLES[status]} aria-hidden="true" />
+                            {label}
+                        </li>
+                    ))}
+                </ul>
+            )}
 
             {selectedEvent && (
                 <EventModal 
@@ -225,6 +246,7 @@ const PlanMateCalendar = ({ userEmail, refreshKey, onSlotSelect, onCreateEvent }
                     onSave={handleSaveChanges} 
                     isNewEvent={false} 
                     readOnly={!selectedEvent.isOwn}
+                    onRespond={selectedEvent.viewerRole === 'invited' ? (response) => handleRespond(selectedEvent, response) : undefined}
                 />
             )}
         </div>
