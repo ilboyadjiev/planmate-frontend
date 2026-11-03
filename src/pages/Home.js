@@ -8,7 +8,8 @@ const Home = () => {
   const navigate = useNavigate();
   const { user } = useContext(AuthContext);
 
-  const apkDownloadUrl = "https://github.com/ilboyadjiev/planmate-mobile/releases/download/latest/planmate.apk";
+  // Disabled: the Android app download is not offered at the moment.
+  // const apkDownloadUrl = "https://github.com/ilboyadjiev/planmate-mobile/releases/download/latest/planmate.apk";
 
   return (
     <div className="hero-container">
@@ -65,6 +66,7 @@ const Home = () => {
           )}
         </div>
 
+        {/* Disabled: the Android app download is not offered at the moment.
         <div className="download-section" style={{ marginTop: '40px' }}>
           <p className="download-text">Want to take Planmate on the go?</p>
           <a href={apkDownloadUrl} className="btn-modern-download" download>
@@ -74,6 +76,7 @@ const Home = () => {
             Get the Android App
           </a>
         </div>
+        */}
 
       </div>
     </div>

@@ -43,7 +43,7 @@ const CookieBanner = () => {
             <div>
                 <h4 style={{ margin: '0 0 8px 0', fontSize: '1.1rem', color: 'var(--text-main)', fontWeight: '700' }}>We value your privacy</h4>
                 <p style={{ margin: 0, fontSize: '0.9rem', color: 'var(--text-muted)', lineHeight: '1.5' }}>
-                    We use strictly necessary local storage to keep your sessions active and save your offline calendar events. We do not use analytics. 
+                    We only use strictly necessary local storage, to keep you signed in and to remember your guest calendar. No analytics, no tracking. 
                     <a href="/privacy" style={{ color: 'var(--primary)', textDecoration: 'none', marginLeft: '4px' }}>Read our Privacy Policy.</a>
                 </p>
             </div>

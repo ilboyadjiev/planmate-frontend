@@ -1,6 +1,6 @@
 import React, { useState, useContext } from 'react';
 import { AuthContext } from '../context/AuthContext';
-import { useNavigate } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import api from '../api/client';
 
 const Register = () => {
@@ -114,6 +114,21 @@ const Register = () => {
                             <input type="text" name="mobile" value={formData.mobile} onChange={handleChange} />
                         </div>
                     </div>
+
+                    <aside className="privacy-promise" aria-labelledby="privacy-promise-title">
+                        <svg aria-hidden="true" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                            <path d="M12 3l7 3v5c0 4.6-3 8.6-7 10-4-1.4-7-5.4-7-10V6z" /><path d="M9 12l2 2 4-4" />
+                        </svg>
+                        <div>
+                            <h2 id="privacy-promise-title">Our privacy promise</h2>
+                            <p>
+                                PlanMate is a privacy-first project. Your data is stored only to sync your calendar across
+                                your devices and connect you with friends. We never sell it: no trackers, no data brokers.
+                                The AI Game plan only shares your upcoming events with Google Gemini when you ask for one.{' '}
+                                <Link to="/privacy">Read the privacy policy</Link>
+                            </p>
+                        </div>
+                    </aside>
 
                     {error && <div className="availability-message msg-error" style={{ marginBottom: '16px', textAlign: 'center' }}>{error}</div>}
 

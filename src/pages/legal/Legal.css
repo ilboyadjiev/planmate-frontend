@@ -1,0 +1,53 @@
+/* Legal pages (privacy policy) */
+.legal-page {
+  max-width: 800px;
+  margin: 48px auto;
+  padding: 0 20px;
+  color: var(--text-main);
+  line-height: 1.65;
+}
+
+.legal-page h1 {
+  margin-bottom: 8px;
+  font-weight: 800;
+}
+
+.legal-updated {
+  color: var(--text-muted);
+  margin-bottom: 32px;
+}
+
+.legal-page h2 {
+  font-size: 1.25rem;
+  font-weight: 700;
+  color: var(--primary);
+  margin: 40px 0 12px;
+}
+
+.legal-page h3 {
+  font-size: 1.02rem;
+  font-weight: 700;
+  margin: 24px 0 8px;
+}
+
+.legal-page p,
+.legal-page li {
+  color: #D1D5DB;
+}
+
+.legal-page ul {
+  padding-left: 20px;
+  margin-bottom: 12px;
+}
+
+.legal-page li { margin-bottom: 6px; }
+
+.legal-page strong { color: var(--text-main); }
+
+.legal-page a {
+  color: #FDBA74;
+  text-decoration: underline;
+  text-underline-offset: 3px;
+}
+
+.legal-page a:hover { color: #FED7AA; }

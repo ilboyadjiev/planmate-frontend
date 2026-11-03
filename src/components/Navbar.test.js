@@ -65,10 +65,10 @@ test('logged-in users get Friends with a request badge, and the badge refreshes 
     expect(within(tabBar()).queryByText('1')).not.toBeInTheDocument();
 });
 
-test('guests see local mode, log in and sign up, and no friends', () => {
+test('guests see log in and sign up, no friends and no local mode warning', () => {
     renderNavbar(null);
 
-    expect(screen.getByRole('button', { name: /local mode/i })).toBeInTheDocument();
+    expect(screen.queryByRole('button', { name: /local mode/i })).not.toBeInTheDocument();
     expect(within(tabBar()).getByRole('link', { name: 'Sign up' })).toHaveAttribute('href', '/register');
     expect(screen.queryByRole('link', { name: /friends/i })).not.toBeInTheDocument();
     expect(api.get).not.toHaveBeenCalled();

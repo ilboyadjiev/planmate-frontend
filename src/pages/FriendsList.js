@@ -216,9 +216,10 @@ const UserListItem = ({ userData, subText, actionButton }) => {
                     <div style={{ fontWeight: '600', color: 'var(--text-main)' }}>
                         {userData.firstName} {userData.lastName} <span style={{ fontWeight: '400', color: 'var(--text-muted)' }}>@{userData.username}</span>
                     </div>
-                    <div style={{ fontSize: '0.85rem', color: 'var(--text-muted)' }}>
-                        {subText || userData.email}
-                    </div>
+                    {/* Emails are never shown in the list, only name and @username */}
+                    {subText && (
+                        <div style={{ fontSize: '0.85rem', color: 'var(--text-muted)' }}>{subText}</div>
+                    )}
                 </div>
             </div>
             {actionButton && <div>{actionButton}</div>}

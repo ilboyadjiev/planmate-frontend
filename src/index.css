@@ -375,3 +375,43 @@ button.btn-primary:hover,
 .participant-response.response-maybe { color: #C7D2FE; }
 .participant-response.response-declined { color: #FCA5A5; }
 .participant-response.response-pending { color: var(--text-muted); }
+
+/* Register page: privacy promise (formerly in the navbar's Local Mode pop-up) */
+.privacy-promise {
+  display: flex;
+  gap: 12px;
+  align-items: flex-start;
+  margin: 24px 0 16px;
+  padding: 14px 16px;
+  border-radius: 12px;
+  background: rgba(79, 70, 229, 0.1);
+  border: 1px solid rgba(129, 140, 248, 0.3);
+}
+
+.privacy-promise svg {
+  flex: 0 0 auto;
+  color: #A5B4FC;
+  margin-top: 2px;
+}
+
+.privacy-promise h2 {
+  margin: 0 0 4px;
+  font-size: 0.95rem;
+  font-weight: 700;
+  color: var(--text-main);
+}
+
+.privacy-promise p {
+  margin: 0;
+  font-size: 0.85rem;
+  line-height: 1.5;
+  color: var(--text-muted);
+}
+
+.privacy-promise a {
+  color: #FDBA74;
+  font-weight: 600;
+  text-decoration: none;
+}
+
+.privacy-promise a:hover { text-decoration: underline; }

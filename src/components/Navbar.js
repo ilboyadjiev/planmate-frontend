@@ -1,6 +1,7 @@
 import React, { useContext, useEffect, useState } from 'react';
-import { Link, NavLink, useLocation, useNavigate } from 'react-router-dom';
-import { Modal, Button, Dropdown } from 'react-bootstrap';
+import { Link, NavLink, useLocation } from 'react-router-dom';
+// Modal and Button were only used by the disabled Local Mode pop-up
+import { Dropdown } from 'react-bootstrap';
 import { AuthContext } from '../context/AuthContext';
 import api from '../api/client';
 import { FRIENDS_CHANGED, countIncomingRequests } from '../services/friendEvents';
@@ -23,9 +24,10 @@ const FriendsIcon = () => <Icon><circle cx="9" cy="8.5" r="3.5" /><path d="M2.5 
 const UserIcon = () => <Icon><circle cx="12" cy="8" r="4" /><path d="M4 20.5c.8-4 3.9-6 8-6s7.2 2 8 6" /></Icon>;
 const LoginIcon = () => <Icon><path d="M14 4h4a2 2 0 0 1 2 2v12a2 2 0 0 1-2 2h-4" /><path d="M10 16l4-4-4-4M14 12H4" /></Icon>;
 const SparkIcon = () => <Icon><path d="M12 3v4M12 17v4M3 12h4M17 12h4M6 6l2.5 2.5M15.5 15.5L18 18M6 18l2.5-2.5M15.5 8.5L18 6" /></Icon>;
-const WarningIcon = ({ size = 16 }) => (
-    <Icon size={size}><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z" /><path d="M12 9v4M12 17h.01" /></Icon>
-);
+// Disabled together with the Local Mode warning
+// const WarningIcon = ({ size = 16 }) => (
+//     <Icon size={size}><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z" /><path d="M12 9v4M12 17h.01" /></Icon>
+// );
 
 const initialsOf = (user) => {
     const letters = [user?.firstName, user?.lastName].filter(Boolean).map(p => p.trim()[0]).join('');
@@ -48,10 +50,11 @@ const Badge = ({ count, label }) => (count > 0 ? (
  */
 const Navbar = () => {
     const { authToken, user, logout } = useContext(AuthContext);
-    const [showOfflineInfo, setShowOfflineInfo] = useState(false);
+    // Disabled: Local Mode warning (its privacy message now lives on the register page)
+    // const [showOfflineInfo, setShowOfflineInfo] = useState(false);
     const [incomingRequests, setIncomingRequests] = useState(0);
     const location = useLocation();
-    const navigate = useNavigate();
+    // const navigate = useNavigate();
 
     const loggedIn = !!authToken && !!user;
     const userId = user?.id;
@@ -99,6 +102,7 @@ const Navbar = () => {
                 </nav>
 
                 <div className="pm-topbar-actions">
+                    {/* Disabled: Local Mode warning (its privacy message now lives on the register page)
                     {!loggedIn && (
                         <button type="button" className="pm-local-pill" onClick={() => setShowOfflineInfo(true)}>
                             <WarningIcon />
@@ -106,6 +110,7 @@ const Navbar = () => {
                             <span className="pm-local-short">Local mode</span>
                         </button>
                     )}
+                    */}
 
                     {loggedIn ? (
                         <Dropdown align="end">
@@ -168,6 +173,7 @@ const Navbar = () => {
                 )}
             </nav>
 
+            {/* Disabled: Local Mode pop-up (its privacy message now lives on the register page)
             <Modal show={showOfflineInfo} onHide={() => setShowOfflineInfo(false)} contentClassName="modern-modal" centered>
                 <Modal.Header closeButton>
                     <Modal.Title style={{ display: 'flex', alignItems: 'center', gap: '8px', fontWeight: '700' }}>
@@ -201,6 +207,7 @@ const Navbar = () => {
                     </Button>
                 </Modal.Footer>
             </Modal>
+            */}
         </>
     );
 };
