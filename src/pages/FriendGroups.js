@@ -306,7 +306,8 @@ const FriendGroups = () => {
                 ))}
             </div>
 
-            <ProfileModal personId={profileId} onHide={() => setProfileId(null)} />
+            <ProfileModal personId={profileId} onHide={() => setProfileId(null)}
+                onPlanned={(event, person) => setPlanNotice(`"${event.title}" is planned and ${person.firstName || person.username} is invited. It's in your calendar.`)} />
 
             {planning && (
                 <EventModal show initialData={planning.event} onSave={savePlan} onHide={() => setPlanning(null)} isNewEvent />

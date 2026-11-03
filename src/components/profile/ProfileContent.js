@@ -16,8 +16,9 @@ const displayName = (person) => [person.firstName, person.lastName].filter(Boole
  *
  * Used in the profile pop-up and on the /people/:id page. onOpenPerson(id), when given, opens mutual friends in
  * place (the pop-up); without it they are links to their pages. onLoaded(profile) reports the loaded profile.
+ * onPlan(profile), when given, shows "Plan something with ..." on friends' profiles.
  */
-const ProfileContent = ({ personId: id, onOpenPerson, onLoaded }) => {
+const ProfileContent = ({ personId: id, onOpenPerson, onLoaded, onPlan }) => {
     const friendships = useFriendships();
     const [profile, setProfile] = useState(null);
     const [status, setStatus] = useState('loading'); // loading | ready | notFound | error
@@ -92,6 +93,13 @@ const ProfileContent = ({ personId: id, onOpenPerson, onLoaded }) => {
             </header>
 
             {profile.self && <p className="group-muted">This is how others see your profile.</p>}
+
+            {!profile.self && onPlan && (profile.friend || relation.state === 'friend') && (
+                <button type="button" className="plan-with-button" onClick={() => onPlan(profile)}>
+                    <span aria-hidden="true">📅</span> Plan something with {profile.firstName || name}
+                    <span className="plan-with-hint">We'll find a time that suits you both</span>
+                </button>
+            )}
 
             {!profile.self && (profile.mutualFriends.length > 0 || profile.sharedGroups.length > 0) && (
                 <section className="profile-section" aria-labelledby={`in-common-${profile.id}`}>

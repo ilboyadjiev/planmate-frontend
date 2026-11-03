@@ -77,6 +77,9 @@ const Privacy = () => (
             <li><strong>Your profile page</strong> shows logged-in users your name, username, the friends and groups
                 you have in common with them, and the upcoming public events you host. Which public events you joined
                 is shown only to your friends.</li>
+            <li><strong>Planning with a friend:</strong> your friends can see times when you are free or busy, to
+                find a time that suits you both. They never see what you are doing. Your own events, invitations you
+                have not declined and public events you joined count as busy. Only friends can check this.</li>
             <li><strong>People you may know:</strong> friends of your friends and people in your friend groups may see
                 your name and username as a suggestion, with the reason (mutual friends or a shared group). Your city
                 is used only to order suggestions and is never shown or used as a reason on its own.</li>

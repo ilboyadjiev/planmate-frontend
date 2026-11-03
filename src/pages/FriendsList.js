@@ -231,7 +231,8 @@ const FriendsList = () => {
 
             </div>
 
-            <ProfileModal personId={profileId} onHide={() => setProfileId(null)} />
+            <ProfileModal personId={profileId} onHide={() => setProfileId(null)}
+                onPlanned={(event, person) => setSuccessMsg(`"${event.title}" is planned and ${person.firstName || person.username} is invited. It's in your calendar.`)} />
         </div>
     );
 };

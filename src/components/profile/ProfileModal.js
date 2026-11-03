@@ -1,14 +1,16 @@
 import React, { useCallback, useEffect, useState } from 'react';
 import { Modal } from 'react-bootstrap';
 import ProfileContent from './ProfileContent';
+import PlanWithFriend from './PlanWithFriend';
 
 /**
  * Someone's profile as a pop-up over the current page, so closing it returns you exactly where you were
  * (e.g. your search results). Opening a mutual friend switches the pop-up to them; Back returns.
  */
-const ProfileModal = ({ personId, onHide }) => {
+const ProfileModal = ({ personId, onHide, onPlanned }) => {
     const [stack, setStack] = useState(personId ? [personId] : []);
     const [names, setNames] = useState({}); // id -> name, for the Back button
+    const [planningWith, setPlanningWith] = useState(null);
 
     useEffect(() => { setStack(personId ? [personId] : []); }, [personId]);
 
@@ -20,7 +22,8 @@ const ProfileModal = ({ personId, onHide }) => {
     }, []);
 
     return (
-        <Modal show={!!current} onHide={onHide} contentClassName="modern-modal" centered size="lg"
+        <>
+        <Modal show={!!current && !planningWith} onHide={onHide} contentClassName="modern-modal" centered size="lg"
             aria-labelledby={current ? `profile-name-${current}` : undefined}>
             <Modal.Header closeButton closeLabel="Close profile">
                 {previous ? (
@@ -32,10 +35,20 @@ const ProfileModal = ({ personId, onHide }) => {
             <Modal.Body>
                 {current && (
                     <ProfileContent key={current} personId={current} onLoaded={remember}
-                        onOpenPerson={(id) => setStack(s => [...s, id])} />
+                        onOpenPerson={(id) => setStack(s => [...s, id])} onPlan={setPlanningWith} />
                 )}
             </Modal.Body>
         </Modal>
+        {planningWith && (
+            <PlanWithFriend person={planningWith} show
+                onClose={() => setPlanningWith(null)} // back to the profile
+                onPlanned={(event) => {
+                    setPlanningWith(null);
+                    onHide();
+                    if (onPlanned) onPlanned(event, planningWith);
+                }} />
+        )}
+        </>
     );
 };
 

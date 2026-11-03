@@ -96,8 +96,11 @@ const ResponseNote = ({ response }) => (
  * Create/edit form for the event creator, or a read-only details view (readOnly) for invited participants.
  * onSave may return a promise; if it rejects, the error is shown in the modal and the form stays open.
  * onRespond(response), given for invitees, records their answer (accepted, maybe, declined) and may reject.
+ * availabilityCheck(start, end) -> { youFree, theyFree }, when planning with a friend (availabilityName):
+ * the form then says whether you are both free at the chosen time.
  */
-const EventModal = ({ show, onHide, initialData, onSave, isNewEvent, readOnly = false, onRespond }) => {
+const EventModal = ({ show, onHide, initialData, onSave, isNewEvent, readOnly = false, onRespond,
+    availabilityCheck, availabilityName }) => {
     const { user } = useContext(AuthContext);
 
     const [formData, setFormData] = useState(initialData);
@@ -110,6 +113,7 @@ const EventModal = ({ show, onHide, initialData, onSave, isNewEvent, readOnly = 
     const [saving, setSaving] = useState(false);
     const [responding, setResponding] = useState(false);
     const [respondError, setRespondError] = useState('');
+    const [availability, setAvailability] = useState(null); // { youFree, theyFree } | 'checking' | null
 
     useEffect(() => {
         if (show) {
@@ -126,6 +130,24 @@ const EventModal = ({ show, onHide, initialData, onSave, isNewEvent, readOnly = 
             }
         }
     }, [show, initialData, user]);
+
+    // Planning with a friend: check, shortly after the time changes, whether you are both still free
+    const startTime = formData?.start ? new Date(formData.start).getTime() : null;
+    const endTime = formData?.end ? new Date(formData.end).getTime() : null;
+    useEffect(() => {
+        if (!show || !availabilityCheck || !startTime || !endTime || endTime <= startTime) {
+            setAvailability(null);
+            return undefined;
+        }
+        let cancelled = false;
+        setAvailability('checking');
+        const timer = setTimeout(() => {
+            availabilityCheck(startTime, endTime)
+                .then(result => { if (!cancelled) setAvailability(result); })
+                .catch(() => { if (!cancelled) setAvailability(null); });
+        }, 400);
+        return () => { cancelled = true; clearTimeout(timer); };
+    }, [show, availabilityCheck, startTime, endTime]);
 
     // Everyone whose name we know: friends, plus members of your groups (who need not be your friends)
     const peopleById = useMemo(() => {
@@ -294,9 +316,9 @@ const EventModal = ({ show, onHide, initialData, onSave, isNewEvent, readOnly = 
         const knownGroups = selectedGroups.filter(g => g.name);
         const participants = knownGroups.length ? individualParticipants : formData.participants || [];
         return (
-            <Modal show={show} onHide={onHide} contentClassName="modern-modal" centered>
+            <Modal show={show} onHide={onHide} contentClassName="modern-modal" centered aria-labelledby="event-modal-title">
                 <Modal.Header closeButton>
-                    <Modal.Title style={{ color: 'var(--text-main)' }}>{formData.title || 'Event'}</Modal.Title>
+                    <Modal.Title id="event-modal-title" style={{ color: 'var(--text-main)' }}>{formData.title || 'Event'}</Modal.Title>
                 </Modal.Header>
                 <Modal.Body>
                     <div style={{ ...chipStyle, display: 'inline-flex', marginBottom: '20px' }}>
@@ -361,9 +383,9 @@ const EventModal = ({ show, onHide, initialData, onSave, isNewEvent, readOnly = 
     }
 
     return (
-        <Modal show={show} onHide={onHide} contentClassName="modern-modal" centered>
+        <Modal show={show} onHide={onHide} contentClassName="modern-modal" centered aria-labelledby="event-modal-title">
             <Modal.Header closeButton>
-                <Modal.Title style={{ color: 'var(--text-main)' }}>{isNewEvent ? 'Create New Event' : 'Edit Event'}</Modal.Title>
+                <Modal.Title id="event-modal-title" style={{ color: 'var(--text-main)' }}>{isNewEvent ? 'Create New Event' : 'Edit Event'}</Modal.Title>
             </Modal.Header>
             <Modal.Body>
                 {answersSummary}
@@ -399,6 +421,15 @@ const EventModal = ({ show, onHide, initialData, onSave, isNewEvent, readOnly = 
                             handleChange('end', newEnd);
                         }}
                     />
+                    {availability && (
+                        <p className={`availability-note ${availability === 'checking' ? 'is-checking'
+                            : availability.youFree && availability.theyFree ? 'is-free' : 'is-busy'}`} role="status">
+                            {availability === 'checking' && 'Checking if you are both free…'}
+                            {availability !== 'checking' && availability.youFree && availability.theyFree && `✓ You and ${availabilityName} are both free then`}
+                            {availability !== 'checking' && !availability.theyFree && `${availabilityName} has something else then`}
+                            {availability !== 'checking' && availability.theyFree && !availability.youFree && 'You have something else then'}
+                        </p>
+                    )}
 
                     <Form.Group controlId="formDescription" style={{ marginBottom: '24px' }}>
                         <Form.Label style={labelStyle}>Description</Form.Label>

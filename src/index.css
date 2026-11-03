@@ -569,3 +569,16 @@ button.btn-primary:hover,
   color: var(--text-muted);
   white-space: nowrap;
 }
+
+/* Planning with a friend: are you both free at the chosen time? (EventModal) */
+.availability-note {
+  margin: -8px 0 20px;
+  padding: 8px 12px;
+  border-radius: 8px;
+  font-size: 0.85rem;
+  font-weight: 600;
+}
+
+.availability-note.is-checking { color: var(--text-muted); background: rgba(255, 255, 255, 0.04); }
+.availability-note.is-free { color: #6EE7B7; background: rgba(16, 185, 129, 0.12); }
+.availability-note.is-busy { color: #FCD34D; background: rgba(245, 158, 11, 0.12); }
