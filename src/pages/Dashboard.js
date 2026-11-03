@@ -4,7 +4,7 @@ import PlanMateCalendar from '../components/PlanMateCalendar';
 import DiscoveryFeed from '../components/DiscoveryFeed';
 import EventModal from '../components/EventModal';
 import { Toast, ToastContainer } from 'react-bootstrap';
-import { createEvent } from '../services/eventService';
+import { createEvent, blankEvent } from '../services/eventService';
 import { AuthContext } from '../context/AuthContext';
 import { getGuestId } from '../services/guestService';
 import useIsMobile from '../hooks/useIsMobile';
@@ -14,15 +14,6 @@ const PlusIcon = () => (
         <path d="M12 5v14M5 12h14" />
     </svg>
 );
-
-/** A new event starts at the next full hour and lasts an hour. */
-const newEventAt = (start = null, end = null) => {
-    const from = start || new Date(Math.ceil(Date.now() / 3600000) * 3600000);
-    return {
-        title: '', start: from, end: end || new Date(from.getTime() + 3600000), description: '',
-        participants: [], groups: [], location: null, isPublic: false, tags: [],
-    };
-};
 
 /**
  * Discover feed and calendar.
@@ -34,14 +25,14 @@ const Dashboard = ({ view = 'discover' }) => {
     const { user } = useContext(AuthContext);
     const [showModal, setShowModal] = useState(false);
     const [refreshKey, setRefreshKey] = useState(0);
-    const [selectedEvent, setSelectedEvent] = useState(newEventAt);
+    const [selectedEvent, setSelectedEvent] = useState(() => blankEvent());
     const [notice, setNotice] = useState(null); // { type: 'success' | 'error', text }
 
     const isMobile = useIsMobile();
     const [searchParams] = useSearchParams();
 
     const openNewEvent = useCallback((start, end) => {
-        setSelectedEvent(newEventAt(start, end));
+        setSelectedEvent(blankEvent(start, end));
         setShowModal(true);
     }, []);
     const openBlankEvent = useCallback(() => openNewEvent(), [openNewEvent]);

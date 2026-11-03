@@ -74,6 +74,9 @@ const Privacy = () => (
         <ul>
             <li><strong>Anyone who is logged in</strong> can find you by username or name and sees your username,
                 first and last name. They never see your email address or contact details.</li>
+            <li><strong>People you may know:</strong> friends of your friends and people in your friend groups may see
+                your name and username as a suggestion, with the reason (mutual friends or a shared group). Your city
+                is used only to order suggestions and is never shown or used as a reason on its own.</li>
             <li><strong>Your accepted friends</strong> also see your email address (PlanMate uses it to show who
                 organizes an event). Your street, zipcode, city, country and mobile number are never shown to other users.</li>
             <li><strong>Friend groups</strong> have no owner. Everyone in a group sees its name and the name and

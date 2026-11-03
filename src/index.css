@@ -536,3 +536,36 @@ button.btn-primary:hover,
 @media (max-width: 480px) {
   .answers-row { grid-template-columns: 1fr; gap: 2px; }
 }
+
+/* Friend actions next to names (AddFriendButton) */
+.add-friend-button {
+  position: relative;
+  z-index: 1;
+  min-height: 28px;
+  padding: 0 10px;
+  border-radius: 999px;
+  border: 1px solid rgba(240, 106, 37, 0.6);
+  background: rgba(240, 106, 37, 0.1);
+  color: #FDBA74;
+  font-size: 0.78rem;
+  font-weight: 700;
+  white-space: nowrap;
+  cursor: pointer;
+}
+
+.add-friend-button:hover:not(:disabled) { background: rgba(240, 106, 37, 0.2); }
+.add-friend-button:disabled { cursor: wait; opacity: 0.7; }
+.add-friend-button:focus-visible { outline: 2px solid #FDBA74; outline-offset: 2px; }
+
+.add-friend-button.is-accept {
+  background: var(--primary);
+  border-color: var(--primary);
+  color: #1A0B02;
+}
+
+.add-friend-status {
+  font-size: 0.78rem;
+  font-weight: 600;
+  color: var(--text-muted);
+  white-space: nowrap;
+}

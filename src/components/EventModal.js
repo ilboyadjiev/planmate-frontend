@@ -6,6 +6,8 @@ import DateTimePicker from './DateTimePicker/index';
 import VisibilityToggle from './VisibilityToggle';
 import LocationSearch from './LocationSearch';
 import { RESPONSES, RESPONSE_LABELS } from './calendarStatus';
+import AddFriendButton from './AddFriendButton';
+import useFriendships from '../hooks/useFriendships';
 
 const labelStyle = { fontWeight: '600', color: 'var(--text-main)' };
 const chipStyle = {
@@ -100,7 +102,8 @@ const EventModal = ({ show, onHide, initialData, onSave, isNewEvent, readOnly = 
 
     const [formData, setFormData] = useState(initialData);
     const [tagInput, setTagInput] = useState('');
-    const [friends, setFriends] = useState([]);
+    const friendships = useFriendships();
+    const friends = friendships.friends;
     const [myGroups, setMyGroups] = useState([]);
     const [searchQuery, setSearchQuery] = useState('');
     const [errors, setErrors] = useState({}); // { title, time, participants, form }
@@ -117,11 +120,6 @@ const EventModal = ({ show, onHide, initialData, onSave, isNewEvent, readOnly = 
             setRespondError('');
 
             if (user && user.id) {
-                api.get(`/v1/users/${user.id}/friends`)
-                    .then(res => {
-                        const accepted = res.data.filter(f => f.status === 'accepted');
-                        setFriends(accepted.map(f => f.userA.id === user.id ? f.userB : f.userA));
-                    }).catch(err => console.error('Could not fetch friends', err));
                 api.get('/v1/groups')
                     .then(res => setMyGroups(Array.isArray(res.data) ? res.data : []))
                     .catch(err => console.error('Could not fetch friend groups', err));
@@ -283,6 +281,7 @@ const EventModal = ({ show, onHide, initialData, onSave, isNewEvent, readOnly = 
                     <span key={m.id} style={chipStyle}>
                         {participantName(m)}
                         {!isNewEvent && responseOf(m) && <ResponseNote response={responseOf(m)} />}
+                        <AddFriendButton person={m} friendships={friendships} />
                     </span>
                 ))}
             </div>
@@ -340,6 +339,7 @@ const EventModal = ({ show, onHide, initialData, onSave, isNewEvent, readOnly = 
                                     <div key={p.id} style={chipStyle}>
                                         {participantName(p)}
                                         {responseOf(p) && <ResponseNote response={responseOf(p)} />}
+                                        <AddFriendButton person={{ ...peopleById.get(String(p.id)), ...p }} friendships={friendships} />
                                     </div>
                                 ))}
                             </div>

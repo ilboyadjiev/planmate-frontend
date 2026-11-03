@@ -2,6 +2,15 @@ import api from '../api/client';
 import { getGuestId } from './guestService';
 import { myResponse } from '../components/calendarStatus';
 
+/** A new event: starts at the next full hour and lasts an hour, unless a time slot was picked. */
+export const blankEvent = (start = null, end = null, extra = {}) => {
+    const from = start || new Date(Math.ceil(Date.now() / 3600000) * 3600000);
+    return {
+        title: '', start: from, end: end || new Date(from.getTime() + 3600000), description: '',
+        participants: [], groups: [], location: null, isPublic: false, tags: [], ...extra,
+    };
+};
+
 /**
  * Creates an event. Logged-in users are identified by their token; guests pass their guest id.
  * eventData.participants is a list of friends ({ id, ... }); eventData.groups a list of friend groups ({ id }).

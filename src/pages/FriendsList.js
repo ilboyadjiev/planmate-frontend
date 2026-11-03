@@ -1,96 +1,98 @@
-import React, { useState, useEffect, useContext } from 'react';
+import React, { useState, useEffect, useContext, useCallback } from 'react';
 import api from '../api/client';
 import { AuthContext } from '../context/AuthContext';
-import { notifyFriendsChanged } from '../services/friendEvents';
 import SocialTabs from '../components/SocialTabs';
+import AddFriendButton from '../components/AddFriendButton';
+import useFriendships from '../hooks/useFriendships';
 import './FriendGroups.css';
+
+const displayName = (person) => [person.firstName, person.lastName].filter(Boolean).join(' ') || person.username;
+
+/** Why someone is suggested: shared groups first, then mutual friends. */
+export const suggestionReason = (suggestion) => {
+    const reasons = [];
+    const groups = suggestion.sharedGroups || [];
+    if (groups.length === 1) reasons.push(`In ${groups[0]} with you`);
+    else if (groups.length > 1) reasons.push(`In ${groups.length} of your groups`);
+
+    const count = suggestion.mutualFriendCount || 0;
+    if (count > 0) {
+        const names = (suggestion.mutualFriends || []).map(f => f.firstName || f.username);
+        const others = count - names.length;
+        const named = others > 0 ? `${names.join(', ')} and ${others} more` : names.join(' and ');
+        reasons.push(`${count} mutual ${count === 1 ? 'friend' : 'friends'}: ${named}`);
+    }
+    return reasons.join(' · ');
+};
 
 const FriendsList = () => {
     const { user } = useContext(AuthContext);
-    const [friends, setFriends] = useState([]);
-    const [pendingRequests, setPendingRequests] = useState([]);
+    const friendships = useFriendships();
     const [searchTerm, setSearchTerm] = useState('');
     const [searchResults, setSearchResults] = useState([]);
+    const [suggestions, setSuggestions] = useState([]);
     const [error, setError] = useState(null);
     const [successMsg, setSuccessMsg] = useState('');
-    const [loading, setLoading] = useState(true);
+    const [busyId, setBusyId] = useState(null);
+    const [confirmRemoveId, setConfirmRemoveId] = useState(null);
 
-    const fetchFriends = async () => {
-        if (!user || !user.id) return;
+    const loadSuggestions = useCallback(async () => {
         try {
-            const response = await api.get(`/v1/users/${user.id}/friends`);
-            setFriends(response.data.filter(friendship => friendship.status === 'accepted'));
-            setPendingRequests(response.data.filter(friendship => friendship.status === 'pending'));
-            setLoading(false);
+            const res = await api.get('/v1/friends/suggestions');
+            setSuggestions(Array.isArray(res.data) ? res.data : []);
         } catch (err) {
-            setError('Failed to load friends list.');
-            setLoading(false);
+            setSuggestions([]);
         }
-    };
+    }, []);
 
-    useEffect(() => {
-        fetchFriends();
-        // eslint-disable-next-line react-hooks/exhaustive-deps
-    }, [user]);
+    // Loaded once per visit: people you add stay in the list, showing "Requested"
+    useEffect(() => { if (user?.id) loadSuggestions(); }, [user, loadSuggestions]);
 
     const handleSearch = async (e) => {
         e.preventDefault();
         setError(null);
         setSuccessMsg('');
-        
         if (!searchTerm.trim()) {
             setSearchResults([]);
             return;
         }
-
         try {
             const response = await api.get('/v1/users/search', { params: { term: searchTerm } });
-            const filteredResults = response.data.filter(u => u.id !== user.id);
-            setSearchResults(filteredResults);
-            
-            if (filteredResults.length === 0) {
-                setError("No users found matching that search.");
-            }
+            const results = response.data.filter(u => u.id !== user.id);
+            setSearchResults(results);
+            if (results.length === 0) setError('No users found matching that search.');
         } catch (err) {
             setError('Error searching for users.');
         }
     };
 
-    const sendFriendRequest = async (userId) => {
+    const run = async (id, action, success, failure) => {
+        setBusyId(id);
+        setError(null);
+        setSuccessMsg('');
         try {
-            setError(null);
-            await api.post(`/v1/friends/request/${userId}`, {});
-            setSuccessMsg('Friend request sent successfully!');
-            setSearchResults([]); 
-            setSearchTerm('');
-            fetchFriends();
+            await action();
+            if (success) setSuccessMsg(success);
         } catch (err) {
-            setError(err.response?.data?.error || 'Failed to send friend request.');
+            setError(failure);
+        } finally {
+            setBusyId(null);
+            setConfirmRemoveId(null);
         }
     };
 
-    const acceptFriendRequest = async (friendshipId) => {
-        try {
-            setError(null);
-            await api.put(`/v1/friends/accept/${friendshipId}`, {});
-            setSuccessMsg('Friend request accepted!');
-            fetchFriends();
-            notifyFriendsChanged();
-        } catch (err) {
-            setError('Error accepting friend request.');
-        }
-    };
+    if (!friendships.loaded) return <div style={{ textAlign: 'center', marginTop: '50px', color: 'var(--text-muted)' }}>Loading network...</div>;
 
-    const getFriendData = (friendship) => {
-        return friendship.userA.id === user.id ? friendship.userB : friendship.userA;
-    };
-
-    if (loading) return <div style={{ textAlign: 'center', marginTop: '50px', color: 'var(--text-muted)' }}>Loading network...</div>;
+    const all = friendships.friendships;
+    const other = (f) => (f.userA.id === user.id ? f.userB : f.userA);
+    const friends = all.filter(f => f.status === 'accepted');
+    const received = all.filter(f => f.status !== 'accepted' && f.userA.id !== user.id);
+    const sent = all.filter(f => f.status !== 'accepted' && f.userA.id === user.id);
 
     return (
         <div style={{ padding: '40px 20px', display: 'flex', justifyContent: 'center' }}>
             <div className="form-container" style={{ maxWidth: '800px', width: '100%', margin: 0 }}>
-                
+
                 <SocialTabs />
                 <h2 style={{ marginBottom: '8px', fontWeight: '700' }}>Network</h2>
                 <p style={{ color: 'var(--text-muted)', marginBottom: '32px', fontSize: '0.95rem' }}>
@@ -98,9 +100,11 @@ const FriendsList = () => {
                 </p>
 
                 <form onSubmit={handleSearch} style={{ display: 'flex', gap: '12px', marginBottom: '32px' }}>
+                    <label htmlFor="friend-search" className="visually-hidden">Search people by username</label>
                     <input
+                        id="friend-search"
                         type="text"
-                        placeholder="Search by username or email..."
+                        placeholder="Search by username..."
                         value={searchTerm}
                         onChange={(e) => setSearchTerm(e.target.value)}
                         style={{ flexGrow: 1 }}
@@ -110,112 +114,128 @@ const FriendsList = () => {
                     </button>
                 </form>
 
-                {error && <div className="availability-message msg-error" style={{ marginBottom: '24px' }}>{error}</div>}
-                {successMsg && <div className="availability-message msg-success" style={{ marginBottom: '24px' }}>{successMsg}</div>}
+                {error && <div className="availability-message msg-error" role="alert" style={{ marginBottom: '24px' }}>{error}</div>}
+                {successMsg && <div className="availability-message msg-success" role="status" style={{ marginBottom: '24px' }}>{successMsg}</div>}
 
                 {searchResults.length > 0 && (
-                    <div style={{ marginBottom: '40px' }}>
-                        <h4 style={{ fontSize: '1.1rem', marginBottom: '16px', color: 'var(--primary)' }}>Search Results</h4>
-                        <div style={{ border: '1px solid var(--border)', borderRadius: '12px', overflow: 'hidden' }}>
-                            {searchResults.map((result) => {
-                                const isFriend = friends.some(f => getFriendData(f).id === result.id);
-                                const isPending = pendingRequests.some(f => getFriendData(f).id === result.id);
+                    <Section title="Search Results" color="var(--primary)">
+                        {searchResults.map(result => (
+                            <UserListItem key={result.id} userData={result}
+                                actionButton={friendships.relationOf(result.id).state === 'friend'
+                                    ? <span className="add-friend-status">Friend</span>
+                                    : <AddFriendButton person={result} friendships={friendships} />} />
+                        ))}
+                    </Section>
+                )}
 
-                                let actionContent;
-                                if (isFriend) {
-                                    actionContent = <span style={{ fontSize: '0.85rem', color: 'var(--text-muted)', fontWeight: '500', paddingRight: '8px' }}>Friend</span>;
-                                } else if (isPending) {
-                                    actionContent = <span style={{ fontSize: '0.85rem', color: '#F59E0B', fontWeight: '500', paddingRight: '8px' }}>Pending</span>;
-                                } else {
-                                    actionContent = (
-                                        <button onClick={() => sendFriendRequest(result.id)} className="btn-modern-primary" style={{ padding: '6px 16px', fontSize: '0.85rem' }}>
-                                            Add Friend
+                {received.length > 0 && (
+                    <Section title={`Friend requests (${received.length})`} color="#F59E0B">
+                        {received.map(f => (
+                            <UserListItem key={f.id} userData={other(f)} subText="Wants to be your friend"
+                                actionButton={(
+                                    <div className="friend-actions">
+                                        <button type="button" className="btn-modern-primary friend-action" disabled={busyId === f.id}
+                                            onClick={() => run(f.id, () => friendships.accept(f.id), `You and ${displayName(other(f))} are now friends.`, 'Could not accept the request.')}>
+                                            Accept
                                         </button>
-                                    );
-                                }
-
-                                return (
-                                    <UserListItem 
-                                        key={result.id} 
-                                        userData={result} 
-                                        actionButton={actionContent} 
-                                    />
-                                );
-                            })}
-                        </div>
-                    </div>
+                                        <button type="button" className="friend-action friend-action-quiet" disabled={busyId === f.id}
+                                            aria-label={`Decline ${displayName(other(f))}'s request`}
+                                            onClick={() => run(f.id, () => friendships.remove(f.id), null, 'Could not decline the request.')}>
+                                            Decline
+                                        </button>
+                                    </div>
+                                )} />
+                        ))}
+                    </Section>
                 )}
 
-                {pendingRequests.length > 0 && (
-                    <div style={{ marginBottom: '40px' }}>
-                        <h4 style={{ fontSize: '1.1rem', marginBottom: '16px', color: '#F59E0B' }}>Pending Requests</h4>
-                        <div style={{ border: '1px solid var(--border)', borderRadius: '12px', overflow: 'hidden' }}>
-                            {pendingRequests.map((friendship) => {
-                                const friend = getFriendData(friendship);
-                                const isIncoming = friendship.userA.id !== user.id; 
-
-                                return (
-                                    <UserListItem 
-                                        key={friendship.id} 
-                                        userData={friend} 
-                                        subText={isIncoming ? "Wants to be your friend" : "Request sent"}
-                                        actionButton={isIncoming ? (
-                                            <button onClick={() => acceptFriendRequest(friendship.id)} className="btn-modern-primary" style={{ padding: '6px 16px', fontSize: '0.85rem' }}>
-                                                Accept
-                                            </button>
-                                        ) : (
-                                            <span style={{ fontSize: '0.85rem', color: 'var(--text-muted)', fontWeight: '500', paddingRight: '8px' }}>Pending...</span>
-                                        )} 
-                                    />
-                                );
-                            })}
-                        </div>
-                    </div>
+                {suggestions.length > 0 && (
+                    <Section title="People you may know" color="var(--text-main)">
+                        {suggestions.map(s => (
+                            <UserListItem key={s.id} userData={s} subText={suggestionReason(s)}
+                                actionButton={<AddFriendButton person={s} friendships={friendships} />} />
+                        ))}
+                    </Section>
                 )}
 
-                <div>
-                    <h4 style={{ fontSize: '1.1rem', marginBottom: '16px', color: 'var(--text-main)' }}>My Friends ({friends.length})</h4>
-                    {friends.length > 0 ? (
-                        <div style={{ border: '1px solid var(--border)', borderRadius: '12px', overflow: 'hidden' }}>
-                            {friends.map((friendship) => {
-                                const friend = getFriendData(friendship);
-                                return <UserListItem key={friendship.id} userData={friend} />;
-                            })}
-                        </div>
-                    ) : (
-                        <div style={{ padding: '32px', textAlign: 'center', backgroundColor: 'var(--bg-color)', borderRadius: '12px', color: 'var(--text-muted)' }}>
-                            You don't have any friends added yet. Use the search bar above to find people!
-                        </div>
-                    )}
-                </div>
+                {sent.length > 0 && (
+                    <Section title="Requests you sent" color="var(--text-muted)">
+                        {sent.map(f => (
+                            <UserListItem key={f.id} userData={other(f)} subText="Waiting for an answer"
+                                actionButton={(
+                                    <button type="button" className="friend-action friend-action-quiet" disabled={busyId === f.id}
+                                        aria-label={`Cancel your request to ${displayName(other(f))}`}
+                                        onClick={() => run(f.id, () => friendships.remove(f.id), null, 'Could not cancel the request.')}>
+                                        Cancel request
+                                    </button>
+                                )} />
+                        ))}
+                    </Section>
+                )}
+
+                <Section title={`My Friends (${friends.length})`} color="var(--text-main)" empty={friends.length === 0 && (
+                    <div style={{ padding: '32px', textAlign: 'center', backgroundColor: 'var(--bg-color)', borderRadius: '12px', color: 'var(--text-muted)' }}>
+                        You don't have any friends added yet. Search above or add someone from "People you may know".
+                    </div>
+                )}>
+                    {friends.map(f => {
+                        const friend = other(f);
+                        return (
+                            <UserListItem key={f.id} userData={friend}
+                                actionButton={confirmRemoveId === f.id ? (
+                                    <div className="friend-actions" role="group" aria-label={`Remove ${displayName(friend)}?`}>
+                                        <span className="friend-confirm-text">Remove {displayName(friend)}?</span>
+                                        <button type="button" className="friend-action friend-action-danger" disabled={busyId === f.id}
+                                            onClick={() => run(f.id, () => friendships.remove(f.id), `${displayName(friend)} was removed from your friends.`, 'Could not remove this friend.')}>
+                                            Remove
+                                        </button>
+                                        <button type="button" className="friend-action friend-action-quiet" onClick={() => setConfirmRemoveId(null)}>
+                                            Cancel
+                                        </button>
+                                    </div>
+                                ) : (
+                                    <button type="button" className="friend-action friend-action-quiet"
+                                        aria-label={`Remove ${displayName(friend)} from your friends`}
+                                        onClick={() => setConfirmRemoveId(f.id)}>
+                                        Remove
+                                    </button>
+                                )} />
+                        );
+                    })}
+                </Section>
 
             </div>
         </div>
     );
 };
 
+const Section = ({ title, color, children, empty }) => {
+    const headingId = `section-${title.toLowerCase().replace(/[^a-z0-9]+/g, '-')}`;
+    return (
+    <section aria-labelledby={headingId} style={{ marginBottom: '40px' }}>
+        <h4 id={headingId} style={{ fontSize: '1.1rem', marginBottom: '16px', color }}>{title}</h4>
+        {empty || (
+            <div style={{ border: '1px solid var(--border)', borderRadius: '12px', overflow: 'hidden' }}>{children}</div>
+        )}
+    </section>
+    );
+};
+
 const UserListItem = ({ userData, subText, actionButton }) => {
     const initial = (userData.firstName || userData.username || '?').charAt(0).toUpperCase();
-    
+
     return (
-        <div style={{ 
-            display: 'flex', 
-            alignItems: 'center', 
-            justifyContent: 'space-between', 
-            padding: '16px', 
-            borderBottom: '1px solid var(--border)',
-            backgroundColor: 'var(--surface)'
-        }}>
-            <div style={{ display: 'flex', alignItems: 'center', gap: '16px' }}>
-                <div style={{ 
-                    width: '40px', height: '40px', borderRadius: '50%', 
-                    backgroundColor: 'var(--primary)', color: 'white', 
-                    display: 'flex', alignItems: 'center', justifyContent: 'center', 
-                    fontWeight: 'bold', fontSize: '1.1rem' 
-                }}>
+        <div className="user-list-item">
+            <div style={{ display: 'flex', alignItems: 'center', gap: '16px', minWidth: 0 }}>
+                <div style={{
+                    width: '40px', height: '40px', borderRadius: '50%', flex: '0 0 auto',
+                    backgroundColor: 'var(--primary)', color: '#1A0B02',
+                    display: 'flex', alignItems: 'center', justifyContent: 'center',
+                    fontWeight: 'bold', fontSize: '1.1rem'
+                }} aria-hidden="true">
                     {initial}
                 </div>
-                <div>
+                <div style={{ minWidth: 0 }}>
                     <div style={{ fontWeight: '600', color: 'var(--text-main)' }}>
                         {userData.firstName} {userData.lastName} <span style={{ fontWeight: '400', color: 'var(--text-muted)' }}>@{userData.username}</span>
                     </div>
@@ -225,7 +245,7 @@ const UserListItem = ({ userData, subText, actionButton }) => {
                     )}
                 </div>
             </div>
-            {actionButton && <div>{actionButton}</div>}
+            {actionButton && <div style={{ flex: '0 0 auto' }}>{actionButton}</div>}
         </div>
     );
 };

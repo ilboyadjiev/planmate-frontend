@@ -279,3 +279,80 @@
   .group-create { flex-direction: column; }
   .group-card { padding: 16px; }
 }
+
+/* Friends page rows and actions */
+.user-list-item {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 16px;
+  border-bottom: 1px solid var(--border);
+  background-color: var(--surface);
+}
+
+.user-list-item:last-child { border-bottom: none; }
+
+.friend-actions {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+}
+
+.friend-action {
+  min-height: 36px;
+  padding: 0 14px;
+  border-radius: 8px;
+  font-size: 0.85rem;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.friend-action:disabled { opacity: 0.7; cursor: wait; }
+
+.friend-action-quiet {
+  background: transparent;
+  border: 1px solid var(--border);
+  color: var(--text-muted);
+}
+
+.friend-action-quiet:hover:not(:disabled) { color: var(--text-main); background: rgba(255, 255, 255, 0.05); }
+
+.friend-action-danger {
+  background: rgba(239, 68, 68, 0.15);
+  border: 1px solid rgba(239, 68, 68, 0.5);
+  color: #FCA5A5;
+}
+
+.friend-confirm-text {
+  font-size: 0.85rem;
+  color: var(--text-main);
+}
+
+@media (max-width: 600px) {
+  .user-list-item { flex-wrap: wrap; }
+  .user-list-item > div:last-child { margin-left: 56px; }
+}
+
+/* "Plan something" with a group */
+.group-plan-button {
+  border-color: rgba(240, 106, 37, 0.6);
+  color: #FDBA74;
+}
+
+.group-plan-button:hover:not(:disabled) { background: rgba(240, 106, 37, 0.12); }
+
+.group-plan-notice {
+  margin: 16px 0 0;
+  padding: 10px 14px;
+  border-radius: 10px;
+  background: rgba(16, 185, 129, 0.12);
+  border: 1px solid rgba(16, 185, 129, 0.4);
+  color: #6EE7B7;
+  font-weight: 600;
+}
+
+.group-member .add-friend-button,
+.group-member .add-friend-status { margin-left: 2px; }

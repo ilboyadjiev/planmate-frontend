@@ -102,3 +102,39 @@ test('leaving asks for confirmation and removes the group from the page', async 
     await waitFor(() => expect(screen.queryByRole('heading', { name: 'Sports team' })).not.toBeInTheDocument());
     expect(api.delete).toHaveBeenCalledWith('/v1/groups/10/members/1');
 });
+
+describe('more social groups', () => {
+    const erin = { id: 5, firstName: 'Erin', username: 'erin' }; // in the group, not Alice's friend
+
+    test('group members who are not your friends can be added from the card', async () => {
+        api.get.mockImplementation(url => Promise.resolve({
+            data: url === '/v1/groups' ? [{ ...sports, members: [alice, bob, erin] }]
+                : [{ status: 'accepted', userA: alice, userB: bob }],
+        }));
+        api.post.mockResolvedValue({ data: {} });
+        renderPage();
+        const group = within(await card('Sports team'));
+
+        expect(await group.findByRole('button', { name: 'Add Erin as a friend' })).toBeInTheDocument();
+        expect(group.queryByRole('button', { name: 'Add Bob as a friend' })).not.toBeInTheDocument();
+
+        fireEvent.click(group.getByRole('button', { name: 'Add Erin as a friend' }));
+        await waitFor(() => expect(api.post).toHaveBeenCalledWith('/v1/friends/request/5', {}));
+    });
+
+    test('"Plan something" opens a new event with the group already invited', async () => {
+        api.post.mockResolvedValue({ data: { id: 'e1' } });
+        renderPage();
+        const group = within(await card('Sports team'));
+
+        fireEvent.click(group.getByRole('button', { name: 'Plan something with Sports team' }));
+
+        const dialog = await screen.findByRole('dialog');
+        expect(await within(dialog).findByText('2 invited')).toBeInTheDocument();
+        fireEvent.change(within(dialog).getByPlaceholderText(/weekend hike/i), { target: { value: 'Football' } });
+        fireEvent.click(within(dialog).getByRole('button', { name: /create event/i }));
+
+        await waitFor(() => expect(api.post).toHaveBeenCalledWith('/v2/events', expect.objectContaining({ title: 'Football', groupIds: ['10'] })));
+        expect(await screen.findByText(/"Football" is planned and Sports team invited/)).toBeInTheDocument();
+    });
+});

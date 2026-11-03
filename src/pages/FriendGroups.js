@@ -2,6 +2,10 @@ import React, { useCallback, useContext, useEffect, useMemo, useRef, useState } 
 import api from '../api/client';
 import { AuthContext } from '../context/AuthContext';
 import SocialTabs from '../components/SocialTabs';
+import AddFriendButton from '../components/AddFriendButton';
+import EventModal from '../components/EventModal';
+import useFriendships from '../hooks/useFriendships';
+import { blankEvent, createEvent } from '../services/eventService';
 import { avatarColor, initials } from '../components/feed/feedText';
 import './FriendGroups.css';
 
@@ -23,7 +27,7 @@ const Avatar = ({ person }) => (
 );
 
 /** One group: rename, see members, add your friends, remove members, leave. */
-const GroupCard = ({ group, me, friends, autoOpenAdd, onChanged, onGone, onReload }) => {
+const GroupCard = ({ group, me, friends, friendships, autoOpenAdd, onChanged, onGone, onReload, onPlan }) => {
     const [renaming, setRenaming] = useState(false);
     const [name, setName] = useState(group.name);
     const [adding, setAdding] = useState(autoOpenAdd);
@@ -117,6 +121,7 @@ const GroupCard = ({ group, me, friends, autoOpenAdd, onChanged, onGone, onReloa
                             {person.id === me.id ? 'You' : displayName(person)}
                             <span className="group-member-handle"> @{person.username}</span>
                         </span>
+                        {person.id !== me.id && <AddFriendButton person={person} friendships={friendships} />}
                         {person.id !== me.id && (
                             <button type="button" className="group-remove" disabled={busy}
                                 aria-label={`Remove ${displayName(person)} from ${group.name}`}
@@ -160,6 +165,10 @@ const GroupCard = ({ group, me, friends, autoOpenAdd, onChanged, onGone, onReloa
             {error && <p className="field-error" role="alert">{error}</p>}
 
             <footer className="group-card-footer">
+                <button type="button" className="group-button group-plan-button" onClick={() => onPlan(group)}
+                    aria-label={`Plan something with ${group.name}`}>
+                    Plan something
+                </button>
                 {!adding && (
                     <button type="button" className="group-button group-button-primary" onClick={() => setAdding(true)}>
                         + Add friends
@@ -188,7 +197,11 @@ const GroupCard = ({ group, me, friends, autoOpenAdd, onChanged, onGone, onReloa
 const FriendGroups = () => {
     const { user } = useContext(AuthContext);
     const [groups, setGroups] = useState([]);
-    const [friends, setFriends] = useState([]);
+    const friendships = useFriendships();
+    const friends = useMemo(() => [...friendships.friends].sort((a, b) => displayName(a).localeCompare(displayName(b))),
+        [friendships.friends]);
+    const [planning, setPlanning] = useState(null); // the new event being planned for a group
+    const [planNotice, setPlanNotice] = useState('');
     const [loading, setLoading] = useState(true);
     const [loadError, setLoadError] = useState(false);
     const [newName, setNewName] = useState('');
@@ -203,15 +216,8 @@ const FriendGroups = () => {
         setLoading(true);
         setLoadError(false);
         try {
-            const [groupsRes, friendsRes] = await Promise.all([
-                api.get('/v1/groups'),
-                api.get(`/v1/users/${user.id}/friends`),
-            ]);
+            const groupsRes = await api.get('/v1/groups');
             setGroups(groupsRes.data);
-            setFriends(friendsRes.data
-                .filter(f => f.status === 'accepted')
-                .map(f => (f.userA.id === user.id ? f.userB : f.userA))
-                .sort((a, b) => displayName(a).localeCompare(displayName(b))));
         } catch (err) {
             setLoadError(true);
         } finally {
@@ -238,6 +244,19 @@ const FriendGroups = () => {
         }
     };
 
+    // "Plan something": the new-event form with the group already invited
+    const planFor = (group) => {
+        setPlanNotice('');
+        setPlanning({ group, event: blankEvent(null, null, { groups: [{ id: group.id }] }) });
+    };
+
+    const savePlan = async (formData) => {
+        await createEvent(formData); // errors propagate to the form
+        const invited = (formData.groups || []).map(g => groups.find(x => x.id === g.id)?.name).filter(Boolean);
+        setPlanNotice(`"${formData.title}" is planned${invited.length ? ` and ${invited.join(', ')} invited` : ''}. It's in your calendar.`);
+        setPlanning(null);
+    };
+
     const replaceGroup = (updated) => setGroups(prev => prev.map(g => (g.id === updated.id ? updated : g)));
     const dropGroup = (id) => setGroups(prev => prev.filter(g => g.id !== id));
 
@@ -261,6 +280,7 @@ const FriendGroups = () => {
                 </button>
             </form>
             {createError && <p id="new-group-error" className="field-error" role="alert">{createError}</p>}
+            {planNotice && <p className="group-plan-notice" role="status">{planNotice}</p>}
 
             {loading && <p className="group-muted">Loading your groups…</p>}
             {!loading && loadError && (
@@ -278,10 +298,14 @@ const FriendGroups = () => {
 
             <div className="groups-list">
                 {groups.map(group => (
-                    <GroupCard key={group.id} group={group} me={me} friends={friends}
+                    <GroupCard key={group.id} group={group} me={me} friends={friends} friendships={friendships} onPlan={planFor}
                         autoOpenAdd={group.id === justCreatedId} onChanged={replaceGroup} onGone={dropGroup} onReload={load} />
                 ))}
             </div>
+
+            {planning && (
+                <EventModal show initialData={planning.event} onSave={savePlan} onHide={() => setPlanning(null)} isNewEvent />
+            )}
         </div>
     );
 };
