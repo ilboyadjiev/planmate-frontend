@@ -197,7 +197,12 @@ const DiscoveryFeed = ({ onAttendanceChange, onRespond, onEventChanged, onError 
             <div className="feed-chips" role="group" aria-label="Filter events">
                 {chips.map(chip => (
                     <button key={chip.key} type="button" className={`feed-chip${chip.groupId ? ' feed-chip-group' : ''}`}
-                        aria-pressed={active.key === chip.key} onClick={() => setActive(chip)}
+                        aria-pressed={active.key === chip.key}
+                        onClick={e => {
+                            setActive(chip);
+                            // In the one-line swipeable row on phones, bring the chosen chip into view
+                            if (e.currentTarget.scrollIntoView) e.currentTarget.scrollIntoView({ behavior: 'smooth', inline: 'center', block: 'nearest' });
+                        }}
                         aria-label={chip.groupId ? `Group: ${chip.label}` : undefined}>
                         {chip.groupId && <GroupIcon />}
                         {chip.nearby && <PinIcon />}

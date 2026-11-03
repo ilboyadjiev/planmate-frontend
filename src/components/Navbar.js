@@ -8,8 +8,6 @@ import { FRIENDS_CHANGED, countIncomingRequests } from '../services/friendEvents
 import planmateIcon from '../assets/planmate-icon.png';
 import './Navbar.css';
 
-/** Where the navbar opens the calendar drawer on small screens (read by Dashboard). */
-export const CALENDAR_DRAWER_LINK = { pathname: '/dashboard', search: '?calendar=open' };
 
 const Icon = ({ children, size = 22 }) => (
     <svg aria-hidden="true" width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor"
@@ -46,8 +44,8 @@ const Badge = ({ count, label }) => (count > 0 ? (
  * App navigation.
  * - Large screens: sticky top bar with Discover / Friends and an avatar menu. The calendar is always on the
  *   dashboard there, so it needs no entry.
- * - Small screens: slim top bar plus a bottom tab bar (Discover, Calendar, Friends, You). Calendar opens the
- *   dashboard's slide-in drawer through the URL, so it works from any page and the back gesture closes it.
+ * - Small screens: slim top bar plus a bottom tab bar (Discover, Calendar, Friends, You). Calendar is its own
+ *   page (/calendar), opening in the day view.
  */
 const Navbar = () => {
     const { authToken, user, logout } = useContext(AuthContext);
@@ -59,8 +57,6 @@ const Navbar = () => {
 
     const loggedIn = !!authToken && !!user;
     const userId = user?.id;
-    const onDashboard = location.pathname === '/dashboard';
-    const calendarOpen = onDashboard && new URLSearchParams(location.search).get('calendar') === 'open';
 
     // Pending friend requests for the badge: on login, on every page change and when FriendsList changes them
     useEffect(() => {
@@ -153,15 +149,12 @@ const Navbar = () => {
             </header>
 
             <nav className="pm-tabbar" aria-label="Main">
-                <Link to="/dashboard" className={`pm-tab${onDashboard && !calendarOpen ? ' active' : ''}`}
-                    aria-current={onDashboard && !calendarOpen ? 'page' : undefined}>
+                <NavLink to="/dashboard" className="pm-tab">
                     <CompassIcon /><span>Discover</span>
-                </Link>
-                <Link to={CALENDAR_DRAWER_LINK} state={{ calendarDrawer: true }}
-                    className={`pm-tab${calendarOpen ? ' active' : ''}`} aria-current={calendarOpen ? 'page' : undefined}
-                    onClick={e => { if (calendarOpen) e.preventDefault(); }}>
+                </NavLink>
+                <NavLink to="/calendar" className="pm-tab">
                     <CalendarIcon /><span>Calendar</span>
-                </Link>
+                </NavLink>
                 {loggedIn ? (
                     <>
                         {/* Friends and Groups share this tab; the pages switch between each other */}

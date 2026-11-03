@@ -255,7 +255,13 @@ button.btn-primary:hover,
   background: rgba(79, 70, 229, 0.2);
 }
 
-/* --- Dashboard Layout & Responsive Drawer --- */
+/* --- Dashboard: feed and calendar side by side; one page per tab on phones --- */
+.dashboard-page {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 20px;
+}
+
 .dashboard-layout {
   display: grid;
   grid-template-columns: 350px 1fr;
@@ -263,72 +269,54 @@ button.btn-primary:hover,
   align-items: start;
 }
 
-.drawer-header,
-.drawer-overlay {
-  display: none;
+.dashboard-feed,
+.dashboard-calendar {
+  min-width: 0;
 }
 
-/* Mobile Breakpoint */
+.dashboard-page-title {
+  font-size: 1.4rem;
+  font-weight: 800;
+  margin: 0 0 16px;
+}
+
+/* Floating "new event" button (phones) */
+.new-event-fab {
+  position: fixed;
+  right: 18px;
+  bottom: calc(84px + env(safe-area-inset-bottom, 0px));
+  z-index: 1001;
+  width: 58px;
+  height: 58px;
+  border-radius: 50%;
+  border: none;
+  background: var(--primary);
+  color: #1A0B02;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0 10px 24px rgba(240, 106, 37, 0.45), 0 2px 6px rgba(0, 0, 0, 0.4);
+  cursor: pointer;
+  transition: transform 0.15s, background 0.2s;
+}
+
+.new-event-fab:hover { background: #F58A50; }
+.new-event-fab:active { transform: scale(0.94); }
+.new-event-fab:focus-visible { outline: 3px solid #FDBA74; outline-offset: 3px; }
+
 @media (max-width: 900px) {
-  .dashboard-layout {
-    display: block; /* Break the grid so Discovery Feed takes full width */
-  }
+  .dashboard-page { padding: 16px; }
 
-  /* Toasts sit above the bottom tab bar */
+  /* Keep the last card and the calendar clear of the floating button */
+  .dashboard-single { padding-bottom: 72px; }
+
+  /* Toasts sit above the bottom tab bar and the floating button */
   .dashboard-toasts {
-    bottom: calc(68px + env(safe-area-inset-bottom, 0px)) !important;
+    bottom: calc(150px + env(safe-area-inset-bottom, 0px)) !important;
   }
 
-  /* The Sliding Drawer */
-  .dashboard-calendar-drawer {
-    position: fixed;
-    top: 0;
-    right: -100%;
-    width: 90%;
-    max-width: 650px;
-    height: 100vh;
-    background-color: var(--bg-color);
-    z-index: 1050;
-    transition: right 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-    box-shadow: -5px 0 25px rgba(0, 0, 0, 0.7);
-    padding: 20px;
-    overflow-y: auto;
-  }
-
-  .dashboard-calendar-drawer.open {
-    right: 0;
-  }
-
-  .drawer-header {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    margin-bottom: 16px;
-    padding-bottom: 12px;
-    border-bottom: 1px solid var(--border);
-  }
-
-  .close-drawer-btn {
-    background: transparent;
-    border: none;
-    color: var(--text-muted);
-    font-size: 1.5rem;
-    cursor: pointer;
-    line-height: 1;
-  }
-
-  /* Dimmed Background Overlay */
-  .drawer-overlay {
-    position: fixed;
-    top: 0;
-    left: 0;
-    width: 100%;
-    height: 100vh;
-    background: rgba(0, 0, 0, 0.6);
-    backdrop-filter: blur(2px);
-    z-index: 1040;
-    display: block;
-  }
+  /* The floating button replaces the toolbar's "New event" on phones */
+  .toolbar-new-event { display: none; }
 }
 
 /* Answering an invitation (EventModal) */

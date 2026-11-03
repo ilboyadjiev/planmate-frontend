@@ -41,12 +41,12 @@ test('only requests sent to me count as new', () => {
     expect(countIncomingRequests(friendships, 1)).toBe(1);
 });
 
-test('the tab bar opens the calendar drawer and marks it active', async () => {
-    renderNavbar(alice, '/dashboard?calendar=open');
+test('the Calendar tab is its own page and is marked active there', async () => {
+    renderNavbar(alice, '/calendar');
     await waitFor(() => expect(api.get).toHaveBeenCalled());
 
     const calendarTab = within(tabBar()).getByRole('link', { name: 'Calendar' });
-    expect(calendarTab).toHaveAttribute('href', '/dashboard?calendar=open');
+    expect(calendarTab).toHaveAttribute('href', '/calendar');
     expect(calendarTab).toHaveAttribute('aria-current', 'page');
     expect(within(tabBar()).getByRole('link', { name: 'Discover' })).not.toHaveAttribute('aria-current');
 });

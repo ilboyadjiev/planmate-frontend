@@ -405,3 +405,21 @@
 }
 
 .game-plan .ai-markdown-content { margin-top: 12px; }
+
+/* Collapsible AI Game plan */
+.game-plan-toggle {
+  all: unset;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  min-height: 32px;
+  cursor: pointer;
+  border-radius: 6px;
+}
+
+.game-plan-toggle:focus-visible { outline: 2px solid #FDBA74; outline-offset: 2px; }
+
+.game-plan-chevron { transition: transform 0.2s; flex: 0 0 auto; }
+.game-plan-chevron.is-open { transform: rotate(90deg); }
+
+.game-plan.is-collapsed { padding-block: 10px; }

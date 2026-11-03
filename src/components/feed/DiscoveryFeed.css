@@ -431,3 +431,31 @@
   position: relative;
   z-index: 1;
 }
+
+/* Phones: chips stay on one line that you swipe sideways, so the events stay in view */
+@media (max-width: 900px) {
+  .feed-panel { padding: 16px; }
+
+  .feed-chips {
+    flex-wrap: nowrap;
+    overflow-x: auto;
+    margin: 0 -16px;
+    padding: 2px 16px;
+    scroll-snap-type: x proximity;
+    scroll-padding: 0 16px;
+    scrollbar-width: none;
+    -webkit-overflow-scrolling: touch;
+    /* Fade the edges to show there is more to swipe to */
+    -webkit-mask-image: linear-gradient(to right, transparent 0, #000 16px, #000 calc(100% - 24px), transparent 100%);
+    mask-image: linear-gradient(to right, transparent 0, #000 16px, #000 calc(100% - 24px), transparent 100%);
+  }
+
+  .feed-chips::-webkit-scrollbar { display: none; }
+
+  .feed-chip {
+    flex: 0 0 auto;
+    white-space: nowrap;
+    min-height: 36px;
+    scroll-snap-align: start;
+  }
+}

@@ -15,7 +15,7 @@ import { eventStatus, statusLabel, STATUS_STYLES, STATUS_LEGEND } from './calend
 const localizer = momentLocalizer(moment);
 moment.updateLocale('en', { week: { dow: 1, doy: 1 } });
 
-const PlanMateCalendar = ({ userEmail, refreshKey, onSlotSelect, onCreateEvent }) => {
+const PlanMateCalendar = ({ userEmail, refreshKey, onSlotSelect, onCreateEvent, defaultView = 'month' }) => {
     const [events, setEvents] = useState([]);
     const [selectedEvent, setSelectedEvent] = useState(null);
     const [showModal, setShowModal] = useState(false);
@@ -118,6 +118,7 @@ const PlanMateCalendar = ({ userEmail, refreshKey, onSlotSelect, onCreateEvent }
                 localizer={localizer}
                 events={events}
                 components={toolbarComponents}
+                defaultView={defaultView}
                 startAccessor="start" 
                 endAccessor="end"
                 style={{ height: 700 }}

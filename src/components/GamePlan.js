@@ -4,6 +4,22 @@ import moment from 'moment';
 import api from '../api/client';
 
 const cacheKeyFor = (user) => `planmate_game_plan_${user.id}`;
+const collapsedKeyFor = (user) => `planmate_game_plan_collapsed_${user.id}`;
+
+const readCollapsed = (user) => {
+    try {
+        return localStorage.getItem(collapsedKeyFor(user)) === 'true';
+    } catch (e) {
+        return false;
+    }
+};
+
+const Chevron = ({ open }) => (
+    <svg aria-hidden="true" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"
+        strokeLinecap="round" strokeLinejoin="round" className={`game-plan-chevron${open ? ' is-open' : ''}`}>
+        <path d="M9 6l6 6-6 6" />
+    </svg>
+);
 // Earlier names of this feature's browser cache, cleared so they do not linger
 const legacyCacheKeys = (user) => [`planmate_ai_recap_${user.id}`, `planmate_ai_summary_${user.username || user.email}`];
 const today = () => moment().format('YYYY-MM-DD');
@@ -30,10 +46,18 @@ const GamePlan = ({ user, calendarVersion }) => {
     const [error, setError] = useState('');
     const [outdated, setOutdated] = useState(false);
     const [now, setNow] = useState(() => Date.now());
+    const [collapsed, setCollapsed] = useState(() => readCollapsed(user)); // open by default
     const versionAtPlan = useRef(calendarVersion);
+
+    const toggleCollapsed = () => {
+        const next = !collapsed;
+        setCollapsed(next);
+        try { localStorage.setItem(collapsedKeyFor(user), String(next)); } catch (e) { /* storage blocked */ }
+    };
 
     useEffect(() => {
         setPlan(readCache(user));
+        setCollapsed(readCollapsed(user));
         try { legacyCacheKeys(user).forEach(key => localStorage.removeItem(key)); } catch (e) { /* storage blocked */ }
     }, [user]);
 
@@ -67,6 +91,8 @@ const GamePlan = ({ user, calendarVersion }) => {
             };
             setPlan(next);
             setOutdated(false);
+            setCollapsed(false); // show the new plan
+            try { localStorage.setItem(collapsedKeyFor(user), 'false'); } catch (e) { /* storage blocked */ }
             versionAtPlan.current = calendarVersion;
             setNow(Date.now());
             try { localStorage.setItem(cacheKeyFor(user), JSON.stringify(next)); } catch (e) { /* storage full or blocked */ }
@@ -101,11 +127,17 @@ const GamePlan = ({ user, calendarVersion }) => {
     const disabled = loading || limitReached || coolingDown;
 
     return (
-        <section className="game-plan" aria-labelledby="game-plan-heading" aria-busy={loading}>
+        <section className={`game-plan${collapsed ? ' is-collapsed' : ''}`} aria-labelledby="game-plan-heading" aria-busy={loading}>
             <div className="game-plan-header">
                 <div>
-                    <h4 id="game-plan-heading" className="game-plan-title">AI Game plan</h4>
-                    {plan?.createdAt && (
+                    <h4 id="game-plan-heading" className="game-plan-title">
+                        <button type="button" className="game-plan-toggle" onClick={toggleCollapsed}
+                            aria-expanded={!collapsed} aria-controls="game-plan-body">
+                            <Chevron open={!collapsed} />
+                            AI Game plan
+                        </button>
+                    </h4>
+                    {!collapsed && plan?.createdAt && (
                         <div className="game-plan-meta">
                             {`Planned at ${moment(plan.createdAt).format('HH:mm')}`}
                             {typeof plan.remaining === 'number' && !limitReached && ` · ${plan.remaining} left today`}
@@ -118,6 +150,7 @@ const GamePlan = ({ user, calendarVersion }) => {
                 </button>
             </div>
 
+            <div id="game-plan-body" hidden={collapsed}>
             {note && (
                 <p id="game-plan-note" className={`game-plan-note${outdated && !limitReached ? ' is-outdated' : ''}`} role="status">
                     {note}
@@ -132,6 +165,7 @@ const GamePlan = ({ user, calendarVersion }) => {
                     See what's coming up in the next 48 hours, what to prepare, and which invites still need an answer.
                 </p>
             )}
+            </div>
         </section>
     );
 };

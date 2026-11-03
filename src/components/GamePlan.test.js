@@ -115,3 +115,37 @@ test('a failed request is reported and can be retried', async () => {
     expect(await screen.findByRole('alert')).toHaveTextContent(/couldn't put your game plan together/i);
     expect(screen.getByRole('button', { name: '✨ Get my game plan' })).toBeEnabled();
 });
+
+describe('collapsing', () => {
+    test('is open by default and collapses to the header line, remembered after a reload', () => {
+        cachePlan();
+        const { unmount } = render(<GamePlan user={alice} calendarVersion="0-0" />);
+        const toggle = screen.getByRole('button', { name: 'AI Game plan' });
+
+        expect(toggle).toHaveAttribute('aria-expanded', 'true');
+        expect(screen.getByText('Cached plan')).toBeVisible();
+
+        fireEvent.click(toggle);
+
+        expect(toggle).toHaveAttribute('aria-expanded', 'false');
+        expect(screen.queryByText('Cached plan')).not.toBeVisible();
+        expect(screen.queryByText(/Planned at/)).not.toBeInTheDocument();
+        // The header line keeps the action
+        expect(screen.getByRole('button', { name: 'Refresh game plan' })).toBeVisible();
+
+        unmount();
+        render(<GamePlan user={alice} calendarVersion="0-0" />);
+        expect(screen.getByRole('button', { name: 'AI Game plan' })).toHaveAttribute('aria-expanded', 'false');
+    });
+
+    test('a new game plan opens the section again', async () => {
+        localStorage.setItem('planmate_game_plan_collapsed_1', 'true');
+        api.get.mockResolvedValue(serverPlan());
+        render(<GamePlan user={alice} calendarVersion="0-0" />);
+
+        fireEvent.click(screen.getByRole('button', { name: '✨ Get my game plan' }));
+
+        expect(await screen.findByText(/Dinner with/)).toBeVisible();
+        expect(screen.getByRole('button', { name: 'AI Game plan' })).toHaveAttribute('aria-expanded', 'true');
+    });
+});

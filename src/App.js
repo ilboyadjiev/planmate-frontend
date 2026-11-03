@@ -31,12 +31,8 @@ function App() {
             <Route path="/impressum" element={<Impressum />} />
             <Route path="/privacy" element={<Privacy />} />
             
-            <Route 
-              path="/dashboard" 
-              element={
-                  <Dashboard />
-              } 
-            />
+            <Route path="/dashboard" element={<Dashboard view="discover" />} />
+            <Route path="/calendar" element={<Dashboard view="calendar" />} />
             <Route 
               path="/profile/edit" 
               element={

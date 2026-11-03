@@ -256,7 +256,7 @@
 
 .pm-tabbar { display: none; }
 
-/* Same breakpoint as the dashboard's calendar drawer */
+/* Same breakpoint as the dashboard layout (src/hooks/useIsMobile.js) */
 @media (max-width: 900px) {
   .pm-topbar {
     padding: 10px 16px;
