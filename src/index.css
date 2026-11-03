@@ -18,6 +18,18 @@
   --shadow-md: 0 4px 12px rgba(0, 0, 0, 0.4);
 }
 
+/*
+ * Bootstrap's stylesheet is imported after this file (App.js), so its light-theme defaults would win and turn
+ * every element without an explicit colour dark grey (#212529) on our dark background. :root:root outranks
+ * Bootstrap's :root, so text inherits the app colours wherever nothing else is set.
+ */
+:root:root {
+  --bs-body-color: var(--text-main);
+  --bs-heading-color: var(--text-main);
+  --bs-emphasis-color: #FFFFFF;
+  --bs-secondary-color: var(--text-muted);
+}
+
 body {
   margin: 0;
   font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;

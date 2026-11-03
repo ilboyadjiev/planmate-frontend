@@ -170,7 +170,7 @@ const PlanMateCalendar = ({ userEmail, refreshKey, onSlotSelect }) => {
                 <div style={{ background: 'linear-gradient(135deg, rgba(79, 70, 229, 0.1), rgba(168, 85, 247, 0.1))', borderRadius: '12px', padding: '16px 20px', marginBottom: '24px', display: 'flex', gap: '12px', border: '1px solid rgba(79, 70, 229, 0.2)' }}>
                     <span style={{ fontSize: '1.5rem' }}>✨</span>
                     <div>
-                        <h4 style={{ margin: '0 0 8px 0', fontSize: '1.1rem', fontWeight: '600', color: '#818cf8' }}>Daily Briefing</h4>
+                        <h4 style={{ margin: '0 0 8px 0', fontSize: '1.1rem', fontWeight: '600', color: '#A5B4FC' }}>Daily Briefing</h4>
                         {isLoadingSummary ? <p style={{ color: 'var(--text-main)', margin: 0 }}>Asking Gemini...</p> : <div className="ai-markdown-content"><ReactMarkdown>{aiSummary}</ReactMarkdown></div>}
                     </div>
                 </div>
