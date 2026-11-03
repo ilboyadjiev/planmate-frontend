@@ -5,19 +5,42 @@ import FeedEventCard from './feed/FeedEventCard';
 import './feed/DiscoveryFeed.css';
 
 const PAGE_SIZE = 5;
-const FOR_YOU = null;
 const TAGS = ['#munich', '#gaming', '#tech', '#music', '#food'];
+const FOR_YOU = { key: 'for-you', label: 'For you' };
+
+const GroupIcon = () => (
+    <svg aria-hidden="true" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+        <circle cx="9" cy="8.5" r="3.5" /><path d="M2.5 20c.6-3.6 3.2-5.5 6.5-5.5s5.9 1.9 6.5 5.5" /><path d="M16 5.2a3.3 3.3 0 0 1 0 6.6M18 14.8c2 .6 3.2 2.3 3.5 5.2" />
+    </svg>
+);
+
+/** The card after the viewer answered an invitation, without waiting for a reload. */
+export const withResponse = (event, response) => {
+    const wasGoing = event.myResponse === 'accepted';
+    const nowGoing = response === 'accepted';
+    return {
+        ...event,
+        myResponse: response,
+        going: nowGoing,
+        attendeeCount: Math.max(0, (event.attendeeCount || 0) + (nowGoing ? 1 : 0) - (wasGoing ? 1 : 0)),
+    };
+};
 
 /**
- * Discover feed: upcoming public events ranked by the server (friends going, friends hosting, popularity, how soon).
- * "For you" is the whole ranked feed; a tag narrows it. Joining adds the event to your calendar, read-only.
+ * Discover feed with three kinds of chips:
+ * - "For you": upcoming public events ranked by the server (friends going, friends hosting, popularity, how soon)
+ * - one chip per friend group you are in: that group's upcoming events, soonest first
+ * - tags: public events with that tag
+ * Public events can be joined; invitations (e.g. a group's events) are answered right on the card.
  *
- * onAttendanceChange(event) is called after joining or leaving, with the updated event.
- * onError(message) is called when joining or leaving fails.
+ * onAttendanceChange(event) is called after joining or leaving a public event.
+ * onRespond(event, response) is called after answering an invitation.
+ * onError(message) is called when joining, leaving or answering fails.
  */
-const DiscoveryFeed = ({ onAttendanceChange, onError }) => {
+const DiscoveryFeed = ({ onAttendanceChange, onRespond, onError }) => {
     const { user } = useContext(AuthContext);
-    const [activeTag, setActiveTag] = useState(FOR_YOU);
+    const [groups, setGroups] = useState([]);
+    const [active, setActive] = useState(FOR_YOU); // { key, label, tag?, groupId? }
     const [events, setEvents] = useState([]);
     const [page, setPage] = useState(0);
     const [hasMore, setHasMore] = useState(false);
@@ -28,15 +51,30 @@ const DiscoveryFeed = ({ onAttendanceChange, onError }) => {
 
     const userKey = user?.id ?? null;
 
+    // Friend groups become chips; logging out (or leaving the active group) falls back to "For you"
+    useEffect(() => {
+        if (!userKey) {
+            setGroups([]);
+            setActive(prev => (prev.groupId ? FOR_YOU : prev));
+            return;
+        }
+        api.get('/v1/groups')
+            .then(res => {
+                const mine = Array.isArray(res.data) ? res.data : [];
+                setGroups(mine);
+                setActive(prev => (prev.groupId && !mine.some(g => g.id === prev.groupId) ? FOR_YOU : prev));
+            })
+            .catch(() => setGroups([]));
+    }, [userKey]);
+
     const loadPage = useCallback(async (pageToLoad) => {
         const requestId = ++latestRequest.current;
         setLoading(true);
         setLoadError(false);
+        const filter = active.groupId ? { group: active.groupId } : active.tag ? { tag: active.tag } : {};
         try {
-            const res = await api.get('/v2/events/feed', {
-                params: { ...(activeTag ? { tag: activeTag } : {}), page: pageToLoad, size: PAGE_SIZE },
-            });
-            if (requestId !== latestRequest.current) return; // a newer tag or login change won
+            const res = await api.get('/v2/events/feed', { params: { ...filter, page: pageToLoad, size: PAGE_SIZE } });
+            if (requestId !== latestRequest.current) return; // a newer chip or login change won
             const incoming = res.data.events || [];
             setEvents(prev => {
                 if (pageToLoad === 0) return incoming;
@@ -51,9 +89,9 @@ const DiscoveryFeed = ({ onAttendanceChange, onError }) => {
         } finally {
             if (requestId === latestRequest.current) setLoading(false);
         }
-    }, [activeTag]);
+    }, [active]);
 
-    // Reload from the top when the tag changes or someone logs in or out (friends and "going" depend on it)
+    // Reload from the top when the chip changes or someone logs in or out (friends and answers depend on it)
     useEffect(() => {
         setEvents([]);
         loadPage(0);
@@ -67,14 +105,36 @@ const DiscoveryFeed = ({ onAttendanceChange, onError }) => {
             setEvents(prev => prev.map(e => (e.id === event.id ? res.data : e)));
             if (onAttendanceChange) onAttendanceChange(res.data);
         } catch (err) {
-            const message = err.response?.data?.message;
-            if (onError) onError(message || (event.going ? 'Could not leave the event. Please try again.' : 'Could not join the event. Please try again.'));
+            if (onError) onError(event.going ? 'Could not leave the event. Please try again.' : 'Could not join the event. Please try again.');
         } finally {
             setPendingId(null);
         }
     };
 
-    const chips = [{ label: 'For you', tag: FOR_YOU }, ...TAGS.map(tag => ({ label: tag, tag }))];
+    const handleRespond = async (event, response) => {
+        if (event.myResponse === response) return;
+        setPendingId(event.id);
+        try {
+            await api.put(`/v2/events/${event.id}/response`, { response });
+            const updated = withResponse(event, response);
+            setEvents(prev => prev.map(e => (e.id === event.id ? updated : e)));
+            if (onRespond) onRespond(updated, response);
+        } catch (err) {
+            if (onError) onError('Your answer could not be saved. Please try again.');
+        } finally {
+            setPendingId(null);
+        }
+    };
+
+    const chips = [
+        FOR_YOU,
+        ...groups.map(g => ({ key: `group-${g.id}`, label: g.name, groupId: g.id })),
+        ...TAGS.map(tag => ({ key: `tag-${tag}`, label: tag, tag })),
+    ];
+
+    let emptyText = 'No upcoming public events yet.';
+    if (active.groupId) emptyText = `No upcoming events for ${active.label} yet. Create one and invite the group!`;
+    else if (active.tag) emptyText = `No upcoming events for ${active.tag} yet.`;
 
     return (
         <section className="feed-panel" aria-labelledby="discover-heading">
@@ -82,8 +142,10 @@ const DiscoveryFeed = ({ onAttendanceChange, onError }) => {
 
             <div className="feed-chips" role="group" aria-label="Filter events">
                 {chips.map(chip => (
-                    <button key={chip.label} type="button" className="feed-chip"
-                        aria-pressed={activeTag === chip.tag} onClick={() => setActiveTag(chip.tag)}>
+                    <button key={chip.key} type="button" className={`feed-chip${chip.groupId ? ' feed-chip-group' : ''}`}
+                        aria-pressed={active.key === chip.key} onClick={() => setActive(chip)}
+                        aria-label={chip.groupId ? `Group: ${chip.label}` : undefined}>
+                        {chip.groupId && <GroupIcon />}
                         {chip.label}
                     </button>
                 ))}
@@ -92,7 +154,7 @@ const DiscoveryFeed = ({ onAttendanceChange, onError }) => {
             <div className="feed-list" aria-busy={loading}>
                 {events.map(event => (
                     <FeedEventCard key={event.id} event={event} loggedIn={!!user}
-                        pending={pendingId === event.id} onToggleGoing={handleToggleGoing} />
+                        pending={pendingId === event.id} onToggleGoing={handleToggleGoing} onRespond={handleRespond} />
                 ))}
 
                 {loading && events.length === 0 && <p className="feed-status">Loading events…</p>}
@@ -104,11 +166,7 @@ const DiscoveryFeed = ({ onAttendanceChange, onError }) => {
                         </button>
                     </p>
                 )}
-                {!loading && !loadError && events.length === 0 && (
-                    <p className="feed-status">
-                        {activeTag ? `No upcoming events for ${activeTag} yet.` : 'No upcoming public events yet.'}
-                    </p>
-                )}
+                {!loading && !loadError && events.length === 0 && <p className="feed-status">{emptyText}</p>}
             </div>
 
             {hasMore && events.length > 0 && (

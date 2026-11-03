@@ -82,13 +82,25 @@ const Dashboard = () => {
         setRefreshKey(prev => prev + 1);
     };
 
+    // An invitation answered in the feed: the calendar recolours the event
+    const handleFeedResponse = (event, response) => {
+        const text = {
+            accepted: `You're going to "${event.title}".`,
+            maybe: `You answered maybe to "${event.title}".`,
+            declined: `You can't make "${event.title}". The organizer will see your answer.`,
+        }[response];
+        setNotice({ type: 'success', text });
+        setRefreshKey(prev => prev + 1);
+    };
+
     return (
         <div style={{ maxWidth: '1200px', margin: '0 auto', padding: '20px' }}>
             <h1 className="visually-hidden">Dashboard</h1>
 
             <div className="dashboard-layout">
                 <div style={{ height: '100%', minHeight: '700px', alignSelf: 'flex-start' }}>
-                    <DiscoveryFeed onAttendanceChange={handleAttendanceChange} onError={text => setNotice({ type: 'error', text })} />
+                    <DiscoveryFeed onAttendanceChange={handleAttendanceChange} onRespond={handleFeedResponse}
+                        onError={text => setNotice({ type: 'error', text })} />
                 </div>
 
                 <div

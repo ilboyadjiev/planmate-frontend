@@ -2,6 +2,7 @@ import React from 'react';
 import { Link } from 'react-router-dom';
 import moment from 'moment';
 import { avatarColor, initials, socialProof, formatWhen, formatPlace } from './feedText';
+import { RESPONSES } from '../calendarStatus';
 
 const MAX_AVATARS = 3;
 
@@ -33,7 +34,7 @@ const Avatar = ({ text, colorKey, className = '', title }) => (
  * One event on the Discover feed (see the card design canvas): date, title, time and place, host,
  * description, tags, and who is going above the action.
  */
-const FeedEventCard = ({ event, loggedIn, pending, onToggleGoing }) => {
+const FeedEventCard = ({ event, loggedIn, pending, onToggleGoing, onRespond }) => {
     const start = moment(event.startTime);
     const host = event.host || {};
     const friends = event.friendsGoing || [];
@@ -43,7 +44,25 @@ const FeedEventCard = ({ event, loggedIn, pending, onToggleGoing }) => {
     const [hostFirst, hostLast] = (host.name || '').split(' ');
 
     let action;
-    if (event.hosting) {
+    if (event.invited && !event.hosting && onRespond) {
+        // Invitations are answered right here: Going / Maybe / Can't go
+        action = (
+            <div className="feed-rsvp">
+                {event.myResponse === 'pending' && (
+                    <span className="feed-rsvp-prompt" id={`${titleId}-prompt`}>You're invited. Will you be there?</span>
+                )}
+                <div className="feed-rsvp-buttons" role="group" aria-label={`Your answer for ${event.title}`}>
+                    {RESPONSES.map(({ value, label }) => (
+                        <button key={value} type="button" className={`feed-rsvp-button rsvp-${value}`}
+                            aria-pressed={event.myResponse === value} disabled={pending}
+                            onClick={() => onRespond(event, value)}>
+                            {label}
+                        </button>
+                    ))}
+                </div>
+            </div>
+        );
+    } else if (event.hosting) {
         action = <span className="feed-hosting-pill">You're hosting</span>;
     } else if (!loggedIn) {
         action = <Link to="/login" className="feed-action feed-action-login">Log in to join</Link>;
@@ -65,7 +84,7 @@ const FeedEventCard = ({ event, loggedIn, pending, onToggleGoing }) => {
     }
 
     return (
-        <article className={`feed-card${event.going ? ' is-going' : ''}${event.hosting ? ' is-hosting' : ''}`} aria-labelledby={titleId}>
+        <article className={`feed-card${event.going ? ' is-going' : ''}${event.hosting ? ' is-hosting' : ''}${event.myResponse === 'pending' ? ' is-unanswered' : ''}`} aria-labelledby={titleId}>
             <div className="feed-card-top">
                 <div className="feed-date" aria-hidden="true">
                     <span className="feed-date-month">{start.format('MMM').toUpperCase()}</span>
