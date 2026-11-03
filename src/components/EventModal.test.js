@@ -38,7 +38,8 @@ test('participants see invited events read-only, with the organizer and no way t
     expect(screen.getByText(/only the organizer can make changes/i)).toBeInTheDocument();
     expect(await screen.findByText('Alice @alice')).toBeInTheDocument();
     expect(screen.getByText('Boulderwelt')).toBeInTheDocument();
-    expect(screen.getByText('You')).toBeInTheDocument();
+    // Bob, the only invitee, is not listed as someone else: his own answer is in the answer buttons
+    expect(screen.queryByText(/friends going/i)).not.toBeInTheDocument();
     expect(screen.queryByRole('button', { name: /save/i })).not.toBeInTheDocument();
     expect(screen.queryByRole('textbox')).not.toBeInTheDocument();
 });
@@ -103,8 +104,11 @@ test('invitees answer from the details view and see everyone\'s answers', async 
     const answered = { ...invitedEvent, viewerRole: 'invited', myResponse: 'pending', participants: [{ id: '2' }, { id: '3' }], responses: { 3: 'declined' } };
     renderAs(bob, <EventModal show initialData={answered} onSave={jest.fn()} onHide={jest.fn()} readOnly onRespond={onRespond} />);
 
-    expect(await screen.findByText(/not answered yet$/i, { selector: '.participant-response:not(dt)' })).toBeInTheDocument(); // Bob himself
-    expect(screen.getByText(/can't go$/i, { selector: '.participant-response' })).toBeInTheDocument(); // participant 3
+    // Participant 3 is not Bob's friend: listed under "Other people invited", closed at first
+    const others = await screen.findByRole('button', { name: /other people invited/i });
+    expect(others).toHaveAttribute('aria-expanded', 'false');
+    fireEvent.click(others);
+    expect(screen.getByText(/can't go$/i, { selector: '.person-line .participant-response' })).toBeVisible();
     const going = screen.getByRole('button', { name: 'Going' });
     expect(going).toHaveAttribute('aria-pressed', 'false');
 
@@ -137,7 +141,10 @@ describe('inviting friend groups', () => {
         const onSave = jest.fn().mockResolvedValue();
         renderAs(alice, <EventModal show isNewEvent initialData={dixit} onSave={onSave} onHide={jest.fn()} />);
 
-        fireEvent.click(await screen.findByRole('button', { name: '+ Board games (2)' }));
+        const inviteGroup = await screen.findByRole('button', { name: /invite a group/i });
+        expect(inviteGroup).toHaveAttribute('aria-expanded', 'false'); // closed by default
+        fireEvent.click(inviteGroup);
+        fireEvent.click(screen.getByRole('button', { name: '+ Board games (2)' }));
 
         expect(screen.getByText('2 invited')).toBeInTheDocument();
         expect(screen.getByText('Carol')).toBeInTheDocument(); // named via the group, though not a friend
@@ -157,18 +164,6 @@ describe('inviting friend groups', () => {
         fireEvent.click(screen.getByRole('button', { name: /save changes/i }));
 
         expect(onSave).toHaveBeenCalledWith(expect.objectContaining({ groups: [], participants: [{ id: '4' }] }));
-    });
-
-    test('invitees see the groups they are in', async () => {
-        const invite = { ...dixit, id: 'e9', creatorId: alice.email, viewerRole: 'invited', participants: [{ id: '2' }, { id: '3' }], groups: [{ id: '7' }], responses: { 3: 'accepted' } };
-        api.get.mockImplementation(url => Promise.resolve({
-            data: url === '/v1/groups' ? [boardGames] : [{ status: 'accepted', userA: alice, userB: bob }],
-        }));
-        renderAs(bob, <EventModal show initialData={invite} onSave={jest.fn()} onHide={jest.fn()} readOnly />);
-
-        expect(await screen.findByText('Invited groups')).toBeInTheDocument();
-        expect(screen.getByText('Board games')).toBeInTheDocument();
-        expect(screen.getByText(/going$/i, { selector: '.participant-response' })).toBeInTheDocument(); // Carol
     });
 });
 
@@ -201,4 +196,75 @@ test('new events have no answers yet', () => {
     renderAs(alice, <EventModal show isNewEvent initialData={{ ...ownEvent, participants: [{ id: '2' }] }} onSave={jest.fn()} onHide={jest.fn()} />);
 
     expect(screen.queryByRole('region', { name: 'Answers' })).not.toBeInTheDocument();
+});
+
+describe("who's invited, as an invitee sees it (Alice's birthday)", () => {
+    // Alice plans her birthday and invites the group "Trip to Italy" (Alice, Bob, Charlie) plus David, Elena and Fred.
+    // David is friends with everyone but not in the group. Fred only knows Alice.
+    const alice2 = { id: 1, firstName: 'Alice', username: 'alice' };
+    const bob2 = { id: 2, firstName: 'Bob', username: 'bob' };
+    const charlie = { id: 3, firstName: 'Charlie', username: 'charlie' };
+    const david = { id: 4, firstName: 'David', username: 'david' };
+    const elena = { id: 5, firstName: 'Elena', username: 'elena' };
+    const fred = { id: 6, firstName: 'Fred', username: 'fred' };
+    const tripToItaly = { id: 7, name: 'Trip to Italy', members: [alice2, bob2, charlie] };
+    const everyone = [bob2, charlie, david, elena, fred];
+
+    // What the server sends each invitee: everyone's names, and only the invited groups they are in
+    const birthday = (viewer, groupIds) => ({
+        id: 'bday', title: "Alice's birthday", start: new Date('2026-11-20T18:00:00Z'), end: new Date('2026-11-20T23:00:00Z'),
+        viewerRole: 'invited', myResponse: 'pending', creatorId: 'alice@example.com', organizer: alice2, hostName: 'Alice',
+        participants: everyone.map(p => ({ ...p, id: String(p.id) })), groups: groupIds.map(id => ({ id })),
+        responses: { 2: 'accepted', 4: 'maybe', 5: 'accepted' }, tags: [],
+    });
+
+    const viewAs = (viewer, friends, groups, groupIds) => {
+        api.get.mockImplementation(url => Promise.resolve({
+            data: url === '/v1/groups' ? groups
+                : friends.map((f, i) => ({ id: 100 + i, status: 'accepted', userA: viewer, userB: f })),
+        }));
+        renderAs(viewer, <EventModal show initialData={birthday(viewer, groupIds)} onSave={jest.fn()} onHide={jest.fn()} readOnly />);
+    };
+
+    const lineTexts = (container) => within(container).getAllByRole('listitem').map(li => li.textContent.replace(/\+ Add friend/, '').trim());
+
+    test('Charlie (in the group) sees Alice and Bob inside a "Trip to Italy" bubble under Friends', async () => {
+        viewAs(charlie, [alice2, bob2, david], [tripToItaly], [7]);
+
+        const friendsToggle = await screen.findByRole('button', { name: /^Friends/ });
+        expect(friendsToggle).toHaveAttribute('aria-expanded', 'true'); // open by default
+        const group = await screen.findByRole('group', { name: 'Group: Trip to Italy' });
+        expect(lineTexts(group)).toEqual(['Alice· organizer', 'Bob· Going']);
+        // David is outside the group, Elena and Fred are not Charlie's friends
+        expect(screen.getByText(/^David/, { selector: '.person-line .pm-chip' })).toBeVisible();
+        expect(screen.getByRole('button', { name: /other people invited/i })).toHaveAttribute('aria-expanded', 'false');
+        expect(screen.getByRole('button', { name: /other people invited/i })).toHaveTextContent('2');
+        expect(screen.queryByText(/invited groups/i)).not.toBeInTheDocument();
+    });
+
+    test('David (friends with everyone, not in the group) sees his friends one per line and nothing about the group', async () => {
+        viewAs(david, [alice2, bob2, charlie, elena, fred], [], []); // the server sends him no group ids
+
+        await screen.findByRole('button', { name: /^Friends/ });
+        expect(screen.queryByRole('group', { name: /Group:/ })).not.toBeInTheDocument();
+        expect(screen.queryByText('Trip to Italy')).not.toBeInTheDocument();
+        const friends = screen.getAllByRole('list')[0];
+        expect(lineTexts(friends)).toEqual(['Bob· Going', 'Elena· Going', 'Charlie· Not answered yet', 'Fred· Not answered yet']);
+        expect(screen.queryByRole('button', { name: /other people invited/i })).not.toBeInTheDocument();
+    });
+
+    test('Fred (only knows Alice) sees four other people invited, closed, each with Add friend', async () => {
+        viewAs(fred, [alice2], [], []);
+
+        const others = await screen.findByRole('button', { name: /other people invited/i });
+        expect(others).toHaveTextContent('4');
+        expect(others).toHaveAttribute('aria-expanded', 'false');
+        expect(screen.queryByRole('button', { name: /^Friends/ })).not.toBeInTheDocument();
+
+        fireEvent.click(others);
+        const lines = within(screen.getByRole('list')).getAllByRole('listitem');
+        expect(lines).toHaveLength(4);
+        expect(within(lines[0]).getByText('Bob')).toBeVisible();
+        expect(within(lines[0]).getByRole('button', { name: 'Add Bob as a friend' })).toBeVisible();
+    });
 });

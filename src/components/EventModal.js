@@ -10,17 +10,6 @@ import AddFriendButton from './AddFriendButton';
 import useFriendships from '../hooks/useFriendships';
 
 const labelStyle = { fontWeight: '600', color: 'var(--text-main)' };
-const chipStyle = {
-    background: 'rgba(79, 70, 229, 0.2)', color: '#a5b4fc', padding: '4px 12px', borderRadius: '16px',
-    fontSize: '0.85rem', fontWeight: '500', display: 'flex', alignItems: 'center', gap: '8px',
-    border: '1px solid rgba(79, 70, 229, 0.3)',
-};
-const tagChipStyle = {
-    background: 'rgba(240, 106, 37, 0.15)', color: 'var(--primary)', padding: '4px 12px', borderRadius: '16px',
-    fontSize: '0.85rem', fontWeight: '600', display: 'flex', alignItems: 'center', gap: '8px',
-    border: '1px solid rgba(240, 106, 37, 0.3)',
-};
-const removeButtonStyle = { background: 'none', border: 'none', color: 'inherit', padding: 0, cursor: 'pointer', lineHeight: 1 };
 
 const formatRange = (start, end) => {
     const opts = { weekday: 'short', day: 'numeric', month: 'short', hour: 'numeric', minute: '2-digit' };
@@ -84,6 +73,25 @@ const AnswersSummary = ({ people, responses }) => {
                 ))}
             </dl>
         </section>
+    );
+};
+
+/** A section that opens and closes; closed by default unless defaultOpen. */
+const Collapsible = ({ id, title, count, defaultOpen = false, children }) => {
+    const [open, setOpen] = useState(defaultOpen);
+    return (
+        <div className="pm-collapsible">
+            <button type="button" className="pm-collapsible-toggle" aria-expanded={open} aria-controls={id}
+                onClick={() => setOpen(o => !o)}>
+                <svg aria-hidden="true" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                    strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" className={`pm-chevron${open ? ' is-open' : ''}`}>
+                    <path d="M9 6l6 6-6 6" />
+                </svg>
+                {title}
+                {count != null && <span className="pm-collapsible-count">{count}</span>}
+            </button>
+            <div id={id} hidden={!open} className="pm-collapsible-body">{children}</div>
+        </div>
     );
 };
 
@@ -290,17 +298,16 @@ const EventModal = ({ show, onHide, initialData, onSave, isNewEvent, readOnly = 
     const groupMembersList = (group, removable) => (
         <div key={group.id} className="invited-group">
             <div className="invited-group-header">
-                <span className="invited-group-badge">Group</span>
                 <strong>{group.name || 'A friend group'}</strong>
                 <span className="invited-group-count">{membersOf(group).length} invited</span>
                 {removable && (
-                    <button type="button" style={removeButtonStyle} className="invited-group-remove"
+                    <button type="button" className="pm-chip-remove invited-group-remove"
                         aria-label={`Remove group ${group.name || ''}`.trim()} onClick={() => removeGroup(group)}>×</button>
                 )}
             </div>
             <div className="invited-group-members">
                 {membersOf(group).map(m => (
-                    <span key={m.id} style={chipStyle}>
+                    <span key={m.id} className="pm-chip">
                         {participantName(m)}
                         {!isNewEvent && responseOf(m) && <ResponseNote response={responseOf(m)} />}
                         <AddFriendButton person={m} friendships={friendships} />
@@ -313,15 +320,56 @@ const EventModal = ({ show, onHide, initialData, onSave, isNewEvent, readOnly = 
     if (!formData) return null;
 
     if (readOnly) {
-        const knownGroups = selectedGroups.filter(g => g.name);
-        const participants = knownGroups.length ? individualParticipants : formData.participants || [];
+        // Everyone invited except you. Each person appears once:
+        // 1. inside an invited group you are in (the server only sends those; first group alphabetically),
+        // 2. else under your friends, 3. else under other people invited.
+        const others = (formData.participants || []).filter(p => !isMe(p));
+        const invitedIds = new Set(others.map(p => String(p.id)));
+        const organizerId = formData.organizer ? String(formData.organizer.id) : null;
+        const isFriend = (p) => friendships.relationOf(p.id).state === 'friend';
+        const answerRank = (p) => ({ accepted: 0, maybe: 1, pending: 2, declined: 3 }[responseOf(p) || 'pending']);
+        const byAnswer = (a, b) => answerRank(a) - answerRank(b) || participantName(a).localeCompare(participantName(b));
+        const asInvitee = (member) => ({ ...member, ...(others.find(o => String(o.id) === String(member.id)) || {}), id: member.id });
+
+        const placed = new Set();
+        const groupBlocks = selectedGroups
+            .filter(g => g.name)
+            .sort((a, b) => a.name.localeCompare(b.name))
+            .map(group => {
+                const members = (group.members || [])
+                    .filter(m => !isMe(m) && !placed.has(String(m.id))
+                        && (invitedIds.has(String(m.id)) || String(m.id) === organizerId))
+                    .map(asInvitee);
+                members.forEach(m => placed.add(String(m.id)));
+                // Organizer first, then by answer
+                members.sort((a, b) => (String(b.id) === organizerId) - (String(a.id) === organizerId) || byAnswer(a, b));
+                return { group, members };
+            })
+            .filter(block => block.members.length > 0);
+        const friendsOutside = others.filter(p => !placed.has(String(p.id)) && isFriend(p)).sort(byAnswer);
+        const notFriends = friendships.loaded
+            ? others.filter(p => !placed.has(String(p.id)) && !isFriend(p)).sort(byAnswer) : [];
+        const friendsCount = groupBlocks.reduce((n, b) => n + b.members.length, 0) + friendsOutside.length;
+
+        // One person per line: their bubble (name and answer), with "Add friend" next to it when they aren't yet
+        const personLine = (person) => (
+            <li key={person.id} className="person-line">
+                <span className="pm-chip">
+                    {participantName(person)}
+                    {String(person.id) === organizerId
+                        ? <span className="participant-response response-organizer">· organizer</span>
+                        : responseOf(person) && <ResponseNote response={responseOf(person)} />}
+                </span>
+                <AddFriendButton person={{ ...peopleById.get(String(person.id)), ...person }} friendships={friendships} />
+            </li>
+        );
         return (
             <Modal show={show} onHide={onHide} contentClassName="modern-modal" centered aria-labelledby="event-modal-title">
                 <Modal.Header closeButton>
                     <Modal.Title id="event-modal-title" style={{ color: 'var(--text-main)' }}>{formData.title || 'Event'}</Modal.Title>
                 </Modal.Header>
                 <Modal.Body>
-                    <div style={{ ...chipStyle, display: 'inline-flex', marginBottom: '20px' }}>
+                    <div className="pm-chip pm-chip-banner">
                         {{ going: "You're going", invited: "You're invited" }[formData.viewerRole] || 'Public event'} · only the organizer can make changes
                     </div>
                     {onRespond && (
@@ -351,26 +399,26 @@ const EventModal = ({ show, onHide, initialData, onSave, isNewEvent, readOnly = 
                     {formData.description && (
                         <Section label="Description"><span style={{ whiteSpace: 'pre-wrap' }}>{formData.description}</span></Section>
                     )}
-                    {knownGroups.length > 0 && (
-                        <Section label="Invited groups">{knownGroups.map(g => groupMembersList(g, false))}</Section>
+                    {friendsCount > 0 && (
+                        <Collapsible id="invited-friends" title="Friends" count={friendsCount} defaultOpen>
+                            {groupBlocks.map(({ group, members }) => (
+                                <div key={group.id} className="group-bubble" role="group" aria-label={`Group: ${group.name}`}>
+                                    <span className="group-bubble-label">{group.name}</span>
+                                    <ul className="person-lines">{members.map(personLine)}</ul>
+                                </div>
+                            ))}
+                            {friendsOutside.length > 0 && <ul className="person-lines">{friendsOutside.map(personLine)}</ul>}
+                        </Collapsible>
                     )}
-                    {participants.length > 0 && (
-                        <Section label={knownGroups.length ? 'Also invited' : 'Participants'}>
-                            <div style={{ display: 'flex', flexWrap: 'wrap', gap: '8px' }}>
-                                {participants.map(p => (
-                                    <div key={p.id} style={chipStyle}>
-                                        {participantName(p)}
-                                        {responseOf(p) && <ResponseNote response={responseOf(p)} />}
-                                        <AddFriendButton person={{ ...peopleById.get(String(p.id)), ...p }} friendships={friendships} />
-                                    </div>
-                                ))}
-                            </div>
-                        </Section>
+                    {notFriends.length > 0 && (
+                        <Collapsible id="other-invitees" title="Other people invited" count={notFriends.length}>
+                            <ul className="person-lines">{notFriends.map(personLine)}</ul>
+                        </Collapsible>
                     )}
                     {(formData.tags || []).length > 0 && (
                         <Section label="Tags">
                             <div style={{ display: 'flex', flexWrap: 'wrap', gap: '8px' }}>
-                                {formData.tags.map(tag => <div key={tag} style={tagChipStyle}>{tag}</div>)}
+                                {formData.tags.map(tag => <div key={tag} className="pm-chip">{tag}</div>)}
                             </div>
                         </Section>
                     )}
@@ -449,14 +497,15 @@ const EventModal = ({ show, onHide, initialData, onSave, isNewEvent, readOnly = 
                         <Form.Group controlId="formParticipants" style={{ position: 'relative', marginBottom: '16px' }}>
                             <Form.Label style={labelStyle}>Participants</Form.Label>
                             {availableGroups.length > 0 && (
-                                <div className="invite-groups" role="group" aria-label="Invite a friend group">
-                                    <span className="invite-groups-label">Invite a group:</span>
-                                    {availableGroups.map(g => (
-                                        <button key={g.id} type="button" className="invite-group-button" onClick={() => addGroup(g)}>
-                                            + {g.name} <span className="invite-group-size">({membersOf(g).length})</span>
-                                        </button>
-                                    ))}
-                                </div>
+                                <Collapsible id="invite-groups" title="Invite a group" count={availableGroups.length}>
+                                    <div className="invite-groups" role="group" aria-label="Invite a friend group">
+                                        {availableGroups.map(g => (
+                                            <button key={g.id} type="button" className="pm-chip pm-chip-action" onClick={() => addGroup(g)}>
+                                                + {g.name} <span className="invite-group-size">({membersOf(g).length})</span>
+                                            </button>
+                                        ))}
+                                    </div>
+                                </Collapsible>
                             )}
                             {myGroups.length === 0 && (
                                 <p className="invite-groups-hint">
@@ -466,10 +515,10 @@ const EventModal = ({ show, onHide, initialData, onSave, isNewEvent, readOnly = 
                             {selectedGroups.map(g => groupMembersList(g, true))}
                             <div style={{ display: 'flex', flexWrap: 'wrap', gap: '8px', marginBottom: '8px' }}>
                                 {individualParticipants.map(p => (
-                                    <div key={p.id} style={chipStyle}>
+                                    <div key={p.id} className="pm-chip">
                                         {participantName(p)}
                                         {!isNewEvent && responseOf(p) && <ResponseNote response={responseOf(p)} />}
-                                        <button type="button" style={removeButtonStyle} aria-label={`Remove ${participantName(p)}`} onClick={() => toggleParticipant(p)}>×</button>
+                                        <button type="button" className="pm-chip-remove" aria-label={`Remove ${participantName(p)}`} onClick={() => toggleParticipant(p)}>×</button>
                                     </div>
                                 ))}
                             </div>
@@ -503,9 +552,9 @@ const EventModal = ({ show, onHide, initialData, onSave, isNewEvent, readOnly = 
                         <Form.Label style={labelStyle}>Tags</Form.Label>
                         <div style={{ display: 'flex', flexWrap: 'wrap', gap: '8px', marginBottom: '8px' }}>
                             {(formData.tags || []).map(tag => (
-                                <div key={tag} style={tagChipStyle}>
+                                <div key={tag} className="pm-chip">
                                     {tag}
-                                    <button type="button" style={removeButtonStyle} aria-label={`Remove tag ${tag}`} onClick={() => handleChange('tags', formData.tags.filter(t => t !== tag))}>×</button>
+                                    <button type="button" className="pm-chip-remove" aria-label={`Remove tag ${tag}`} onClick={() => handleChange('tags', formData.tags.filter(t => t !== tag))}>×</button>
                                 </div>
                             ))}
                         </div>
