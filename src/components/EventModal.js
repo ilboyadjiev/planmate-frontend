@@ -36,7 +36,9 @@ const formatLocation = (location) => {
 // Maps a failed save to the field it concerns; "form" is for errors that belong to no single field
 const saveErrors = (err, hasParticipants) => {
     const status = err?.response?.status;
-    if (status === 400 && hasParticipants) return { participants: 'Participants must be your friends. Remove anyone who is not.' };
+    if (status === 400 && hasParticipants) {
+        return { participants: 'Some of these people or groups can no longer be invited. Remove them and try again.' };
+    }
     if (status === 404) return { form: 'This event no longer exists or you are not allowed to change it.' };
     return { form: 'The event could not be saved. Please try again.' };
 };
@@ -69,6 +71,7 @@ const EventModal = ({ show, onHide, initialData, onSave, isNewEvent, readOnly = 
     const [formData, setFormData] = useState(initialData);
     const [tagInput, setTagInput] = useState('');
     const [friends, setFriends] = useState([]);
+    const [myGroups, setMyGroups] = useState([]);
     const [searchQuery, setSearchQuery] = useState('');
     const [errors, setErrors] = useState({}); // { title, time, participants, form }
     const [saving, setSaving] = useState(false);
@@ -89,16 +92,47 @@ const EventModal = ({ show, onHide, initialData, onSave, isNewEvent, readOnly = 
                         const accepted = res.data.filter(f => f.status === 'accepted');
                         setFriends(accepted.map(f => f.userA.id === user.id ? f.userB : f.userA));
                     }).catch(err => console.error('Could not fetch friends', err));
+                api.get('/v1/groups')
+                    .then(res => setMyGroups(Array.isArray(res.data) ? res.data : []))
+                    .catch(err => console.error('Could not fetch friend groups', err));
             }
         }
     }, [show, initialData, user]);
 
-    const friendsById = useMemo(() => new Map(friends.map(f => [String(f.id), f])), [friends]);
+    // Everyone whose name we know: friends, plus members of your groups (who need not be your friends)
+    const peopleById = useMemo(() => {
+        const people = new Map();
+        myGroups.forEach(g => (g.members || []).forEach(m => people.set(String(m.id), m)));
+        friends.forEach(f => people.set(String(f.id), f));
+        return people;
+    }, [friends, myGroups]);
 
-    // Participants may only carry an id (as loaded from the server); resolve names from the friends list
+    // Invited groups. Inviting a group invites all its members; the server adds them to the participants.
+    const isMe = (person) => user && String(person.id) === String(user.id);
+    const selectedGroups = (formData?.groups || []).map(g =>
+        myGroups.find(mine => String(mine.id) === String(g.id)) || { id: g.id, name: null, members: [] });
+    const membersOf = (group) => (group.members || []).filter(m => !isMe(m));
+    const coveredIds = new Set(selectedGroups.flatMap(g => membersOf(g).map(m => String(m.id))));
+    const availableGroups = myGroups.filter(g => !selectedGroups.some(sel => String(sel.id) === String(g.id)));
+
+    const addGroup = (group) => handleChange('groups', [...(formData.groups || []), { id: group.id }]);
+
+    const removeGroup = (group) => {
+        const remaining = (formData.groups || []).filter(g => String(g.id) !== String(group.id));
+        const stillCovered = new Set(selectedGroups
+            .filter(g => String(g.id) !== String(group.id))
+            .flatMap(g => membersOf(g).map(m => String(m.id))));
+        const leaving = new Set(membersOf(group).map(m => String(m.id)));
+        handleChange('groups', remaining);
+        // Uninvite the group's members, unless another invited group still includes them
+        handleChange('participants', (formData.participants || [])
+            .filter(p => !leaving.has(String(p.id)) || stillCovered.has(String(p.id))));
+    };
+
+    // Participants may only carry an id (as loaded from the server); resolve names from friends and groups
     const participantName = (p) => {
-        if (user && String(p.id) === String(user.id)) return 'You';
-        const friend = friendsById.get(String(p.id));
+        if (isMe(p)) return 'You';
+        const friend = peopleById.get(String(p.id));
         const name = p.username || p.firstName || friend?.username || friend?.firstName;
         return name ? `@${name}` : 'Another participant';
     };
@@ -178,7 +212,7 @@ const EventModal = ({ show, onHide, initialData, onSave, isNewEvent, readOnly = 
         try {
             await onSave({ ...formData, tags: finalTags });
         } catch (err) {
-            setErrors(saveErrors(err, (formData.participants || []).length > 0));
+            setErrors(saveErrors(err, (formData.participants || []).length > 0 || (formData.groups || []).length > 0));
         } finally {
             setSaving(false);
         }
@@ -187,13 +221,40 @@ const EventModal = ({ show, onHide, initialData, onSave, isNewEvent, readOnly = 
     const filteredFriends = friends.filter(f =>
         (f.username?.toLowerCase().includes(searchQuery.toLowerCase()) ||
          f.firstName?.toLowerCase().includes(searchQuery.toLowerCase())) &&
-        !(formData?.participants || []).some(sf => String(sf.id) === String(f.id))
+        !(formData?.participants || []).some(sf => String(sf.id) === String(f.id)) &&
+        !coveredIds.has(String(f.id))
+    );
+
+    // People invited one by one (group members are listed under their group)
+    const individualParticipants = (formData?.participants || []).filter(p => !coveredIds.has(String(p.id)));
+
+    const groupMembersList = (group, removable) => (
+        <div key={group.id} className="invited-group">
+            <div className="invited-group-header">
+                <span className="invited-group-badge">Group</span>
+                <strong>{group.name || 'A friend group'}</strong>
+                <span className="invited-group-count">{membersOf(group).length} invited</span>
+                {removable && (
+                    <button type="button" style={removeButtonStyle} className="invited-group-remove"
+                        aria-label={`Remove group ${group.name || ''}`.trim()} onClick={() => removeGroup(group)}>×</button>
+                )}
+            </div>
+            <div className="invited-group-members">
+                {membersOf(group).map(m => (
+                    <span key={m.id} style={chipStyle}>
+                        {participantName(m)}
+                        {!isNewEvent && responseOf(m) && <ResponseNote response={responseOf(m)} />}
+                    </span>
+                ))}
+            </div>
+        </div>
     );
 
     if (!formData) return null;
 
     if (readOnly) {
-        const participants = formData.participants || [];
+        const knownGroups = selectedGroups.filter(g => g.name);
+        const participants = knownGroups.length ? individualParticipants : formData.participants || [];
         return (
             <Modal show={show} onHide={onHide} contentClassName="modern-modal" centered>
                 <Modal.Header closeButton>
@@ -224,8 +285,11 @@ const EventModal = ({ show, onHide, initialData, onSave, isNewEvent, readOnly = 
                     {formData.description && (
                         <Section label="Description"><span style={{ whiteSpace: 'pre-wrap' }}>{formData.description}</span></Section>
                     )}
+                    {knownGroups.length > 0 && (
+                        <Section label="Invited groups">{knownGroups.map(g => groupMembersList(g, false))}</Section>
+                    )}
                     {participants.length > 0 && (
-                        <Section label="Participants">
+                        <Section label={knownGroups.length ? 'Also invited' : 'Participants'}>
                             <div style={{ display: 'flex', flexWrap: 'wrap', gap: '8px' }}>
                                 {participants.map(p => (
                                     <div key={p.id} style={chipStyle}>
@@ -307,8 +371,24 @@ const EventModal = ({ show, onHide, initialData, onSave, isNewEvent, readOnly = 
                     {user && (
                         <Form.Group controlId="formParticipants" style={{ position: 'relative', marginBottom: '16px' }}>
                             <Form.Label style={labelStyle}>Participants</Form.Label>
+                            {availableGroups.length > 0 && (
+                                <div className="invite-groups" role="group" aria-label="Invite a friend group">
+                                    <span className="invite-groups-label">Invite a group:</span>
+                                    {availableGroups.map(g => (
+                                        <button key={g.id} type="button" className="invite-group-button" onClick={() => addGroup(g)}>
+                                            + {g.name} <span className="invite-group-size">({membersOf(g).length})</span>
+                                        </button>
+                                    ))}
+                                </div>
+                            )}
+                            {myGroups.length === 0 && (
+                                <p className="invite-groups-hint">
+                                    Tip: <a href="/profile/groups">create a friend group</a> to invite several friends with one click.
+                                </p>
+                            )}
+                            {selectedGroups.map(g => groupMembersList(g, true))}
                             <div style={{ display: 'flex', flexWrap: 'wrap', gap: '8px', marginBottom: '8px' }}>
-                                {(formData.participants || []).map(p => (
+                                {individualParticipants.map(p => (
                                     <div key={p.id} style={chipStyle}>
                                         {participantName(p)}
                                         {!isNewEvent && responseOf(p) && <ResponseNote response={responseOf(p)} />}

@@ -247,7 +247,8 @@ const FriendGroups = () => {
             <h1>Friend Groups</h1>
             <p className="groups-intro">
                 Put your friends into groups like "Sports team" or "Board games". A friend can be in as many groups as you
-                like. Groups have no owner: everyone in a group can rename it and add or remove people.
+                like. Groups have no owner: everyone in a group can rename it and add or remove people. New members are
+                automatically invited to the group's upcoming events.
             </p>
 
             <form className="group-create" onSubmit={createGroup} noValidate>

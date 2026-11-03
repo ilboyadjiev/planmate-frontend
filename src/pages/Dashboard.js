@@ -15,7 +15,7 @@ const newEventAt = (start = null, end = null) => {
     const from = start || new Date(Math.ceil(Date.now() / 3600000) * 3600000);
     return {
         title: '', start: from, end: end || new Date(from.getTime() + 3600000), description: '',
-        participants: [], location: null, isPublic: false, tags: [],
+        participants: [], groups: [], location: null, isPublic: false, tags: [],
     };
 };
 

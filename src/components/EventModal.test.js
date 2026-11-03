@@ -26,8 +26,10 @@ const renderAs = (user, ui) => render(<AuthContext.Provider value={{ user }}>{ui
 
 beforeEach(() => {
     api.get.mockReset();
-    // Bob's friends list contains the organizer, Alice
-    api.get.mockResolvedValue({ data: [{ status: 'accepted', userA: alice, userB: bob }] });
+    // Bob's friends list contains the organizer, Alice; nobody is in a group
+    api.get.mockImplementation(url => Promise.resolve({
+        data: url === '/v1/groups' ? [] : [{ status: 'accepted', userA: alice, userB: bob }],
+    }));
 });
 
 test('participants see invited events read-only, with the organizer and no way to save', async () => {
@@ -62,7 +64,7 @@ test('a rejected participant list is reported below the participants field and k
     fireEvent.click(screen.getByRole('button', { name: /create event/i }));
 
     const error = await screen.findByRole('alert');
-    expect(error).toHaveTextContent(/participants must be your friends/i);
+    expect(error).toHaveTextContent(/can no longer be invited/i);
     expect(screen.getByPlaceholderText(/search friends/i)).toHaveAttribute('aria-describedby', error.id);
     expect(onSave).toHaveBeenCalled();
 });
@@ -118,4 +120,54 @@ test('a failed answer is reported below the answer buttons', async () => {
     fireEvent.click(screen.getByRole('button', { name: "Can't go" }));
 
     expect(await screen.findByText(/could not be saved/i)).toHaveAttribute('id', 'rsvp-error');
+});
+
+describe('inviting friend groups', () => {
+    const carol = { id: 3, username: 'carol', firstName: 'Carol' }; // not Alice's friend, but in her group
+    const boardGames = { id: 7, name: 'Board games', members: [alice, bob, carol] };
+    const dixit = { title: 'Dixit', start: new Date('2026-11-15T18:00:00Z'), end: new Date('2026-11-15T20:00:00Z'), participants: [], groups: [], tags: [] };
+
+    beforeEach(() => {
+        api.get.mockImplementation(url => Promise.resolve({
+            data: url === '/v1/groups' ? [boardGames] : [{ status: 'accepted', userA: alice, userB: bob }],
+        }));
+    });
+
+    test('one click invites the whole group, and the group is saved with the event', async () => {
+        const onSave = jest.fn().mockResolvedValue();
+        renderAs(alice, <EventModal show isNewEvent initialData={dixit} onSave={onSave} onHide={jest.fn()} />);
+
+        fireEvent.click(await screen.findByRole('button', { name: '+ Board games (2)' }));
+
+        expect(screen.getByText('2 invited')).toBeInTheDocument();
+        expect(screen.getByText('@carol')).toBeInTheDocument(); // named via the group, though not a friend
+        expect(screen.queryByRole('button', { name: /\+ Board games/ })).not.toBeInTheDocument();
+
+        fireEvent.click(screen.getByRole('button', { name: /create event/i }));
+        expect(onSave).toHaveBeenCalledWith(expect.objectContaining({ groups: [{ id: 7 }] }));
+    });
+
+    test('removing a group uninvites its members but keeps people invited on their own', async () => {
+        const onSave = jest.fn().mockResolvedValue();
+        // As loaded from the server: the group's members were added to the participants
+        const saved = { ...dixit, id: 'e9', participants: [{ id: '2' }, { id: '3' }, { id: '4' }], groups: [{ id: '7' }], responses: {} };
+        renderAs(alice, <EventModal show initialData={saved} onSave={onSave} onHide={jest.fn()} />);
+
+        fireEvent.click(await screen.findByRole('button', { name: 'Remove group Board games' }));
+        fireEvent.click(screen.getByRole('button', { name: /save changes/i }));
+
+        expect(onSave).toHaveBeenCalledWith(expect.objectContaining({ groups: [], participants: [{ id: '4' }] }));
+    });
+
+    test('invitees see the groups they are in', async () => {
+        const invite = { ...dixit, id: 'e9', creatorId: alice.email, viewerRole: 'invited', participants: [{ id: '2' }, { id: '3' }], groups: [{ id: '7' }], responses: { 3: 'accepted' } };
+        api.get.mockImplementation(url => Promise.resolve({
+            data: url === '/v1/groups' ? [boardGames] : [{ status: 'accepted', userA: alice, userB: bob }],
+        }));
+        renderAs(bob, <EventModal show initialData={invite} onSave={jest.fn()} onHide={jest.fn()} readOnly />);
+
+        expect(await screen.findByText('Invited groups')).toBeInTheDocument();
+        expect(screen.getByText('Board games')).toBeInTheDocument();
+        expect(screen.getByText(/going$/i, { selector: '.participant-response' })).toBeInTheDocument(); // Carol
+    });
 });

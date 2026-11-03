@@ -46,6 +46,7 @@ const PlanMateCalendar = ({ userEmail, refreshKey, onSlotSelect, onCreateEvent }
                     tags: event.tags || [],
                     // The server stores participant user ids; EventModal resolves the names
                     participants: (event.participantIds || []).map(id => ({ id })),
+                    groups: (event.groupIds || []).map(id => ({ id })),
                     isOwn: event.viewerRole ? event.viewerRole === 'host' : event.creatorId === myOwnerId,
                     allDay: false,
                 })));
@@ -71,6 +72,7 @@ const PlanMateCalendar = ({ userEmail, refreshKey, onSlotSelect, onCreateEvent }
             startTime: new Date(formData.start).toISOString(),
             endTime: new Date(formData.end).toISOString(),
             participantIds: (formData.participants || []).map(p => String(p.id)),
+            groupIds: (formData.groups || []).map(g => String(g.id)),
             location: formData.location,
             isPublic: formData.isPublic,
             tags: formData.tags,

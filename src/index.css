@@ -415,3 +415,84 @@ button.btn-primary:hover,
 }
 
 .privacy-promise a:hover { text-decoration: underline; }
+
+/* Inviting friend groups (EventModal) */
+.invite-groups {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 10px;
+}
+
+.invite-groups-label {
+  font-size: 0.85rem;
+  color: var(--text-muted);
+}
+
+.invite-group-button {
+  min-height: 34px;
+  padding: 0 12px;
+  border-radius: 999px;
+  border: 1px dashed rgba(240, 106, 37, 0.6);
+  background: rgba(240, 106, 37, 0.08);
+  color: #FDBA74;
+  font-size: 0.85rem;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.invite-group-button:hover { background: rgba(240, 106, 37, 0.18); }
+.invite-group-button:focus-visible { outline: 2px solid #FDBA74; outline-offset: 2px; }
+
+.invite-group-size { color: var(--text-muted); font-weight: 500; }
+
+.invite-groups-hint {
+  font-size: 0.85rem;
+  color: var(--text-muted);
+  margin: 0 0 10px;
+}
+
+.invite-groups-hint a { color: #FDBA74; }
+
+.invited-group {
+  margin-bottom: 10px;
+  padding: 10px 12px;
+  border-radius: 10px;
+  background: rgba(255, 255, 255, 0.04);
+  border: 1px solid var(--border);
+}
+
+.invited-group-header {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 8px;
+  color: var(--text-main);
+}
+
+.invited-group-badge {
+  font-size: 11px;
+  font-weight: 700;
+  padding: 2px 8px;
+  border-radius: 999px;
+  background: rgba(240, 106, 37, 0.15);
+  color: #FDBA74;
+}
+
+.invited-group-count {
+  font-size: 0.8rem;
+  color: var(--text-muted);
+}
+
+.invited-group-remove {
+  margin-left: auto;
+  color: var(--text-muted) !important;
+  font-size: 1.1rem;
+}
+
+.invited-group-members {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
