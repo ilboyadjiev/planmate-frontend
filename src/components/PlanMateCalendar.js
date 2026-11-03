@@ -1,4 +1,4 @@
-import React, { useEffect, useState, useContext, useRef, useCallback, useMemo } from 'react';
+import React, { useEffect, useState, useContext, useMemo } from 'react';
 import api from '../api/client';
 import './PlanMateCalendar.css'; 
 import { Calendar, momentLocalizer } from 'react-big-calendar';
@@ -7,7 +7,7 @@ import 'react-big-calendar/lib/css/react-big-calendar.css';
 import { getGuestId } from '../services/guestService';
 import { AuthContext } from '../context/AuthContext';
 import EventModal from './EventModal';
-import ReactMarkdown from 'react-markdown';
+import GamePlan from './GamePlan';
 import CalendarToolbar from './CalendarToolbar';
 import { myResponse, eventStatus, statusLabel, STATUS_STYLES, STATUS_LEGEND } from './calendarStatus';
 
@@ -21,68 +21,7 @@ const PlanMateCalendar = ({ userEmail, refreshKey, onSlotSelect, onCreateEvent }
     const [currentDate, setCurrentDate] = useState(new Date());
     const [internalRefresh, setInternalRefresh] = useState(0); 
     
-    const [aiSummary, setAiSummary] = useState('');
-    const [isLoadingSummary, setIsLoadingSummary] = useState(false);
-    const fetchLock = useRef(false);
-
     const { user } = useContext(AuthContext);
-
-    const fetchAiSummary = useCallback(async (forceRefresh = false) => {
-        if (!user || !user.id) return;
-        
-        if (fetchLock.current) return;
-        
-        const today = new Date().toISOString().split('T')[0]; 
-        const cacheKey = `planmate_ai_summary_${user.username || user.email}`;
-
-        // Check local browser cache first
-        if (!forceRefresh) {
-            const cachedData = localStorage.getItem(cacheKey);
-            if (cachedData) {
-                try {
-                    const parsed = JSON.parse(cachedData);
-                    if (parsed.date === today) {
-                        setAiSummary(parsed.summary);
-                        return; 
-                    }
-                } catch (e) {
-                    console.error("Cache parsing error", e);
-                }
-            }
-        }
-
-        // Fetch fresh data
-        fetchLock.current = true;
-        setIsLoadingSummary(true);
-        try {
-            const res = await api.get('/v2/ai/summary', {
-                params: { force: forceRefresh }
-            });
-            
-            const summaryText = res.data.summary;
-            setAiSummary(summaryText);
-            
-            localStorage.setItem(cacheKey, JSON.stringify({ date: today, summary: summaryText }));
-        } catch (error) {
-            setAiSummary("Unable to load summary.");
-        } finally {
-            setIsLoadingSummary(false);
-            fetchLock.current = false;
-        }
-    }, [user]);
-
-    // Trigger 1: Initial load
-    useEffect(() => {
-        fetchAiSummary(false);
-    }, [fetchAiSummary]);
-
-    // Trigger 2: An event was added from Dashboard or edited inside Calendar
-    useEffect(() => {
-        if (refreshKey > 0 || internalRefresh > 0) {
-            fetchAiSummary(true);
-        }
-    }, [refreshKey, internalRefresh, fetchAiSummary]);
-
 
     // Fetch Events
     useEffect(() => {
@@ -148,7 +87,7 @@ const PlanMateCalendar = ({ userEmail, refreshKey, onSlotSelect, onCreateEvent }
         const updated = { ...event, responses: res.data.responses || {}, myResponse: response };
         setSelectedEvent(updated);
         setEvents(prev => prev.map(e => (e.id === event.id ? updated : e)));
-        // The daily briefing covers invites too; this also refreshes it (subject to the server's cooldown)
+        // Recolours the event; the AI Game plan notices the change and offers an update
         setInternalRefresh(prev => prev + 1);
     };
 
@@ -182,22 +121,16 @@ const PlanMateCalendar = ({ userEmail, refreshKey, onSlotSelect, onCreateEvent }
 
     return (
         <div className="calendar-container">
-            {/* AI Summary Block */}
+            {/* AI Game plan: generated only on request */}
             {user ? (
-                <div style={{ background: 'linear-gradient(135deg, rgba(79, 70, 229, 0.1), rgba(168, 85, 247, 0.1))', borderRadius: '12px', padding: '16px 20px', marginBottom: '24px', display: 'flex', gap: '12px', border: '1px solid rgba(79, 70, 229, 0.2)' }}>
-                    <span style={{ fontSize: '1.5rem' }}>✨</span>
-                    <div>
-                        <h4 style={{ margin: '0 0 8px 0', fontSize: '1.1rem', fontWeight: '600', color: '#A5B4FC' }}>Daily Briefing</h4>
-                        {isLoadingSummary ? <p style={{ color: 'var(--text-main)', margin: 0 }}>Asking Gemini...</p> : <div className="ai-markdown-content"><ReactMarkdown>{aiSummary}</ReactMarkdown></div>}
-                    </div>
-                </div>
+                <GamePlan user={user} calendarVersion={`${refreshKey}-${internalRefresh}`} />
             ) : (
                 <div style={{ background: 'rgba(255, 255, 255, 0.03)', borderRadius: '12px', padding: '16px 20px', marginBottom: '24px', display: 'flex', gap: '12px', border: '1px dashed rgba(255, 255, 255, 0.15)' }}>
                     <span style={{ fontSize: '1.5rem', opacity: 0.5, filter: 'grayscale(100%)' }}>✨</span>
                     <div>
-                        <h4 style={{ margin: '0 0 8px 0', fontSize: '1.1rem', fontWeight: '600', color: 'var(--text-muted)' }}>Daily Briefing</h4>
+                        <h4 style={{ margin: '0 0 8px 0', fontSize: '1.1rem', fontWeight: '600', color: 'var(--text-muted)' }}>AI Game plan</h4>
                         <p style={{ color: 'var(--text-muted)', margin: 0, fontSize: '0.9rem', lineHeight: '1.5' }}>
-                            Registered users get a personalized AI summary of their schedule every day. 
+                            Registered users get an AI game plan for their next 48 hours. 
                             <a href="/register" style={{ color: 'var(--primary)', textDecoration: 'none', fontWeight: '600', marginLeft: '6px' }}>
                                 Create a free account
                             </a> to unlock.
