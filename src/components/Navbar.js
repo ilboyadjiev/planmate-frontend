@@ -21,6 +21,7 @@ const Icon = ({ children, size = 22 }) => (
 const CompassIcon = () => <Icon><circle cx="12" cy="12" r="9" /><path d="M15.5 8.5l-2 5-5 2 2-5z" /></Icon>;
 const CalendarIcon = () => <Icon><rect x="3.5" y="5" width="17" height="15.5" rx="2.5" /><path d="M3.5 10h17M8 3v4M16 3v4" /></Icon>;
 const FriendsIcon = () => <Icon><circle cx="9" cy="8.5" r="3.5" /><path d="M2.5 20c.6-3.6 3.2-5.5 6.5-5.5s5.9 1.9 6.5 5.5" /><path d="M16 5.2a3.3 3.3 0 0 1 0 6.6M18 14.8c2 .6 3.2 2.3 3.5 5.2" /></Icon>;
+const GroupsIcon = () => <Icon><circle cx="7" cy="9" r="2.5" /><circle cx="17" cy="9" r="2.5" /><circle cx="12" cy="6" r="2.5" /><path d="M3 19c.4-2.6 2-4 4-4M21 19c-.4-2.6-2-4-4-4M7.5 20c.6-3 2.4-4.5 4.5-4.5s3.9 1.5 4.5 4.5" /></Icon>;
 const UserIcon = () => <Icon><circle cx="12" cy="8" r="4" /><path d="M4 20.5c.8-4 3.9-6 8-6s7.2 2 8 6" /></Icon>;
 const LoginIcon = () => <Icon><path d="M14 4h4a2 2 0 0 1 2 2v12a2 2 0 0 1-2 2h-4" /><path d="M10 16l4-4-4-4M14 12H4" /></Icon>;
 const SparkIcon = () => <Icon><path d="M12 3v4M12 17v4M3 12h4M17 12h4M6 6l2.5 2.5M15.5 15.5L18 18M6 18l2.5-2.5M15.5 8.5L18 6" /></Icon>;
@@ -99,6 +100,11 @@ const Navbar = () => {
                             <Badge count={incomingRequests} label={requestLabel} />
                         </NavLink>
                     )}
+                    {loggedIn && (
+                        <NavLink to="/profile/groups" className="pm-topnav-link">
+                            <GroupsIcon /> Groups
+                        </NavLink>
+                    )}
                 </nav>
 
                 <div className="pm-topbar-actions">
@@ -132,6 +138,7 @@ const Navbar = () => {
                                 <Dropdown.Item as={Link} to="/profile/friends">
                                     Friends <Badge count={incomingRequests} label={requestLabel} />
                                 </Dropdown.Item>
+                                <Dropdown.Item as={Link} to="/profile/groups">Friend groups</Dropdown.Item>
                                 <Dropdown.Divider />
                                 <Dropdown.Item as="button" type="button" onClick={logout}>Log out</Dropdown.Item>
                             </Dropdown.Menu>
@@ -157,7 +164,9 @@ const Navbar = () => {
                 </Link>
                 {loggedIn ? (
                     <>
-                        <NavLink to="/profile/friends" className="pm-tab">
+                        {/* Friends and Groups share this tab; the pages switch between each other */}
+                        <NavLink to="/profile/friends"
+                            className={({ isActive }) => `pm-tab${isActive || location.pathname === '/profile/groups' ? ' active' : ''}`}>
                             <span className="pm-tab-icon"><FriendsIcon /><Badge count={incomingRequests} label={requestLabel} /></span>
                             <span>Friends</span>
                         </NavLink>

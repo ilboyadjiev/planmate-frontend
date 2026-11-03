@@ -46,6 +46,7 @@ const Privacy = () => (
         <ul>
             <li>Events you create: title, description, time, location, tags and whether the event is public.</li>
             <li>Friends: friend requests and friendships.</li>
+            <li>Friend groups: the group names and who is in each group.</li>
             <li>Invitations: who you invite and how invitees answer (going, maybe, can't go).</li>
             <li>Public events you join from the Discover feed.</li>
         </ul>
@@ -74,6 +75,9 @@ const Privacy = () => (
                 first and last name. They never see your email address or contact details.</li>
             <li><strong>Your accepted friends</strong> also see your email address (PlanMate uses it to show who
                 organizes an event). Your street, zipcode, country and mobile number are never shown to other users.</li>
+            <li><strong>Friend groups</strong> have no owner. Everyone in a group sees its name and the name and
+                username of every other member, even members who are not their friends, and can rename the group or
+                add and remove people. Members can only add their own friends.</li>
             <li><strong>People you invite</strong> see the event, the other invitees and everyone's answers.</li>
             <li><strong>Public events</strong> are visible to every visitor of the Discover feed, including people
                 who are not logged in: title, description, time, location, tags, your name and username as host,
@@ -138,8 +142,8 @@ const Privacy = () => (
         <h2>6. How long we keep data</h2>
         <ul>
             <li>Account and calendar data: until you delete it or your account.</li>
-            <li>Deleting your account removes your profile, friendships and events, and takes you off other
-                people's invitations and events.</li>
+            <li>Deleting your account removes your profile, friendships and events, and takes you out of your
+                friend groups and off other people's invitations and events.</li>
             <li>Server logs: only as long as needed to run and secure the service.</li>
         </ul>
 

@@ -1,0 +1,281 @@
+/* Friends / Groups switch (shared by both pages) */
+.social-tabs {
+  display: inline-flex;
+  gap: 4px;
+  padding: 4px;
+  margin-bottom: 24px;
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid var(--border);
+}
+
+.social-tab {
+  min-height: 36px;
+  display: inline-flex;
+  align-items: center;
+  padding: 0 18px;
+  border-radius: 999px;
+  color: var(--text-muted);
+  font-weight: 600;
+  text-decoration: none;
+}
+
+.social-tab:hover { color: var(--text-main); }
+
+.social-tab.active {
+  background: var(--primary);
+  color: #1A0B02;
+}
+
+.social-tab:focus-visible { outline: 2px solid #FDBA74; outline-offset: 2px; }
+
+/* Friend Groups page */
+.groups-page {
+  max-width: 800px;
+  margin: 0 auto;
+  padding: 40px 20px;
+}
+
+.groups-page h1 {
+  font-size: 1.8rem;
+  font-weight: 800;
+  margin-bottom: 8px;
+}
+
+.groups-intro {
+  color: var(--text-muted);
+  margin-bottom: 24px;
+  line-height: 1.6;
+}
+
+.group-create {
+  display: flex;
+  gap: 10px;
+}
+
+.group-create input { flex: 1; min-width: 0; }
+
+.group-create-button { white-space: nowrap; }
+
+.groups-list {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  margin-top: 24px;
+}
+
+.groups-empty {
+  margin-top: 24px;
+  padding: 32px;
+  text-align: center;
+  border-radius: 12px;
+  border: 1px dashed var(--border);
+}
+
+.groups-empty p { margin: 0 0 4px; }
+
+.group-muted {
+  color: var(--text-muted);
+  font-size: 0.9rem;
+  margin: 8px 0;
+}
+
+/* One group */
+.group-card {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 14px;
+  padding: 18px 20px;
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+
+.group-card-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 12px;
+}
+
+.group-name {
+  margin: 0;
+  font-size: 1.15rem;
+  font-weight: 700;
+}
+
+.group-count {
+  font-size: 0.85rem;
+  color: var(--text-muted);
+}
+
+.group-rename {
+  display: flex;
+  gap: 8px;
+  flex: 1;
+  flex-wrap: wrap;
+}
+
+.group-rename input { flex: 1; min-width: 160px; }
+
+.group-members,
+.group-add-list {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.group-member {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 4px 6px 4px 4px;
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid var(--border);
+}
+
+.group-avatar {
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  color: #0B0F19;
+  font-size: 11px;
+  font-weight: 700;
+  flex: 0 0 auto;
+}
+
+.group-member-name {
+  font-size: 0.9rem;
+  font-weight: 600;
+}
+
+.group-member-handle {
+  font-weight: 400;
+  color: var(--text-muted);
+}
+
+.group-remove {
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+  border: none;
+  background: transparent;
+  color: var(--text-muted);
+  font-size: 1.1rem;
+  line-height: 1;
+  cursor: pointer;
+}
+
+.group-remove:hover:not(:disabled) { background: rgba(239, 68, 68, 0.15); color: #FCA5A5; }
+
+/* Adding friends */
+.group-add {
+  padding: 14px;
+  border-radius: 12px;
+  background: rgba(255, 255, 255, 0.03);
+  border: 1px solid var(--border);
+}
+
+.group-add-label {
+  display: block;
+  font-weight: 600;
+  margin-bottom: 8px;
+}
+
+.group-add-list {
+  flex-direction: column;
+  margin-top: 10px;
+  max-height: 260px;
+  overflow-y: auto;
+}
+
+.group-add-list li {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 6px 4px;
+}
+
+.group-add-list .group-member-name { flex: 1; min-width: 0; }
+
+/* Footer and buttons */
+.group-card-footer {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 12px;
+  flex-wrap: wrap;
+  padding-top: 12px;
+  border-top: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+.group-leave-confirm {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+  margin-left: auto;
+  font-size: 0.9rem;
+}
+
+.group-button {
+  min-height: 38px;
+  padding: 0 14px;
+  border-radius: 8px;
+  border: 1px solid var(--border);
+  background: transparent;
+  color: var(--text-main);
+  font-weight: 600;
+  font-size: 0.9rem;
+  cursor: pointer;
+}
+
+.group-button:hover:not(:disabled) { background: rgba(255, 255, 255, 0.06); }
+.group-button:disabled { opacity: 0.7; cursor: wait; }
+
+.group-button-primary {
+  background: var(--primary);
+  border-color: var(--primary);
+  color: #1A0B02;
+}
+
+.group-button-primary:hover:not(:disabled) { background: #F58A50; }
+
+.group-button-danger {
+  background: rgba(239, 68, 68, 0.15);
+  border-color: rgba(239, 68, 68, 0.5);
+  color: #FCA5A5;
+}
+
+.group-link {
+  background: none;
+  border: none;
+  padding: 0;
+  margin-top: 10px;
+  color: #FDBA74;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.group-card-footer .group-link { margin-top: 0; margin-left: auto; }
+
+.group-link-danger { color: #FCA5A5; }
+
+.group-button:focus-visible,
+.group-remove:focus-visible,
+.group-link:focus-visible {
+  outline: 2px solid #FDBA74;
+  outline-offset: 2px;
+}
+
+@media (max-width: 600px) {
+  .group-create { flex-direction: column; }
+  .group-card { padding: 16px; }
+}

@@ -2,6 +2,8 @@ import React, { useState, useEffect, useContext } from 'react';
 import api from '../api/client';
 import { AuthContext } from '../context/AuthContext';
 import { notifyFriendsChanged } from '../services/friendEvents';
+import SocialTabs from '../components/SocialTabs';
+import './FriendGroups.css';
 
 const FriendsList = () => {
     const { user } = useContext(AuthContext);
@@ -89,6 +91,7 @@ const FriendsList = () => {
         <div style={{ padding: '40px 20px', display: 'flex', justifyContent: 'center' }}>
             <div className="form-container" style={{ maxWidth: '800px', width: '100%', margin: 0 }}>
                 
+                <SocialTabs />
                 <h2 style={{ marginBottom: '8px', fontWeight: '700' }}>Network</h2>
                 <p style={{ color: 'var(--text-muted)', marginBottom: '32px', fontSize: '0.95rem' }}>
                     Find friends and manage your connections.
