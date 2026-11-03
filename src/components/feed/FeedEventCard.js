@@ -1,0 +1,120 @@
+import React from 'react';
+import { Link } from 'react-router-dom';
+import moment from 'moment';
+import { avatarColor, initials, socialProof, formatWhen, formatPlace } from './feedText';
+
+const MAX_AVATARS = 3;
+
+const ClockIcon = () => (
+    <svg aria-hidden="true" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+        <circle cx="12" cy="12" r="9" /><path d="M12 7v5l3 2" />
+    </svg>
+);
+
+const PinIcon = () => (
+    <svg aria-hidden="true" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+        <path d="M12 21s-7-6.2-7-11.5A7 7 0 0 1 19 9.5C19 14.8 12 21 12 21z" /><circle cx="12" cy="9.5" r="2.5" />
+    </svg>
+);
+
+const CheckIcon = () => (
+    <svg aria-hidden="true" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+        <path d="M5 12.5l4.5 4.5L19 7.5" />
+    </svg>
+);
+
+const Avatar = ({ text, colorKey, className = '', title }) => (
+    <span className={`feed-avatar ${className}`} style={{ background: avatarColor(colorKey) }} title={title} aria-hidden="true">
+        {text}
+    </span>
+);
+
+/**
+ * One event on the Discover feed (see the card design canvas): date, title, time and place, host,
+ * description, tags, and who is going above the action.
+ */
+const FeedEventCard = ({ event, loggedIn, pending, onToggleGoing }) => {
+    const start = moment(event.startTime);
+    const host = event.host || {};
+    const friends = event.friendsGoing || [];
+    const place = formatPlace(event.location);
+    const { headline, detail } = socialProof(event, loggedIn);
+    const titleId = `feed-event-${event.id}`;
+    const [hostFirst, hostLast] = (host.name || '').split(' ');
+
+    let action;
+    if (event.hosting) {
+        action = <span className="feed-hosting-pill">You're hosting</span>;
+    } else if (!loggedIn) {
+        action = <Link to="/login" className="feed-action feed-action-login">Log in to join</Link>;
+    } else if (event.going) {
+        action = (
+            <button type="button" className="feed-action feed-action-going" aria-pressed="true"
+                aria-describedby={titleId} disabled={pending} onClick={() => onToggleGoing(event)}>
+                <CheckIcon /> {pending ? 'Leaving…' : 'Going'}
+                <span className="visually-hidden"> (select to leave)</span>
+            </button>
+        );
+    } else {
+        action = (
+            <button type="button" className="feed-action feed-action-join" aria-pressed="false"
+                aria-describedby={titleId} disabled={pending} onClick={() => onToggleGoing(event)}>
+                {pending ? 'Joining…' : "I'm going"}
+            </button>
+        );
+    }
+
+    return (
+        <article className={`feed-card${event.going ? ' is-going' : ''}${event.hosting ? ' is-hosting' : ''}`} aria-labelledby={titleId}>
+            <div className="feed-card-top">
+                <div className="feed-date" aria-hidden="true">
+                    <span className="feed-date-month">{start.format('MMM').toUpperCase()}</span>
+                    <span className="feed-date-day">{start.format('D')}</span>
+                </div>
+                <div className="feed-card-heading">
+                    <h4 id={titleId} className="feed-card-title">{event.title}</h4>
+                    <div className="feed-meta"><ClockIcon /><span>{formatWhen(event.startTime, event.endTime)}</span></div>
+                    {place && <div className="feed-meta"><PinIcon /><span className="feed-meta-text">{place}</span></div>}
+                </div>
+            </div>
+
+            <div className="feed-host">
+                <Avatar text={initials(hostFirst, hostLast, host.name)}
+                    colorKey={host.username || host.name} className="feed-avatar-sm" />
+                <span>
+                    Hosted by <strong>{host.you ? 'you' : host.name}</strong>
+                    {host.username && !host.you && <span className="feed-host-username"> @{host.username}</span>}
+                </span>
+                {host.friend && <span className="feed-friend-badge">Friend</span>}
+            </div>
+
+            {event.description && <p className="feed-description">{event.description}</p>}
+
+            {(event.tags || []).length > 0 && (
+                <ul className="feed-tags" aria-label="Tags">
+                    {event.tags.map(tag => <li key={tag}>{tag}</li>)}
+                </ul>
+            )}
+
+            <div className="feed-card-footer">
+                <div className="feed-social">
+                    {friends.length > 0 && (
+                        <div className="feed-avatar-stack">
+                            {friends.slice(0, MAX_AVATARS).map(f => (
+                                <Avatar key={f.id} text={initials(f.firstName, f.lastName, f.username)} colorKey={f.id}
+                                    title={f.firstName || f.username} />
+                            ))}
+                        </div>
+                    )}
+                    <div className="feed-social-text">
+                        <span className={`feed-social-headline${friends.length > 0 || event.going ? ' has-friends' : ''}`}>{headline}</span>
+                        {detail && <span className="feed-social-detail">{detail}</span>}
+                    </div>
+                </div>
+                {action}
+            </div>
+        </article>
+    );
+};
+
+export default FeedEventCard;

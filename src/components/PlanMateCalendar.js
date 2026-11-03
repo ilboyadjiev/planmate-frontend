@@ -95,7 +95,7 @@ const PlanMateCalendar = ({ userEmail, refreshKey, onSlotSelect }) => {
                     params: user ? { start, end } : { creatorId: getGuestId(), start, end }
                 });
 
-                // Events I created are editable; events I was invited to are read-only
+                // Events I created are editable; events I was invited to or joined from the feed are read-only
                 const myOwnerId = user ? user.email : getGuestId();
                 setEvents(response.data.map(event => ({
                     ...event,
@@ -105,7 +105,7 @@ const PlanMateCalendar = ({ userEmail, refreshKey, onSlotSelect }) => {
                     tags: event.tags || [],
                     // The server stores participant user ids; EventModal resolves the names
                     participants: (event.participantIds || []).map(id => ({ id })),
-                    isOwn: event.creatorId === myOwnerId,
+                    isOwn: event.viewerRole ? event.viewerRole === 'host' : event.creatorId === myOwnerId,
                     allDay: false,
                 })));
             } catch (error) { console.error('Error fetching events:', error); }
@@ -205,7 +205,7 @@ const PlanMateCalendar = ({ userEmail, refreshKey, onSlotSelect }) => {
                         ? { backgroundColor: '#4F46E5', borderRadius: '6px', border: 'none', color: 'white' }
                         : { backgroundColor: 'rgba(79, 70, 229, 0.15)', borderRadius: '6px', border: '1px dashed #818cf8', color: '#c7d2fe' },
                 })}
-                tooltipAccessor={event => (event.isOwn ? event.title : `${event.title} (invited)`)}
+                tooltipAccessor={event => (event.isOwn ? event.title : `${event.title} (${event.viewerRole === 'going' ? 'going' : 'invited'})`)}
                 onSelectEvent={handleSelectEvent}
                 date={currentDate}
                 onNavigate={d => { setCurrentDate(d); }}

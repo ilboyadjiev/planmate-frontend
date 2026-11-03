@@ -1,152 +1,122 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useContext, useRef, useCallback } from 'react';
 import api from '../api/client';
-import moment from 'moment';
+import { AuthContext } from '../context/AuthContext';
+import FeedEventCard from './feed/FeedEventCard';
+import './feed/DiscoveryFeed.css';
 
-const DiscoveryFeed = ({ onAddEvent }) => {
-    const [feedEvents, setFeedEvents] = useState([]);
-    const [activeTag, setActiveTag] = useState('#munich');
-    const [loading, setLoading] = useState(false);
-    
+const PAGE_SIZE = 5;
+const FOR_YOU = null;
+const TAGS = ['#munich', '#gaming', '#tech', '#music', '#food'];
+
+/**
+ * Discover feed: upcoming public events ranked by the server (friends going, friends hosting, popularity, how soon).
+ * "For you" is the whole ranked feed; a tag narrows it. Joining adds the event to your calendar, read-only.
+ *
+ * onAttendanceChange(event) is called after joining or leaving, with the updated event.
+ * onError(message) is called when joining or leaving fails.
+ */
+const DiscoveryFeed = ({ onAttendanceChange, onError }) => {
+    const { user } = useContext(AuthContext);
+    const [activeTag, setActiveTag] = useState(FOR_YOU);
+    const [events, setEvents] = useState([]);
     const [page, setPage] = useState(0);
-    const [totalPages, setTotalPages] = useState(0);
+    const [hasMore, setHasMore] = useState(false);
+    const [loading, setLoading] = useState(false);
+    const [loadError, setLoadError] = useState(false);
+    const [pendingId, setPendingId] = useState(null);
+    const latestRequest = useRef(0);
 
-    const popularTags = ['#munich', '#gaming', '#tech', '#music', '#food'];
+    const userKey = user?.id ?? null;
 
+    const loadPage = useCallback(async (pageToLoad) => {
+        const requestId = ++latestRequest.current;
+        setLoading(true);
+        setLoadError(false);
+        try {
+            const res = await api.get('/v2/events/feed', {
+                params: { ...(activeTag ? { tag: activeTag } : {}), page: pageToLoad, size: PAGE_SIZE },
+            });
+            if (requestId !== latestRequest.current) return; // a newer tag or login change won
+            const incoming = res.data.events || [];
+            setEvents(prev => {
+                if (pageToLoad === 0) return incoming;
+                // Rankings can shift between pages (someone joins); never show a card twice
+                const seen = new Set(prev.map(e => e.id));
+                return [...prev, ...incoming.filter(e => !seen.has(e.id))];
+            });
+            setPage(pageToLoad);
+            setHasMore(!!res.data.hasMore);
+        } catch (err) {
+            if (requestId === latestRequest.current) setLoadError(true);
+        } finally {
+            if (requestId === latestRequest.current) setLoading(false);
+        }
+    }, [activeTag]);
+
+    // Reload from the top when the tag changes or someone logs in or out (friends and "going" depend on it)
     useEffect(() => {
-        const fetchFeed = async () => {
-            setLoading(true);
-            try {
-                const res = await api.get('/v2/events/feed', {
-                    params: { 
-                        tag: activeTag,
-                        page: page,
-                        size: 3
-                    }
-                });
-                setFeedEvents(res.data.events);
-                setTotalPages(res.data.totalPages);
-            } catch (err) {
-                console.error("Could not fetch discovery feed", err);
-            } finally {
-                setLoading(false);
-            }
-        };
+        setEvents([]);
+        loadPage(0);
+    }, [loadPage, userKey]);
 
-        fetchFeed();
-    }, [activeTag, page]);
-
-    const handleTagChange = (tag) => {
-        setActiveTag(tag);
-        setPage(0);
+    const handleToggleGoing = async (event) => {
+        setPendingId(event.id);
+        try {
+            const url = `/v2/events/${event.id}/attendance`;
+            const res = event.going ? await api.delete(url) : await api.post(url);
+            setEvents(prev => prev.map(e => (e.id === event.id ? res.data : e)));
+            if (onAttendanceChange) onAttendanceChange(res.data);
+        } catch (err) {
+            const message = err.response?.data?.message;
+            if (onError) onError(message || (event.going ? 'Could not leave the event. Please try again.' : 'Could not join the event. Please try again.'));
+        } finally {
+            setPendingId(null);
+        }
     };
 
+    const chips = [{ label: 'For you', tag: FOR_YOU }, ...TAGS.map(tag => ({ label: tag, tag }))];
+
     return (
-        <div style={{ 
-            background: 'var(--surface)', 
-            borderRadius: '12px', 
-            padding: '20px', 
-            border: '1px solid var(--border)',
-            height: '100%',
-            display: 'flex',
-            flexDirection: 'column'
-        }}>
-            <h3 style={{ fontSize: '1.2rem', fontWeight: '700', marginBottom: '16px', color: 'var(--text-main)' }}>📍 Discover</h3>
-            
-            <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap', marginBottom: '20px' }}>
-                {popularTags.map(tag => (
-                    <span 
-                        key={tag} 
-                        onClick={() => handleTagChange(tag)}
-                        style={{
-                            padding: '4px 12px',
-                            borderRadius: '20px',
-                            fontSize: '0.85rem',
-                            fontWeight: '600',
-                            cursor: 'pointer',
-                            background: activeTag === tag ? 'var(--primary)' : 'rgba(255, 255, 255, 0.05)',
-                            color: activeTag === tag ? '#fff' : 'var(--text-muted)',
-                            border: `1px solid ${activeTag === tag ? 'var(--primary)' : 'var(--border)'}`,
-                            transition: 'all 0.2s'
-                        }}
-                    >
-                        {tag}
-                    </span>
+        <section className="feed-panel" aria-labelledby="discover-heading">
+            <h3 id="discover-heading">Discover</h3>
+
+            <div className="feed-chips" role="group" aria-label="Filter events">
+                {chips.map(chip => (
+                    <button key={chip.label} type="button" className="feed-chip"
+                        aria-pressed={activeTag === chip.tag} onClick={() => setActiveTag(chip.tag)}>
+                        {chip.label}
+                    </button>
                 ))}
             </div>
 
-            {/* Event List Container */}
-            <div style={{ overflowY: 'auto', flex: 1, paddingRight: '4px', minHeight: '350px' }}>
-                {loading ? (
-                    <p style={{ color: 'var(--text-muted)' }}>Loading events...</p>
-                ) : feedEvents.length === 0 ? (
-                    <p style={{ color: 'var(--text-muted)' }}>No upcoming events for {activeTag}.</p>
-                ) : (
-                    feedEvents.map(event => (
-                        <div key={event.id || event._id} style={{ 
-                            padding: '16px', 
-                            marginBottom: '12px', 
-                            borderRadius: '8px', 
-                            background: 'var(--bg-color)',
-                            border: '1px solid var(--border)'
-                        }}>
-                            <h4 style={{ fontSize: '1rem', margin: '0 0 8px 0', fontWeight: '600', color: 'var(--text-main)' }}>{event.title}</h4>
-                            
-                            <p style={{ fontSize: '0.85rem', color: 'var(--text-muted)', margin: '0 0 12px 0' }}>
-                                📅 {moment(event.startTime).format('MMM Do, h:mm a')}
-                            </p>
-                            
-                            <p style={{ fontSize: '0.9rem', marginBottom: '12px', display: '-webkit-box', WebkitLineClamp: 2, WebkitBoxOrient: 'vertical', overflow: 'hidden', color: 'var(--text-main)' }}>
-                                {event.description}
-                            </p>
-                            
-                            <button 
-                                onClick={() => onAddEvent(event)}
-                                style={{ 
-                                    width: '100%', padding: '8px', borderRadius: '6px', 
-                                    background: 'rgba(79, 70, 229, 0.1)', color: '#818cf8', 
-                                    border: '1px solid rgba(79, 70, 229, 0.3)', fontWeight: '600', cursor: 'pointer',
-                                    transition: 'background 0.2s'
-                                }}
-                                onMouseOver={(e) => e.target.style.background = 'rgba(79, 70, 229, 0.2)'}
-                                onMouseOut={(e) => e.target.style.background = 'rgba(79, 70, 229, 0.1)'}
-                            >
-                                + Add to Calendar
-                            </button>
-                        </div>
-                    ))
+            <div className="feed-list" aria-busy={loading}>
+                {events.map(event => (
+                    <FeedEventCard key={event.id} event={event} loggedIn={!!user}
+                        pending={pendingId === event.id} onToggleGoing={handleToggleGoing} />
+                ))}
+
+                {loading && events.length === 0 && <p className="feed-status">Loading events…</p>}
+                {!loading && loadError && (
+                    <p className="feed-status" role="alert">
+                        Couldn't load events.{' '}
+                        <button type="button" className="btn btn-link p-0 align-baseline" onClick={() => loadPage(events.length ? page + 1 : 0)}>
+                            Try again
+                        </button>
+                    </p>
+                )}
+                {!loading && !loadError && events.length === 0 && (
+                    <p className="feed-status">
+                        {activeTag ? `No upcoming events for ${activeTag} yet.` : 'No upcoming public events yet.'}
+                    </p>
                 )}
             </div>
 
-            {!loading && totalPages > 0 && (
-                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginTop: '16px', paddingTop: '16px', borderTop: '1px solid var(--border)' }}>
-                    <button 
-                        onClick={() => setPage(p => Math.max(0, p - 1))}
-                        disabled={page === 0}
-                        style={{ 
-                            background: 'transparent', border: 'none', color: page === 0 ? 'var(--text-muted)' : 'var(--primary)', 
-                            fontWeight: '600', cursor: page === 0 ? 'not-allowed' : 'pointer', opacity: page === 0 ? 0.5 : 1 
-                        }}
-                    >
-                        &larr; Prev
-                    </button>
-                    
-                    <span style={{ color: 'var(--text-muted)', fontSize: '0.85rem' }}>
-                        {page + 1} / {totalPages}
-                    </span>
-                    
-                    <button 
-                        onClick={() => setPage(p => Math.min(totalPages - 1, p + 1))}
-                        disabled={page >= totalPages - 1}
-                        style={{ 
-                            background: 'transparent', border: 'none', color: page >= totalPages - 1 ? 'var(--text-muted)' : 'var(--primary)', 
-                            fontWeight: '600', cursor: page >= totalPages - 1 ? 'not-allowed' : 'pointer', opacity: page >= totalPages - 1 ? 0.5 : 1 
-                        }}
-                    >
-                        Next &rarr;
-                    </button>
-                </div>
+            {hasMore && events.length > 0 && (
+                <button type="button" className="feed-more" disabled={loading} onClick={() => loadPage(page + 1)}>
+                    {loading ? 'Loading…' : 'Show more'}
+                </button>
             )}
-        </div>
+        </section>
     );
 };
 

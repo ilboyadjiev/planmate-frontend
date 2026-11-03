@@ -37,18 +37,13 @@ const Dashboard = () => {
         setRefreshKey(prev => prev + 1);
     };
 
-    const handleAddFromFeed = async (feedEvent) => {
-        try {
-            await createEvent({
-                title: feedEvent.title, start: feedEvent.startTime, end: feedEvent.endTime,
-                description: feedEvent.description, participants: [], location: feedEvent.location,
-                isPublic: false, tags: feedEvent.tags
-            }, user ? null : getGuestId());
-            setNotice({ type: 'success', text: `"${feedEvent.title}" was added to your calendar.` });
-            setRefreshKey(prev => prev + 1);
-        } catch (err) {
-            setNotice({ type: 'error', text: 'Could not add the event to your calendar. Please try again.' });
-        }
+    // Joined events show in the calendar read-only, so refresh it after joining or leaving
+    const handleAttendanceChange = (event) => {
+        setNotice({
+            type: 'success',
+            text: event.going ? `You're going to "${event.title}". It's in your calendar now.` : `You left "${event.title}".`,
+        });
+        setRefreshKey(prev => prev + 1);
     };
 
     const handleCalendarSlotSelect = (start, end) => {
@@ -80,7 +75,7 @@ const Dashboard = () => {
             <div className="dashboard-layout">
                 {/* Discovery Feed */}
                 <div style={{ height: '100%', minHeight: '700px', alignSelf: 'flex-start' }}>
-                    <DiscoveryFeed onAddEvent={handleAddFromFeed} />
+                    <DiscoveryFeed onAttendanceChange={handleAttendanceChange} onError={text => setNotice({ type: 'error', text })} />
                 </div>
                 
                 {/* Sliding Calendar Drawer */}

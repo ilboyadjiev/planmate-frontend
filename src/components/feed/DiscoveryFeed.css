@@ -1,0 +1,323 @@
+/* Discover feed: see the "Discover Feed Cards" design canvas */
+
+.feed-panel {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  padding: 20px;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.feed-panel h3 {
+  margin: 0;
+  font-size: 1.2rem;
+  font-weight: 700;
+  color: var(--text-main);
+}
+
+.feed-chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.feed-chip {
+  min-height: 32px;
+  padding: 4px 12px;
+  border-radius: 999px;
+  font-size: 0.85rem;
+  font-weight: 600;
+  cursor: pointer;
+  background: rgba(255, 255, 255, 0.05);
+  color: var(--text-muted);
+  border: 1px solid var(--border);
+  transition: background 0.2s, color 0.2s;
+}
+
+.feed-chip:hover { color: var(--text-main); }
+
+.feed-chip[aria-pressed="true"] {
+  background: var(--primary);
+  border-color: var(--primary);
+  color: #1A0B02;
+}
+
+.feed-list {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.feed-status {
+  color: var(--text-muted);
+  margin: 0;
+}
+
+/* --- Card --- */
+
+.feed-card {
+  background: var(--bg-color);
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  padding: 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.feed-card.is-going { border-color: rgba(52, 211, 153, 0.35); }
+.feed-card.is-hosting { border-color: rgba(129, 140, 248, 0.35); }
+
+.feed-card-top {
+  display: flex;
+  gap: 12px;
+  align-items: flex-start;
+}
+
+.feed-date {
+  flex: 0 0 48px;
+  height: 52px;
+  border-radius: 10px;
+  background: rgba(240, 106, 37, 0.12);
+  border: 1px solid rgba(240, 106, 37, 0.35);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+}
+
+.feed-date-month {
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  color: #FDBA74;
+}
+
+.feed-date-day {
+  font-size: 20px;
+  font-weight: 700;
+  line-height: 1.1;
+  color: var(--text-main);
+}
+
+.feed-card-heading {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.feed-card-title {
+  margin: 0;
+  font-size: 1rem;
+  font-weight: 600;
+  line-height: 1.3;
+  color: var(--text-main);
+}
+
+.feed-meta {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 13px;
+  color: var(--text-muted);
+  min-width: 0;
+}
+
+.feed-meta svg { flex: 0 0 auto; }
+
+.feed-meta-text {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.feed-host {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 13px;
+  color: var(--text-muted);
+}
+
+.feed-host strong {
+  color: var(--text-main);
+  font-weight: 600;
+}
+
+.feed-host-username { color: var(--text-muted); }
+
+.feed-friend-badge {
+  font-size: 11px;
+  font-weight: 600;
+  padding: 2px 8px;
+  border-radius: 999px;
+  background: rgba(129, 140, 248, 0.15);
+  color: #A5B4FC;
+}
+
+.feed-description {
+  margin: 0;
+  font-size: 14px;
+  line-height: 1.5;
+  color: #D1D5DB;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+
+.feed-tags {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.feed-tags li {
+  font-size: 12px;
+  font-weight: 500;
+  padding: 3px 10px;
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.06);
+  color: var(--text-muted);
+}
+
+/* Who's going sits on its own row above the full-width action, so neither feels cramped */
+.feed-card-footer {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  padding-top: 14px;
+  border-top: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+.feed-social {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  min-width: 0;
+}
+
+.feed-avatar {
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+  border: 2px solid var(--bg-color);
+  color: #0B0F19;
+  font-size: 11px;
+  font-weight: 700;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex: 0 0 auto;
+}
+
+.feed-avatar-sm {
+  width: 24px;
+  height: 24px;
+  border: none;
+  font-size: 10px;
+}
+
+.feed-avatar-stack { display: flex; flex: 0 0 auto; }
+.feed-avatar-stack .feed-avatar + .feed-avatar { margin-left: -8px; }
+
+.feed-social-text {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+}
+
+.feed-social-headline {
+  font-size: 13px;
+  font-weight: 600;
+  line-height: 1.3;
+  color: var(--text-main);
+}
+
+.feed-social-headline.has-friends { color: #FDBA74; }
+
+.feed-social-detail {
+  font-size: 12px;
+  color: var(--text-muted);
+}
+
+.feed-action {
+  width: 100%;
+  min-height: 44px;
+  padding: 0 16px;
+  border-radius: 8px;
+  font-size: 14px;
+  font-weight: 700;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  text-decoration: none;
+  transition: background 0.2s, transform 0.1s;
+}
+
+.feed-action:disabled { cursor: wait; opacity: 0.7; }
+
+.feed-action-join {
+  border: none;
+  background: var(--primary);
+  color: #1A0B02;
+}
+
+.feed-action-join:hover:not(:disabled) { background: #F58A50; }
+
+.feed-action-going {
+  background: rgba(52, 211, 153, 0.12);
+  border: 1px solid rgba(52, 211, 153, 0.45);
+  color: #6EE7B7;
+}
+
+.feed-action-going:hover:not(:disabled) { background: rgba(52, 211, 153, 0.2); }
+
+.feed-action-login {
+  border: 1px solid rgba(240, 106, 37, 0.6);
+  color: #FDBA74;
+}
+
+.feed-action-login:hover { color: #FED7AA; background: rgba(240, 106, 37, 0.08); }
+
+.feed-hosting-pill {
+  align-self: flex-start;
+  font-size: 12px;
+  font-weight: 700;
+  padding: 6px 10px;
+  border-radius: 999px;
+  background: rgba(129, 140, 248, 0.15);
+  color: #A5B4FC;
+}
+
+.feed-more {
+  align-self: center;
+  min-height: 44px;
+  padding: 0 20px;
+  border-radius: 8px;
+  background: transparent;
+  border: 1px solid rgba(255, 255, 255, 0.15);
+  color: var(--text-main);
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.feed-more:hover:not(:disabled) { background: rgba(255, 255, 255, 0.05); }
+.feed-more:disabled { cursor: wait; opacity: 0.7; }
+
+.feed-action:focus-visible,
+.feed-chip:focus-visible,
+.feed-more:focus-visible {
+  outline: 2px solid #FDBA74;
+  outline-offset: 2px;
+}

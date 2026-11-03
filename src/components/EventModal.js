@@ -95,9 +95,10 @@ const EventModal = ({ show, onHide, initialData, onSave, isNewEvent, readOnly = 
 
     const organizerName = () => {
         const creator = formData?.creatorId;
-        if (!creator) return 'Unknown';
-        const friend = friends.find(f => f.email === creator);
-        return friend ? `${friend.firstName || ''} @${friend.username}`.trim() : creator;
+        const friend = creator && friends.find(f => f.email === creator);
+        if (friend) return `${friend.firstName || ''} @${friend.username}`.trim();
+        // Events joined from the feed only carry the host's display name, never their email
+        return formData?.hostName || 'Unknown';
     };
 
     const handleChange = (field, value) => {
@@ -175,7 +176,7 @@ const EventModal = ({ show, onHide, initialData, onSave, isNewEvent, readOnly = 
                 </Modal.Header>
                 <Modal.Body>
                     <div style={{ ...chipStyle, display: 'inline-flex', marginBottom: '20px' }}>
-                        You're invited · only the organizer can make changes
+                        {formData.viewerRole === 'going' ? "You're going" : "You're invited"} · only the organizer can make changes
                     </div>
                     <Section label="When">{formatRange(formData.start, formData.end)}</Section>
                     <Section label="Organizer">{organizerName()}</Section>
