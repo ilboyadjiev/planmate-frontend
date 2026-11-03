@@ -74,6 +74,9 @@ const Privacy = () => (
         <ul>
             <li><strong>Anyone who is logged in</strong> can find you by username or name and sees your username,
                 first and last name. They never see your email address or contact details.</li>
+            <li><strong>Your profile page</strong> shows logged-in users your name, username, the friends and groups
+                you have in common with them, and the upcoming public events you host. Which public events you joined
+                is shown only to your friends.</li>
             <li><strong>People you may know:</strong> friends of your friends and people in your friend groups may see
                 your name and username as a suggestion, with the reason (mutual friends or a shared group). Your city
                 is used only to order suggestions and is never shown or used as a reason on its own.</li>

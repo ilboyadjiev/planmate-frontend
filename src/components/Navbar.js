@@ -130,6 +130,7 @@ const Navbar = () => {
                                     </div>
                                 </div>
                                 <Dropdown.Divider />
+                                <Dropdown.Item as={Link} to={`/people/${user.id}`}>View my profile</Dropdown.Item>
                                 <Dropdown.Item as={Link} to="/profile/edit">Edit profile</Dropdown.Item>
                                 <Dropdown.Item as={Link} to="/profile/friends">
                                     Friends <Badge count={incomingRequests} label={requestLabel} />

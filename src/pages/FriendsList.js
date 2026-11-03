@@ -1,12 +1,15 @@
-import React, { useState, useEffect, useContext, useCallback } from 'react';
+import React, { useState, useEffect, useContext, useCallback, useRef } from 'react';
 import api from '../api/client';
 import { AuthContext } from '../context/AuthContext';
 import SocialTabs from '../components/SocialTabs';
 import AddFriendButton from '../components/AddFriendButton';
 import useFriendships from '../hooks/useFriendships';
+import ProfileModal from '../components/profile/ProfileModal';
 import './FriendGroups.css';
 
 const displayName = (person) => [person.firstName, person.lastName].filter(Boolean).join(' ') || person.username;
+
+const MIN_SEARCH = 2;
 
 /** Why someone is suggested: shared groups first, then mutual friends. */
 export const suggestionReason = (suggestion) => {
@@ -30,11 +33,13 @@ const FriendsList = () => {
     const friendships = useFriendships();
     const [searchTerm, setSearchTerm] = useState('');
     const [searchResults, setSearchResults] = useState([]);
+    const [searching, setSearching] = useState(false);
     const [suggestions, setSuggestions] = useState([]);
     const [error, setError] = useState(null);
     const [successMsg, setSuccessMsg] = useState('');
     const [busyId, setBusyId] = useState(null);
     const [confirmRemoveId, setConfirmRemoveId] = useState(null);
+    const [profileId, setProfileId] = useState(null); // the profile open in the pop-up
 
     const loadSuggestions = useCallback(async () => {
         try {
@@ -48,22 +53,36 @@ const FriendsList = () => {
     // Loaded once per visit: people you add stay in the list, showing "Requested"
     useEffect(() => { if (user?.id) loadSuggestions(); }, [user, loadSuggestions]);
 
-    const handleSearch = async (e) => {
-        e.preventDefault();
-        setError(null);
-        setSuccessMsg('');
-        if (!searchTerm.trim()) {
+    // Search as you type (after a short pause), by username or name
+    const latestSearch = useRef(0);
+    const search = useCallback(async (text) => {
+        const requestId = ++latestSearch.current;
+        if (text.trim().length < MIN_SEARCH) {
             setSearchResults([]);
+            setSearching(false);
             return;
         }
+        setSearching(true);
         try {
-            const response = await api.get('/v1/users/search', { params: { term: searchTerm } });
-            const results = response.data.filter(u => u.id !== user.id);
-            setSearchResults(results);
-            if (results.length === 0) setError('No users found matching that search.');
+            const response = await api.get('/v1/users/search', { params: { term: text.trim() } });
+            if (requestId !== latestSearch.current) return; // a newer search won
+            setSearchResults(response.data.filter(u => u.id !== user.id));
+            setError(null);
         } catch (err) {
-            setError('Error searching for users.');
+            if (requestId === latestSearch.current) setError('Error searching for users.');
+        } finally {
+            if (requestId === latestSearch.current) setSearching(false);
         }
+    }, [user]);
+
+    useEffect(() => {
+        const timer = setTimeout(() => search(searchTerm), 300);
+        return () => clearTimeout(timer);
+    }, [searchTerm, search]);
+
+    const handleSearch = (e) => {
+        e.preventDefault();
+        search(searchTerm);
     };
 
     const run = async (id, action, success, failure) => {
@@ -100,11 +119,11 @@ const FriendsList = () => {
                 </p>
 
                 <form onSubmit={handleSearch} style={{ display: 'flex', gap: '12px', marginBottom: '32px' }}>
-                    <label htmlFor="friend-search" className="visually-hidden">Search people by username</label>
+                    <label htmlFor="friend-search" className="visually-hidden">Search people by name or username</label>
                     <input
                         id="friend-search"
                         type="text"
-                        placeholder="Search by username..."
+                        placeholder="Search by name or username..."
                         value={searchTerm}
                         onChange={(e) => setSearchTerm(e.target.value)}
                         style={{ flexGrow: 1 }}
@@ -117,10 +136,16 @@ const FriendsList = () => {
                 {error && <div className="availability-message msg-error" role="alert" style={{ marginBottom: '24px' }}>{error}</div>}
                 {successMsg && <div className="availability-message msg-success" role="status" style={{ marginBottom: '24px' }}>{successMsg}</div>}
 
+                {searchTerm.trim().length >= MIN_SEARCH && !searching && searchResults.length === 0 && !error && (
+                    <p style={{ color: 'var(--text-muted)', marginTop: '-16px', marginBottom: '32px' }}>
+                        No one found for "{searchTerm.trim()}".
+                    </p>
+                )}
+
                 {searchResults.length > 0 && (
                     <Section title="Search Results" color="var(--primary)">
                         {searchResults.map(result => (
-                            <UserListItem key={result.id} userData={result}
+                            <UserListItem onOpen={setProfileId} key={result.id} userData={result} subText={suggestionReason(result)}
                                 actionButton={friendships.relationOf(result.id).state === 'friend'
                                     ? <span className="add-friend-status">Friend</span>
                                     : <AddFriendButton person={result} friendships={friendships} />} />
@@ -131,7 +156,7 @@ const FriendsList = () => {
                 {received.length > 0 && (
                     <Section title={`Friend requests (${received.length})`} color="#F59E0B">
                         {received.map(f => (
-                            <UserListItem key={f.id} userData={other(f)} subText="Wants to be your friend"
+                            <UserListItem onOpen={setProfileId} key={f.id} userData={other(f)} subText="Wants to be your friend"
                                 actionButton={(
                                     <div className="friend-actions">
                                         <button type="button" className="btn-modern-primary friend-action" disabled={busyId === f.id}
@@ -152,7 +177,7 @@ const FriendsList = () => {
                 {suggestions.length > 0 && (
                     <Section title="People you may know" color="var(--text-main)">
                         {suggestions.map(s => (
-                            <UserListItem key={s.id} userData={s} subText={suggestionReason(s)}
+                            <UserListItem onOpen={setProfileId} key={s.id} userData={s} subText={suggestionReason(s)}
                                 actionButton={<AddFriendButton person={s} friendships={friendships} />} />
                         ))}
                     </Section>
@@ -161,7 +186,7 @@ const FriendsList = () => {
                 {sent.length > 0 && (
                     <Section title="Requests you sent" color="var(--text-muted)">
                         {sent.map(f => (
-                            <UserListItem key={f.id} userData={other(f)} subText="Waiting for an answer"
+                            <UserListItem onOpen={setProfileId} key={f.id} userData={other(f)} subText="Waiting for an answer"
                                 actionButton={(
                                     <button type="button" className="friend-action friend-action-quiet" disabled={busyId === f.id}
                                         aria-label={`Cancel your request to ${displayName(other(f))}`}
@@ -181,7 +206,7 @@ const FriendsList = () => {
                     {friends.map(f => {
                         const friend = other(f);
                         return (
-                            <UserListItem key={f.id} userData={friend}
+                            <UserListItem onOpen={setProfileId} key={f.id} userData={friend}
                                 actionButton={confirmRemoveId === f.id ? (
                                     <div className="friend-actions" role="group" aria-label={`Remove ${displayName(friend)}?`}>
                                         <span className="friend-confirm-text">Remove {displayName(friend)}?</span>
@@ -205,6 +230,8 @@ const FriendsList = () => {
                 </Section>
 
             </div>
+
+            <ProfileModal personId={profileId} onHide={() => setProfileId(null)} />
         </div>
     );
 };
@@ -221,7 +248,7 @@ const Section = ({ title, color, children, empty }) => {
     );
 };
 
-const UserListItem = ({ userData, subText, actionButton }) => {
+const UserListItem = ({ userData, subText, actionButton, onOpen }) => {
     const initial = (userData.firstName || userData.username || '?').charAt(0).toUpperCase();
 
     return (
@@ -236,9 +263,10 @@ const UserListItem = ({ userData, subText, actionButton }) => {
                     {initial}
                 </div>
                 <div style={{ minWidth: 0 }}>
-                    <div style={{ fontWeight: '600', color: 'var(--text-main)' }}>
-                        {userData.firstName} {userData.lastName} <span style={{ fontWeight: '400', color: 'var(--text-muted)' }}>@{userData.username}</span>
-                    </div>
+                    <button type="button" className="person-link person-link-button" onClick={() => onOpen(userData.id)}
+                        aria-haspopup="dialog">
+                        {userData.firstName} {userData.lastName} <span className="person-link-handle">@{userData.username}</span>
+                    </button>
                     {/* Emails are never shown in the list, only name and @username */}
                     {subText && (
                         <div style={{ fontSize: '0.85rem', color: 'var(--text-muted)' }}>{subText}</div>

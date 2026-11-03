@@ -4,6 +4,7 @@ import { AuthContext } from '../context/AuthContext';
 import SocialTabs from '../components/SocialTabs';
 import AddFriendButton from '../components/AddFriendButton';
 import EventModal from '../components/EventModal';
+import ProfileModal from '../components/profile/ProfileModal';
 import useFriendships from '../hooks/useFriendships';
 import { blankEvent, createEvent } from '../services/eventService';
 import { avatarColor, initials } from '../components/feed/feedText';
@@ -27,7 +28,7 @@ const Avatar = ({ person }) => (
 );
 
 /** One group: rename, see members, add your friends, remove members, leave. */
-const GroupCard = ({ group, me, friends, friendships, autoOpenAdd, onChanged, onGone, onReload, onPlan }) => {
+const GroupCard = ({ group, me, friends, friendships, autoOpenAdd, onChanged, onGone, onReload, onPlan, onOpenProfile }) => {
     const [renaming, setRenaming] = useState(false);
     const [name, setName] = useState(group.name);
     const [adding, setAdding] = useState(autoOpenAdd);
@@ -117,10 +118,11 @@ const GroupCard = ({ group, me, friends, friendships, autoOpenAdd, onChanged, on
                 {group.members.map(person => (
                     <li key={person.id} className="group-member">
                         <Avatar person={person} />
-                        <span className="group-member-name">
+                        <button type="button" className="group-member-name person-link person-link-button"
+                            onClick={() => onOpenProfile(person.id)} aria-haspopup="dialog">
                             {person.id === me.id ? 'You' : displayName(person)}
                             <span className="group-member-handle"> @{person.username}</span>
-                        </span>
+                        </button>
                         {person.id !== me.id && <AddFriendButton person={person} friendships={friendships} />}
                         {person.id !== me.id && (
                             <button type="button" className="group-remove" disabled={busy}
@@ -202,6 +204,7 @@ const FriendGroups = () => {
         [friendships.friends]);
     const [planning, setPlanning] = useState(null); // the new event being planned for a group
     const [planNotice, setPlanNotice] = useState('');
+    const [profileId, setProfileId] = useState(null);
     const [loading, setLoading] = useState(true);
     const [loadError, setLoadError] = useState(false);
     const [newName, setNewName] = useState('');
@@ -298,10 +301,12 @@ const FriendGroups = () => {
 
             <div className="groups-list">
                 {groups.map(group => (
-                    <GroupCard key={group.id} group={group} me={me} friends={friends} friendships={friendships} onPlan={planFor}
+                    <GroupCard key={group.id} group={group} me={me} friends={friends} friendships={friendships} onPlan={planFor} onOpenProfile={setProfileId}
                         autoOpenAdd={group.id === justCreatedId} onChanged={replaceGroup} onGone={dropGroup} onReload={load} />
                 ))}
             </div>
+
+            <ProfileModal personId={profileId} onHide={() => setProfileId(null)} />
 
             {planning && (
                 <EventModal show initialData={planning.event} onSave={savePlan} onHide={() => setPlanning(null)} isNewEvent />

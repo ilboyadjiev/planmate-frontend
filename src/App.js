@@ -6,6 +6,7 @@ import Dashboard from './pages/Dashboard';
 import EditProfile from './pages/EditProfile';
 import FriendsList from './pages/FriendsList';
 import FriendGroups from './pages/FriendGroups';
+import PersonProfile from './pages/PersonProfile';
 import 'bootstrap/dist/css/bootstrap.min.css';
 import { AuthProvider } from './context/AuthContext';
 import Navbar from './components/Navbar';
@@ -40,6 +41,14 @@ function App() {
                   <EditProfile />
                 </ProtectedRoute>
               } 
+            />
+            <Route
+              path="/people/:id"
+              element={
+                <ProtectedRoute>
+                  <PersonProfile />
+                </ProtectedRoute>
+              }
             />
             <Route
               path="/profile/groups"
