@@ -263,7 +263,6 @@ button.btn-primary:hover,
   align-items: start;
 }
 
-.mobile-calendar-toggle,
 .drawer-header,
 .drawer-overlay {
   display: none;
@@ -275,10 +274,9 @@ button.btn-primary:hover,
     display: block; /* Break the grid so Discovery Feed takes full width */
   }
 
-  .mobile-calendar-toggle {
-    display: inline-flex;
-    padding: 8px 16px;
-    font-size: 0.9rem;
+  /* Toasts sit above the bottom tab bar */
+  .dashboard-toasts {
+    bottom: calc(68px + env(safe-area-inset-bottom, 0px)) !important;
   }
 
   /* The Sliding Drawer */

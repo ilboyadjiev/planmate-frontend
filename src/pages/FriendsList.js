@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useContext } from 'react';
 import api from '../api/client';
 import { AuthContext } from '../context/AuthContext';
+import { notifyFriendsChanged } from '../services/friendEvents';
 
 const FriendsList = () => {
     const { user } = useContext(AuthContext);
@@ -72,6 +73,7 @@ const FriendsList = () => {
             await api.put(`/v1/friends/accept/${friendshipId}`, {});
             setSuccessMsg('Friend request accepted!');
             fetchFriends();
+            notifyFriendsChanged();
         } catch (err) {
             setError('Error accepting friend request.');
         }

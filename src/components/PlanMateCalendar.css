@@ -206,11 +206,18 @@
 /* Calendar Toolbar */
 .custom-calendar-toolbar {
     display: flex;
+    flex-direction: column;
+    gap: 14px;
+    margin-bottom: 20px;
+}
+
+.toolbar-top,
+.toolbar-controls {
+    display: flex;
     justify-content: space-between;
     align-items: center;
-    margin-bottom: 20px;
     gap: 12px;
-    flex-wrap: wrap; 
+    flex-wrap: wrap;
 }
 
 .toolbar-nav-group,
@@ -222,22 +229,63 @@
 .toolbar-label {
     color: var(--text-main);
     margin: 0;
-    font-size: 1.2rem;
+    font-size: 1.3rem;
     font-weight: 700;
-    text-align: center;
+}
+
+.toolbar-button {
+    min-height: 36px;
+    padding: 6px 12px;
+    font-size: 0.85rem;
+    font-weight: 600;
+    border-radius: 8px;
+    background: transparent;
+    color: var(--text-muted);
+    border: 1px solid var(--border);
+    cursor: pointer;
+    transition: background 0.2s, color 0.2s;
+}
+
+.toolbar-button:hover { color: var(--text-main); background: rgba(255, 255, 255, 0.05); }
+
+.toolbar-nav-group .toolbar-button { color: var(--text-main); }
+
+.toolbar-button.active {
+    background: var(--primary);
+    border-color: var(--primary);
+    color: #1A0B02;
+}
+
+.toolbar-new-event {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    min-height: 40px;
+    padding: 0 16px;
+    border: none;
+    border-radius: 999px;
+    background: var(--primary);
+    color: #1A0B02;
+    font-size: 0.9rem;
+    font-weight: 700;
+    cursor: pointer;
+    box-shadow: 0 6px 18px rgba(240, 106, 37, 0.3);
+    transition: background 0.2s, transform 0.1s;
+}
+
+.toolbar-new-event:hover { background: #F58A50; transform: translateY(-1px); }
+
+.toolbar-button:focus-visible,
+.toolbar-new-event:focus-visible {
+    outline: 2px solid #FDBA74;
+    outline-offset: 2px;
 }
 
 /* Mobile Layout */
 @media (max-width: 768px) {
-    .custom-calendar-toolbar {
+    .toolbar-controls {
         flex-direction: column;
         align-items: stretch;
-        gap: 16px;
-    }
-
-    .toolbar-label {
-        order: -1;
-        margin-bottom: 4px;
     }
 
     .toolbar-nav-group,
@@ -245,4 +293,6 @@
         justify-content: center;
         width: 100%;
     }
+
+    .toolbar-view-group .toolbar-button { flex: 1; }
 }

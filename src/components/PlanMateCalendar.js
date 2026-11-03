@@ -1,4 +1,4 @@
-import React, { useEffect, useState, useContext, useRef, useCallback } from 'react';
+import React, { useEffect, useState, useContext, useRef, useCallback, useMemo } from 'react';
 import api from '../api/client';
 import './PlanMateCalendar.css'; 
 import { Calendar, momentLocalizer } from 'react-big-calendar';
@@ -13,7 +13,7 @@ import CalendarToolbar from './CalendarToolbar';
 const localizer = momentLocalizer(moment);
 moment.updateLocale('en', { week: { dow: 1, doy: 1 } });
 
-const PlanMateCalendar = ({ userEmail, refreshKey, onSlotSelect }) => {
+const PlanMateCalendar = ({ userEmail, refreshKey, onSlotSelect, onCreateEvent }) => {
     const [events, setEvents] = useState([]);
     const [selectedEvent, setSelectedEvent] = useState(null);
     const [showModal, setShowModal] = useState(false);
@@ -163,6 +163,11 @@ const PlanMateCalendar = ({ userEmail, refreshKey, onSlotSelect }) => {
         return defaultTime;
     };
 
+    // The toolbar carries the "New event" button; memoised so the calendar does not remount it on every render
+    const toolbarComponents = useMemo(() => ({
+        toolbar: (toolbarProps) => <CalendarToolbar {...toolbarProps} onCreateEvent={onCreateEvent} />,
+    }), [onCreateEvent]);
+
     return (
         <div className="calendar-container">
             {/* AI Summary Block */}
@@ -192,9 +197,7 @@ const PlanMateCalendar = ({ userEmail, refreshKey, onSlotSelect }) => {
             <Calendar
                 localizer={localizer}
                 events={events}
-                components={{
-                    toolbar: CalendarToolbar
-                }}
+                components={toolbarComponents}
                 startAccessor="start" 
                 endAccessor="end"
                 style={{ height: 700 }}

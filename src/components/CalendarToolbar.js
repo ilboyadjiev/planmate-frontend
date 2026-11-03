@@ -1,53 +1,47 @@
 import React from 'react';
 
-const CalendarToolbar = (toolbar) => {
-    const goToBack = () => toolbar.onNavigate('PREV');
-    const goToNext = () => toolbar.onNavigate('NEXT');
-    const goToCurrent = () => toolbar.onNavigate('TODAY');
+const VIEWS = ['month', 'week', 'day', 'agenda'];
 
-    const baseButtonStyle = {
-        padding: '6px 12px',
-        fontSize: '0.85rem',
-        fontWeight: '600',
-        borderRadius: '6px',
-        background: 'transparent',
-        color: 'var(--text-main)',
-        border: '1px solid var(--border)',
-        cursor: 'pointer',
-        transition: 'all 0.2s ease-in-out'
-    };
+/**
+ * react-big-calendar toolbar: the period label with the "New event" button on top,
+ * then navigation and view switching.
+ */
+const CalendarToolbar = ({ label, view, onNavigate, onView, onCreateEvent }) => (
+    <div className="custom-calendar-toolbar">
+        <div className="toolbar-top">
+            <h3 className="toolbar-label">{label}</h3>
+            {onCreateEvent && (
+                <button type="button" className="toolbar-new-event" onClick={onCreateEvent}>
+                    <svg aria-hidden="true" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round">
+                        <path d="M12 5v14M5 12h14" />
+                    </svg>
+                    New event
+                </button>
+            )}
+        </div>
 
-    return (
-        <div className="custom-calendar-toolbar">
+        <div className="toolbar-controls">
             <div className="toolbar-nav-group">
-                <button style={baseButtonStyle} onClick={goToBack}>&larr;</button>
-                <button style={baseButtonStyle} onClick={goToCurrent}>Today</button>
-                <button style={baseButtonStyle} onClick={goToNext}>&rarr;</button>
+                <button type="button" className="toolbar-button" onClick={() => onNavigate('PREV')} aria-label="Previous">&larr;</button>
+                <button type="button" className="toolbar-button" onClick={() => onNavigate('TODAY')}>Today</button>
+                <button type="button" className="toolbar-button" onClick={() => onNavigate('NEXT')} aria-label="Next">&rarr;</button>
             </div>
-            
-            {/* Current Month/Date Label */}
-            <h3 className="toolbar-label">
-                {toolbar.label}
-            </h3>
 
-            <div className="toolbar-view-group">
-                {['month', 'week', 'day', 'agenda'].map(viewName => (
-                    <button 
+            <div className="toolbar-view-group" role="group" aria-label="Calendar view">
+                {VIEWS.map(viewName => (
+                    <button
                         key={viewName}
-                        onClick={() => toolbar.onView(viewName)}
-                        style={{
-                            ...baseButtonStyle,
-                            background: toolbar.view === viewName ? 'var(--primary)' : 'transparent',
-                            color: toolbar.view === viewName ? '#fff' : 'var(--text-muted)',
-                            borderColor: toolbar.view === viewName ? 'var(--primary)' : 'var(--border)'
-                        }}
+                        type="button"
+                        className={`toolbar-button${view === viewName ? ' active' : ''}`}
+                        aria-pressed={view === viewName}
+                        onClick={() => onView(viewName)}
                     >
                         {viewName.charAt(0).toUpperCase() + viewName.slice(1)}
                     </button>
                 ))}
             </div>
         </div>
-    );
-};
+    </div>
+);
 
 export default CalendarToolbar;
