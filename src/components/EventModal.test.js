@@ -1,4 +1,4 @@
-import { render, screen, fireEvent } from '@testing-library/react';
+import { render, screen, fireEvent, within } from '@testing-library/react';
 import EventModal from './EventModal';
 import LocationSearch from './LocationSearch';
 import { AuthContext } from '../context/AuthContext';
@@ -103,7 +103,7 @@ test('invitees answer from the details view and see everyone\'s answers', async 
     const answered = { ...invitedEvent, viewerRole: 'invited', myResponse: 'pending', participants: [{ id: '2' }, { id: '3' }], responses: { 3: 'declined' } };
     renderAs(bob, <EventModal show initialData={answered} onSave={jest.fn()} onHide={jest.fn()} readOnly onRespond={onRespond} />);
 
-    expect(await screen.findByText(/not answered yet/i)).toBeInTheDocument(); // Bob himself
+    expect(await screen.findByText(/not answered yet$/i, { selector: '.participant-response:not(dt)' })).toBeInTheDocument(); // Bob himself
     expect(screen.getByText(/can't go$/i, { selector: '.participant-response' })).toBeInTheDocument(); // participant 3
     const going = screen.getByRole('button', { name: 'Going' });
     expect(going).toHaveAttribute('aria-pressed', 'false');
@@ -140,7 +140,7 @@ describe('inviting friend groups', () => {
         fireEvent.click(await screen.findByRole('button', { name: '+ Board games (2)' }));
 
         expect(screen.getByText('2 invited')).toBeInTheDocument();
-        expect(screen.getByText('@carol')).toBeInTheDocument(); // named via the group, though not a friend
+        expect(screen.getByText('Carol')).toBeInTheDocument(); // named via the group, though not a friend
         expect(screen.queryByRole('button', { name: /\+ Board games/ })).not.toBeInTheDocument();
 
         fireEvent.click(screen.getByRole('button', { name: /create event/i }));
@@ -170,4 +170,35 @@ describe('inviting friend groups', () => {
         expect(screen.getByText('Board games')).toBeInTheDocument();
         expect(screen.getByText(/going$/i, { selector: '.participant-response' })).toBeInTheDocument(); // Carol
     });
+});
+
+test('the organizer sees who answered what, with names even for people who are not their friends', async () => {
+    // As loaded from the server for the organizer: every invitee's name comes with the event
+    const dinner = {
+        ...ownEvent, id: 'e5', viewerRole: 'host',
+        participants: [
+            { id: '2', firstName: 'Bob', username: 'bob' },
+            { id: '3', firstName: 'Carol', lastName: 'Jones', username: 'carol' },
+            { id: '4', username: 'dave' },
+            { id: '5', firstName: 'Erin', username: 'erin' },
+        ],
+        responses: { 2: 'accepted', 3: 'declined', 5: 'accepted' },
+    };
+    renderAs(alice, <EventModal show initialData={dinner} onSave={jest.fn()} onHide={jest.fn()} />);
+
+    const answers = await screen.findByRole('region', { name: 'Answers' });
+    expect(answers).toHaveTextContent("2 going · 1 can't go · 1 not answered");
+    const rows = within(answers).getAllByRole('term').map((term, i) =>
+        [term.textContent, within(answers).getAllByRole('definition')[i].textContent]);
+    expect(rows).toEqual([
+        ['Going (2)', 'Bob, Erin'],
+        ["Can't go (1)", 'Carol Jones'],
+        ['Not answered yet (1)', '@dave'],
+    ]);
+});
+
+test('new events have no answers yet', () => {
+    renderAs(alice, <EventModal show isNewEvent initialData={{ ...ownEvent, participants: [{ id: '2' }] }} onSave={jest.fn()} onHide={jest.fn()} />);
+
+    expect(screen.queryByRole('region', { name: 'Answers' })).not.toBeInTheDocument();
 });

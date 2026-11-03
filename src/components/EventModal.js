@@ -55,7 +55,37 @@ const Section = ({ label, children }) => (
     </div>
 );
 
-/** A participant's answer next to their name, e.g. "@bob · Going". */
+const ANSWER_ORDER = ['accepted', 'maybe', 'declined', 'pending'];
+const ANSWER_HEADINGS = { accepted: 'Going', maybe: 'Maybe', declined: "Can't go", pending: 'Not answered yet' };
+
+/**
+ * Who answered what, for saved events: counts first, then the names per answer.
+ * people: [{ id, name }], responses: { userId: answer }.
+ */
+const AnswersSummary = ({ people, responses }) => {
+    const byAnswer = Object.fromEntries(ANSWER_ORDER.map(a => [a, []]));
+    people.forEach(p => byAnswer[responses[String(p.id)] || 'pending'].push(p));
+    const counts = ANSWER_ORDER.filter(a => byAnswer[a].length > 0)
+        .map(a => `${byAnswer[a].length} ${a === 'pending' ? 'not answered' : ANSWER_HEADINGS[a].toLowerCase()}`);
+    return (
+        <section className="answers-summary" aria-labelledby="answers-heading">
+            <div className="answers-header">
+                <h3 id="answers-heading">Answers</h3>
+                <span className="answers-counts">{counts.join(' · ')}</span>
+            </div>
+            <dl className="answers-list">
+                {ANSWER_ORDER.filter(a => byAnswer[a].length > 0).map(a => (
+                    <div key={a} className="answers-row">
+                        <dt className={`participant-response response-${a}`}>{ANSWER_HEADINGS[a]} ({byAnswer[a].length})</dt>
+                        <dd>{byAnswer[a].map(p => p.name).join(', ')}</dd>
+                    </div>
+                ))}
+            </dl>
+        </section>
+    );
+};
+
+/** A participant's answer next to their name, e.g. "Bob · Going". */
 const ResponseNote = ({ response }) => (
     <span className={`participant-response response-${response}`}>· {RESPONSE_LABELS[response]}</span>
 );
@@ -129,13 +159,22 @@ const EventModal = ({ show, onHide, initialData, onSave, isNewEvent, readOnly = 
             .filter(p => !leaving.has(String(p.id)) || stillCovered.has(String(p.id))));
     };
 
-    // Participants may only carry an id (as loaded from the server); resolve names from friends and groups
+    // Saved events carry every invitee's name from the server; people just added come from friends and groups
     const participantName = (p) => {
         if (isMe(p)) return 'You';
-        const friend = peopleById.get(String(p.id));
-        const name = p.username || p.firstName || friend?.username || friend?.firstName;
-        return name ? `@${name}` : 'Another participant';
+        const known = p.username || p.firstName ? p : peopleById.get(String(p.id)) || {};
+        const fullName = [known.firstName, known.lastName].filter(Boolean).join(' ');
+        if (fullName) return fullName;
+        return known.username ? `@${known.username}` : 'Someone you invited';
     };
+
+    // Answers are about the saved invite list, not people added in this edit who have not been asked yet
+    const answersSummary = !isNewEvent && initialData?.responses && (initialData.participants || []).length > 0 ? (
+        <AnswersSummary
+            people={(initialData.participants || []).map(p => ({ id: p.id, name: participantName(p) }))}
+            responses={initialData.responses}
+        />
+    ) : null;
 
     // Answers are only known for saved events; people added in this edit have not been asked yet
     const responseOf = (p) => (formData?.responses ? formData.responses[String(p.id)] || 'pending' : null);
@@ -262,7 +301,7 @@ const EventModal = ({ show, onHide, initialData, onSave, isNewEvent, readOnly = 
                 </Modal.Header>
                 <Modal.Body>
                     <div style={{ ...chipStyle, display: 'inline-flex', marginBottom: '20px' }}>
-                        {formData.viewerRole === 'going' ? "You're going" : "You're invited"} · only the organizer can make changes
+                        {{ going: "You're going", invited: "You're invited" }[formData.viewerRole] || 'Public event'} · only the organizer can make changes
                     </div>
                     {onRespond && (
                         <div className="rsvp-block">
@@ -278,6 +317,12 @@ const EventModal = ({ show, onHide, initialData, onSave, isNewEvent, readOnly = 
                             </div>
                             <FieldError id="rsvp-error" message={respondError} />
                         </div>
+                    )}
+                    {formData.responses && (formData.participants || []).length > 0 && (
+                        <AnswersSummary
+                            people={(formData.participants || []).map(p => ({ id: p.id, name: participantName(p) }))}
+                            responses={formData.responses}
+                        />
                     )}
                     <Section label="When">{formatRange(formData.start, formData.end)}</Section>
                     <Section label="Organizer">{organizerName()}</Section>
@@ -321,6 +366,7 @@ const EventModal = ({ show, onHide, initialData, onSave, isNewEvent, readOnly = 
                 <Modal.Title style={{ color: 'var(--text-main)' }}>{isNewEvent ? 'Create New Event' : 'Edit Event'}</Modal.Title>
             </Modal.Header>
             <Modal.Body>
+                {answersSummary}
                 <Form onSubmit={e => e.preventDefault()}>
                     <Form.Group controlId="formTitle" style={{ marginBottom: '16px' }}>
                         <Form.Label style={labelStyle}>Event Title</Form.Label>

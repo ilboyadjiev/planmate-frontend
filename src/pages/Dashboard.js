@@ -100,6 +100,7 @@ const Dashboard = () => {
             <div className="dashboard-layout">
                 <div style={{ height: '100%', minHeight: '700px', alignSelf: 'flex-start' }}>
                     <DiscoveryFeed onAttendanceChange={handleAttendanceChange} onRespond={handleFeedResponse}
+                        onEventChanged={() => setRefreshKey(prev => prev + 1)}
                         onError={text => setNotice({ type: 'error', text })} />
                 </div>
 

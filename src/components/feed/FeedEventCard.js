@@ -34,7 +34,7 @@ const Avatar = ({ text, colorKey, className = '', title }) => (
  * One event on the Discover feed (see the card design canvas): date, title, time and place, host,
  * description, tags, and who is going above the action.
  */
-const FeedEventCard = ({ event, loggedIn, pending, onToggleGoing, onRespond }) => {
+const FeedEventCard = ({ event, loggedIn, pending, onToggleGoing, onRespond, onOpen, opening }) => {
     const start = moment(event.startTime);
     const host = event.host || {};
     const friends = event.friendsGoing || [];
@@ -91,7 +91,15 @@ const FeedEventCard = ({ event, loggedIn, pending, onToggleGoing, onRespond }) =
                     <span className="feed-date-day">{start.format('D')}</span>
                 </div>
                 <div className="feed-card-heading">
-                    <h4 id={titleId} className="feed-card-title">{event.title}</h4>
+                    <h4 id={titleId} className="feed-card-title">
+                        {onOpen ? (
+                            // Covers the whole card (see .feed-card-open::after), so clicking anywhere opens the details
+                            <button type="button" className="feed-card-open" onClick={() => onOpen(event)}
+                                aria-busy={opening} aria-haspopup="dialog">
+                                {event.title}
+                            </button>
+                        ) : event.title}
+                    </h4>
                     <div className="feed-meta"><ClockIcon /><span>{formatWhen(event.startTime, event.endTime)}</span></div>
                     {place && <div className="feed-meta"><PinIcon /><span className="feed-meta-text">{place}</span></div>}
                 </div>

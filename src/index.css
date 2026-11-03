@@ -496,3 +496,55 @@ button.btn-primary:hover,
   flex-wrap: wrap;
   gap: 6px;
 }
+
+/* Who answered an invitation (EventModal) */
+.answers-summary {
+  margin-bottom: 20px;
+  padding: 14px 16px;
+  border-radius: 12px;
+  background: rgba(255, 255, 255, 0.04);
+  border: 1px solid var(--border);
+}
+
+.answers-header {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 4px 12px;
+  margin-bottom: 10px;
+}
+
+.answers-header h3 {
+  margin: 0;
+  font-size: 0.95rem;
+  font-weight: 700;
+  color: var(--text-main);
+}
+
+.answers-counts {
+  font-size: 0.8rem;
+  color: var(--text-muted);
+}
+
+.answers-list { margin: 0; }
+
+.answers-row {
+  display: grid;
+  grid-template-columns: 150px 1fr;
+  gap: 8px;
+  padding: 6px 0;
+  border-top: 1px solid rgba(255, 255, 255, 0.06);
+}
+
+.answers-row dt { font-size: 0.85rem; }
+
+.answers-row dd {
+  margin: 0;
+  font-size: 0.9rem;
+  color: var(--text-main);
+}
+
+@media (max-width: 480px) {
+  .answers-row { grid-template-columns: 1fr; gap: 2px; }
+}

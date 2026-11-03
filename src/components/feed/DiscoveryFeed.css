@@ -371,3 +371,63 @@
 .feed-rsvp-button.rsvp-accepted[aria-pressed="true"] { background: #10B981; border-color: #10B981; color: #052E1C; }
 .feed-rsvp-button.rsvp-maybe[aria-pressed="true"] { background: rgba(79, 70, 229, 0.25); border: 1px dashed #818cf8; color: #E0E7FF; }
 .feed-rsvp-button.rsvp-declined[aria-pressed="true"] { background: rgba(239, 68, 68, 0.15); border-color: rgba(239, 68, 68, 0.5); color: #FCA5A5; }
+
+/* "Around me" */
+.feed-city {
+  margin: -4px 0 0;
+  font-size: 0.85rem;
+  color: var(--text-muted);
+}
+
+.feed-city-missing {
+  margin: 0;
+  padding: 14px 16px;
+  border-radius: 12px;
+  border: 1px dashed var(--border);
+  color: var(--text-muted);
+  font-size: 0.9rem;
+  line-height: 1.5;
+}
+
+.feed-city-missing a {
+  color: #FDBA74;
+  font-weight: 600;
+}
+
+/* The whole card opens the event details: the title button stretches over the card */
+.feed-card {
+  position: relative;
+  transition: border-color 0.2s, transform 0.15s;
+}
+
+.feed-card:hover {
+  border-color: rgba(255, 255, 255, 0.22);
+}
+
+.feed-card-open {
+  all: unset;
+  cursor: pointer;
+}
+
+.feed-card-open::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  border-radius: 12px;
+}
+
+.feed-card-open:focus-visible::after {
+  outline: 2px solid #FDBA74;
+  outline-offset: 2px;
+}
+
+.feed-card-open[aria-busy="true"] { cursor: progress; }
+
+/* Controls inside the card stay clickable above the stretched title button */
+.feed-card-footer .feed-action,
+.feed-card-footer .feed-rsvp,
+.feed-card-footer .feed-hosting-pill,
+.feed-host a {
+  position: relative;
+  z-index: 1;
+}

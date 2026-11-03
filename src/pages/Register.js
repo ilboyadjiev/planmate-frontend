@@ -6,7 +6,7 @@ import api from '../api/client';
 const Register = () => {
     const [formData, setFormData] = useState({
         firstName: '', lastName: '', password: '', email: '', username: '',
-        street: '', zipcode: '', country: '', mobile: ''
+        street: '', zipcode: '', city: '', country: '', mobile: ''
     });
 
     const [error, setError] = useState(null);
@@ -26,7 +26,7 @@ const Register = () => {
             await register({
                 ...formData,
                 contactData: {
-                    street: formData.street, zipcode: formData.zipcode,
+                    street: formData.street, zipcode: formData.zipcode, city: formData.city,
                     country: formData.country, mobile: formData.mobile
                 }
             });
@@ -102,6 +102,14 @@ const Register = () => {
                             <label>Zipcode</label>
                             <input type="text" name="zipcode" value={formData.zipcode} onChange={handleChange} />
                         </div>
+                    </div>
+
+                    <div className="form-row">
+                        <div className="form-group" style={{ marginBottom: 0 }}>
+                            <label htmlFor="register-city">City</label>
+                            <input type="text" id="register-city" name="city" value={formData.city} onChange={handleChange} />
+                        </div>
+                        <div className="form-group" style={{ marginBottom: 0 }} />
                     </div>
 
                     <div className="form-row">

@@ -9,7 +9,8 @@ import { AuthContext } from '../context/AuthContext';
 import EventModal from './EventModal';
 import GamePlan from './GamePlan';
 import CalendarToolbar from './CalendarToolbar';
-import { myResponse, eventStatus, statusLabel, STATUS_STYLES, STATUS_LEGEND } from './calendarStatus';
+import { toCalendarEvent, updateEvent, respondToInvite } from '../services/eventService';
+import { eventStatus, statusLabel, STATUS_STYLES, STATUS_LEGEND } from './calendarStatus';
 
 const localizer = momentLocalizer(moment);
 moment.updateLocale('en', { week: { dow: 1, doy: 1 } });
@@ -36,20 +37,7 @@ const PlanMateCalendar = ({ userEmail, refreshKey, onSlotSelect, onCreateEvent }
                 });
 
                 // Events I created are editable; events I was invited to or joined from the feed are read-only
-                const myOwnerId = user ? user.email : getGuestId();
-                setEvents(response.data.map(event => ({
-                    ...event,
-                    myResponse: myResponse(event, user?.id),
-                    start: event.startTime ? new Date(event.startTime) : null,
-                    end: event.endTime ? new Date(event.endTime) : null,
-                    isPublic: event.isPublic !== undefined ? event.isPublic : true,
-                    tags: event.tags || [],
-                    // The server stores participant user ids; EventModal resolves the names
-                    participants: (event.participantIds || []).map(id => ({ id })),
-                    groups: (event.groupIds || []).map(id => ({ id })),
-                    isOwn: event.viewerRole ? event.viewerRole === 'host' : event.creatorId === myOwnerId,
-                    allDay: false,
-                })));
+                setEvents(response.data.map(event => toCalendarEvent(event, user)));
             } catch (error) { console.error('Error fetching events:', error); }
         };
 
@@ -63,30 +51,15 @@ const PlanMateCalendar = ({ userEmail, refreshKey, onSlotSelect, onCreateEvent }
 
     // Errors propagate to EventModal, which shows them and keeps the form open
     const handleSaveChanges = async (formData) => {
-        const eventToSave = {
-            id: formData.id,
-            title: formData.title,
-            // Only guests identify themselves this way; logged-in users are identified by their token
-            creatorId: user ? undefined : getGuestId(),
-            description: formData.description,
-            startTime: new Date(formData.start).toISOString(),
-            endTime: new Date(formData.end).toISOString(),
-            participantIds: (formData.participants || []).map(p => String(p.id)),
-            groupIds: (formData.groups || []).map(g => String(g.id)),
-            location: formData.location,
-            isPublic: formData.isPublic,
-            tags: formData.tags,
-        };
-
-        await api.put(`/v2/events/${formData.id}`, eventToSave);
+        await updateEvent(formData, user ? null : getGuestId());
         setShowModal(false);
         setInternalRefresh(prev => prev + 1);
     };
 
     // An invitee answers; the modal stays open showing the new answer, and the calendar recolours the event
     const handleRespond = async (event, response) => {
-        const res = await api.put(`/v2/events/${event.id}/response`, { response });
-        const updated = { ...event, responses: res.data.responses || {}, myResponse: response };
+        const saved = await respondToInvite(event.id, response);
+        const updated = { ...event, responses: saved.responses || {}, myResponse: response };
         setSelectedEvent(updated);
         setEvents(prev => prev.map(e => (e.id === event.id ? updated : e)));
         // Recolours the event; the AI Game plan notices the change and offers an update

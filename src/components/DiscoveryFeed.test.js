@@ -1,4 +1,4 @@
-import { render, screen, fireEvent, waitFor } from '@testing-library/react';
+import { render, screen, fireEvent, waitFor, within } from '@testing-library/react';
 import { MemoryRouter } from 'react-router-dom';
 import DiscoveryFeed from './DiscoveryFeed';
 import { AuthContext } from '../context/AuthContext';
@@ -134,5 +134,91 @@ describe('friend groups in the feed', () => {
 
         await waitFor(() => expect(screen.getByRole('button', { name: 'Maybe' })).toHaveAttribute('aria-pressed', 'true'));
         expect(screen.getByText('1 person going')).toBeInTheDocument();
+    });
+});
+
+describe('Around me', () => {
+    test('shows public events in the profile city', async () => {
+        feedResponses = [
+            { data: { events: [], hasMore: false } },
+            { data: { events: [card('beer', { title: 'Beer garden' })], hasMore: false, city: 'Munich' } },
+        ];
+        renderFeed();
+
+        fireEvent.click(await screen.findByRole('button', { name: 'Around me' }));
+
+        expect(await screen.findByText('Beer garden')).toBeInTheDocument();
+        expect(screen.getByText('Public events in Munich')).toBeInTheDocument();
+        expect(feedCalls().pop()).toEqual(['/v2/events/feed', { params: { nearby: true, page: 0, size: 5 } }]);
+    });
+
+    test('asks for a city when the profile has none', async () => {
+        feedResponses = [
+            { data: { events: [], hasMore: false } },
+            { data: { events: [], hasMore: false, city: null } },
+        ];
+        renderFeed();
+
+        fireEvent.click(await screen.findByRole('button', { name: 'Around me' }));
+
+        expect(await screen.findByText(/turns on once you add a city/)).toBeInTheDocument();
+        expect(screen.getByRole('link', { name: 'your profile' })).toHaveAttribute('href', '/profile/edit');
+    });
+});
+
+describe('opening a card', () => {
+    const serverEvent = (extra) => ({
+        id: 'a', title: 'Event a', startTime: '2026-11-06T18:00:00Z', endTime: '2026-11-06T20:00:00Z',
+        description: 'Bring snacks', hostName: 'Maya', participantIds: [], groupIds: [], tags: [], ...extra,
+    });
+
+    const routeGets = (eventDoc) => api.get.mockImplementation(url => {
+        if (url === '/v1/groups') return Promise.resolve({ data: [] });
+        if (url === '/v2/events/a') return Promise.resolve({ data: eventDoc });
+        if (url.startsWith('/v1/users/')) return Promise.resolve({ data: [] });
+        return Promise.resolve({ data: { events: [card('a')], hasMore: false } });
+    });
+
+    test("other people's public events open read-only, like in the calendar", async () => {
+        routeGets(serverEvent({ viewerRole: null }));
+        renderFeed();
+
+        fireEvent.click(await screen.findByRole('button', { name: 'Event a' }));
+
+        const dialog = await screen.findByRole('dialog');
+        expect(dialog).toHaveTextContent('Public event · only the organizer can make changes');
+        expect(within(dialog).getByText('Bring snacks')).toBeInTheDocument();
+        expect(within(dialog).getByText('Maya')).toBeInTheDocument();
+        expect(screen.queryByRole('button', { name: /save changes/i })).not.toBeInTheDocument();
+    });
+
+    test('your own events open for editing', async () => {
+        routeGets(serverEvent({ viewerRole: 'host', creatorId: 'alice@example.com' }));
+        renderFeed();
+
+        fireEvent.click(await screen.findByRole('button', { name: 'Event a' }));
+
+        expect(await screen.findByRole('button', { name: /save changes/i })).toBeInTheDocument();
+        expect(screen.getByDisplayValue('Event a')).toBeInTheDocument();
+    });
+
+    test('invitations can be answered in the details, and the card follows', async () => {
+        const onRespond = jest.fn();
+        api.get.mockImplementation(url => {
+            if (url === '/v1/groups') return Promise.resolve({ data: [] });
+            if (url === '/v2/events/a') return Promise.resolve({ data: serverEvent({ viewerRole: 'invited', participantIds: ['1'], responses: {} }) });
+            if (url.startsWith('/v1/users/')) return Promise.resolve({ data: [] });
+            return Promise.resolve({ data: { events: [card('a', { invited: true, myResponse: 'pending' })], hasMore: false } });
+        });
+        api.put.mockResolvedValue({ data: { responses: { 1: 'maybe' } } });
+        renderFeed({ onRespond });
+
+        fireEvent.click(await screen.findByRole('button', { name: 'Event a' }));
+        const dialog = await screen.findByRole('dialog');
+        fireEvent.click(within(dialog).getByRole('button', { name: 'Maybe' }));
+
+        await waitFor(() => expect(within(dialog).getByRole('button', { name: 'Maybe' })).toHaveAttribute('aria-pressed', 'true'));
+        expect(api.put).toHaveBeenCalledWith('/v2/events/a/response', { response: 'maybe' });
+        expect(onRespond).toHaveBeenCalledWith(expect.objectContaining({ id: 'a', myResponse: 'maybe' }), 'maybe');
     });
 });

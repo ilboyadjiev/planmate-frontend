@@ -33,7 +33,8 @@ const Privacy = () => (
         <ul>
             <li><strong>Required:</strong> email address, username and password. Your password is stored only as a
                 one-way hash and cannot be read by anyone, including us.</li>
-            <li><strong>Optional:</strong> first and last name, street, zipcode, country and mobile number.</li>
+            <li><strong>Optional:</strong> first and last name, street, zipcode, city, country and mobile number.
+                If you add a city, Discover uses it to show public events in your city ("Around me").</li>
             <li><strong>Signing in with Google:</strong> we receive your verified email address and name from Google
                 to create or match your account.</li>
         </ul>
@@ -74,7 +75,7 @@ const Privacy = () => (
             <li><strong>Anyone who is logged in</strong> can find you by username or name and sees your username,
                 first and last name. They never see your email address or contact details.</li>
             <li><strong>Your accepted friends</strong> also see your email address (PlanMate uses it to show who
-                organizes an event). Your street, zipcode, country and mobile number are never shown to other users.</li>
+                organizes an event). Your street, zipcode, city, country and mobile number are never shown to other users.</li>
             <li><strong>Friend groups</strong> have no owner. Everyone in a group sees its name and the name and
                 username of every other member, even members who are not their friends, and can rename the group or
                 add and remove people. Members can only add their own friends.</li>
