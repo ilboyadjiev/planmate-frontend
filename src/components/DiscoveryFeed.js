@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useContext, useRef, useCallback } from 'react';
-import { Link } from 'react-router-dom';
+import { Link, useSearchParams } from 'react-router-dom';
 import api from '../api/client';
 import { usePreferences } from '../services/preferences';
 import { AuthContext } from '../context/AuthContext';
@@ -10,11 +10,14 @@ import './feed/DiscoveryFeed.css';
 import CalendarLoader from './CalendarLoader';
 
 const PAGE_SIZE = 5;
-const TAGS = ['#munich', '#gaming', '#tech', '#music', '#food'];
-
-/** Tag chips: the topics you like first, then the usual ones, without the topics you hide (Settings). */
-export const topicChips = (likedTags = [], hiddenTags = []) => [...new Set([...likedTags, ...TAGS])]
-    .filter(tag => !hiddenTags.includes(tag));
+/**
+ * Tag chips: only the topics you chose in Settings (nothing is pushed on anyone), plus the tag you are looking at
+ * right now, e.g. one picked from an event's details.
+ */
+export const topicChips = (likedTags = [], hiddenTags = [], activeTag = null) => {
+    const chips = likedTags.filter(tag => !hiddenTags.includes(tag));
+    return activeTag && !chips.includes(activeTag) ? [...chips, activeTag] : chips;
+};
 const FOR_YOU = { key: 'for-you', label: 'For you' };
 const AROUND_ME = { key: 'around-me', label: 'Around me', nearby: true };
 
@@ -59,6 +62,21 @@ const DiscoveryFeed = ({ onAttendanceChange, onRespond, onEventChanged, onError 
     const [loadError, setLoadError] = useState(false);
     const [nearbyCity, setNearbyCity] = useState(undefined); // "Around me": the profile city, or null when none is set
     const latestRequest = useRef(0);
+    const [searchParams, setSearchParams] = useSearchParams();
+    const linkedTag = searchParams.get('tag');
+
+    // A tag picked in an event's details (/dashboard?tag=%23music): show that tag's events, then tidy the URL
+    useEffect(() => {
+        if (!linkedTag) return;
+        const tag = linkedTag.startsWith('#') ? linkedTag.toLowerCase() : `#${linkedTag.toLowerCase()}`;
+        setActive({ key: `tag-${tag}`, label: tag, tag });
+        setSearchParams(params => {
+            const next = new URLSearchParams(params);
+            next.delete('tag');
+            return next;
+        }, { replace: true });
+        if (document.scrollingElement) document.scrollingElement.scrollTop = 0;
+    }, [linkedTag, setSearchParams]);
 
     const userKey = user?.id ?? null;
 
@@ -120,7 +138,7 @@ const DiscoveryFeed = ({ onAttendanceChange, onRespond, onEventChanged, onError 
         FOR_YOU,
         ...(user ? [AROUND_ME] : []),
         ...groups.map(g => ({ key: `group-${g.id}`, label: g.name, groupId: g.id })),
-        ...topicChips(likedTags, hiddenTags).map(tag => ({ key: `tag-${tag}`, label: tag, tag })),
+        ...topicChips(likedTags, hiddenTags, active.tag).map(tag => ({ key: `tag-${tag}`, label: tag, tag })),
     ];
 
     let emptyText = 'No upcoming public events yet.';

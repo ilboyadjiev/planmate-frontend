@@ -9,6 +9,8 @@ import { RESPONSES } from './calendarStatus';
 import AddFriendButton from './AddFriendButton';
 import PersonPill from './PersonPill';
 import { usePreferences } from '../services/preferences';
+import { useNavigate } from 'react-router-dom';
+import { tagFeedPath } from './feed/feedText';
 import useFriendships from '../hooks/useFriendships';
 
 const labelStyle = { fontWeight: '600', color: 'var(--text-main)' };
@@ -110,6 +112,7 @@ const EventModal = ({ show, onHide, initialData, onSave, isNewEvent, readOnly = 
     availabilityCheck, availabilityName }) => {
     const { user } = useContext(AuthContext);
     const { timeFormat } = usePreferences();
+    const navigate = useNavigate();
 
     const [formData, setFormData] = useState(initialData);
     const [tagInput, setTagInput] = useState('');
@@ -417,7 +420,14 @@ const EventModal = ({ show, onHide, initialData, onSave, isNewEvent, readOnly = 
                     {(formData.tags || []).length > 0 && (
                         <Section label="Tags">
                             <div style={{ display: 'flex', flexWrap: 'wrap', gap: '8px' }}>
-                                {formData.tags.map(tag => <div key={tag} className="pm-chip">{tag}</div>)}
+                                {formData.tags.map(tag => (
+                                    // Shows more events like this one: closes the details and filters Discover by the tag
+                                    <button key={tag} type="button" className="pm-chip pm-chip-action"
+                                        onClick={() => { onHide(); navigate(tagFeedPath(tag)); }}
+                                        aria-label={`Show more ${tag} events`}>
+                                        {tag}
+                                    </button>
+                                ))}
                             </div>
                         </Section>
                     )}

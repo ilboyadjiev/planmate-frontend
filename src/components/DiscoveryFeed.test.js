@@ -1,8 +1,9 @@
 import { render, screen, fireEvent, waitFor, within } from '@testing-library/react';
-import { MemoryRouter } from 'react-router-dom';
+import { MemoryRouter, Route, Routes, useLocation } from 'react-router-dom';
 import DiscoveryFeed, { topicChips } from './DiscoveryFeed';
 import { AuthContext } from '../context/AuthContext';
 import api from '../api/client';
+import { resetPreferences, setPreferences } from '../services/preferences';
 
 jest.mock('../api/client', () => ({ __esModule: true, default: { get: jest.fn(), post: jest.fn(), put: jest.fn(), delete: jest.fn() } }));
 
@@ -11,8 +12,8 @@ const card = (id, extra = {}) => ({
     host: { name: 'Maya' }, attendeeCount: 0, friendsGoing: [], going: false, hosting: false, ...extra,
 });
 
-const renderFeed = (props = {}) => render(
-    <MemoryRouter>
+const renderFeed = (props = {}, url = '/dashboard') => render(
+    <MemoryRouter initialEntries={[url]}>
         <AuthContext.Provider value={{ user: { id: 1, email: 'alice@example.com' } }}>
             <DiscoveryFeed onAttendanceChange={jest.fn()} onError={jest.fn()} {...props} />
         </AuthContext.Provider>
@@ -26,6 +27,7 @@ const feedCalls = () => api.get.mock.calls.filter(([url]) => url === '/v2/events
 
 beforeEach(() => {
     jest.resetAllMocks();
+    resetPreferences();
     feedResponses = [];
     groupsResponse = [];
     api.get.mockImplementation(url => {
@@ -53,7 +55,15 @@ test('starts on "For you" and loads more cards on demand', async () => {
     expect(screen.queryByRole('button', { name: 'Show more' })).not.toBeInTheDocument();
 });
 
+test('nobody gets topic chips they did not choose', async () => {
+    renderFeed();
+    await screen.findByText('No upcoming public events yet.');
+    const chips = within(screen.getByRole('group', { name: 'Filter events' })).getAllByRole('button').map(b => b.textContent);
+    expect(chips).toEqual(['For you', 'Around me']);
+});
+
 test('a tag chip reloads the feed for that tag', async () => {
+    setPreferences({ likedTags: ['#food'] });
     renderFeed();
     await screen.findByText('No upcoming public events yet.');
 
@@ -223,8 +233,26 @@ describe('opening a card', () => {
     });
 });
 
-test('tag chips: liked topics first, hidden topics left out (Settings)', () => {
-    expect(topicChips()).toEqual(['#munich', '#gaming', '#tech', '#music', '#food']);
-    expect(topicChips(['#jazz', '#music'], ['#gaming', '#jazz'])).toEqual(['#music', '#munich', '#tech', '#food']);
-    expect(topicChips(['#jazz'], [])).toEqual(['#jazz', '#munich', '#gaming', '#tech', '#music', '#food']);
+test('tag chips: only your topics, plus the tag you are looking at', () => {
+    expect(topicChips()).toEqual([]);
+    expect(topicChips(['#jazz', '#music'], ['#jazz'])).toEqual(['#music']);
+    expect(topicChips(['#music'], [], '#christmasmarket')).toEqual(['#music', '#christmasmarket']);
+    expect(topicChips(['#music'], [], '#music')).toEqual(['#music']);
+});
+
+test('a tag picked in an event\'s details opens that tag\'s feed, as a chip, and tidies the address', async () => {
+    let location;
+    const Where = () => { location = useLocation(); return null; };
+    render(
+        <MemoryRouter initialEntries={['/dashboard?tag=%23christmasmarket&calendar=open']}>
+            <AuthContext.Provider value={{ user: { id: 1, email: 'alice@example.com' } }}>
+                <Routes><Route path="/dashboard" element={<><DiscoveryFeed onAttendanceChange={jest.fn()} onError={jest.fn()} /><Where /></>} /></Routes>
+            </AuthContext.Provider>
+        </MemoryRouter>
+    );
+
+    expect(await screen.findByText('No upcoming events for #christmasmarket yet.')).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: '#christmasmarket' })).toHaveAttribute('aria-pressed', 'true');
+    expect(feedCalls().pop()).toEqual(['/v2/events/feed', { params: { tag: '#christmasmarket', page: 0, size: 5 } }]);
+    expect(location.search).toBe('?calendar=open');
 });

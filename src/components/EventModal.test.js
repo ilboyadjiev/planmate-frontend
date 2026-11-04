@@ -1,4 +1,5 @@
 import { render, screen, fireEvent, within } from '@testing-library/react';
+import { MemoryRouter, Route, Routes, useLocation } from 'react-router-dom';
 import EventModal from './EventModal';
 import LocationSearch from './LocationSearch';
 import { AuthContext } from '../context/AuthContext';
@@ -22,7 +23,19 @@ const invitedEvent = {
     isPublic: false,
 };
 
-const renderAs = (user, ui) => render(<AuthContext.Provider value={{ user }}>{ui}</AuthContext.Provider>);
+// The details link tags to Discover, so the modal lives inside a router like in the app
+const renderAs = (user, ui, url = '/calendar') => render(
+    <MemoryRouter initialEntries={[url]}>
+        <AuthContext.Provider value={{ user }}>{ui}</AuthContext.Provider>
+        <Routes>
+            <Route path="*" element={<ShowLocation />} />
+        </Routes>
+    </MemoryRouter>
+);
+const ShowLocation = () => {
+    const location = useLocation();
+    return <output data-testid="location">{location.pathname + location.search}</output>;
+};
 
 beforeEach(() => {
     api.get.mockReset();
@@ -269,4 +282,14 @@ describe("who's invited, as an invitee sees it (Alice's birthday)", () => {
         expect(within(lines[0]).getByText('Bob')).toBeVisible();
         expect(within(lines[0]).getByRole('button', { name: 'Add Bob as a friend' })).toBeVisible();
     });
+});
+
+test('a tag in the details closes them and shows more events with that tag on Discover', () => {
+    const onHide = jest.fn();
+    renderAs(bob, <EventModal show initialData={invitedEvent} onSave={jest.fn()} onHide={onHide} readOnly />);
+
+    fireEvent.click(screen.getByRole('button', { name: 'Show more #sport events' }));
+
+    expect(onHide).toHaveBeenCalled();
+    expect(screen.getByTestId('location')).toHaveTextContent('/dashboard?tag=%23sport');
 });

@@ -53,4 +53,7 @@ export const formatWhen = (start, end, timeFormat = '24h') => {
         : `${s.format(`ddd D MMM, ${t}`)} – ${e.format(`ddd D MMM, ${t}`)}`;
 };
 
+/** The Discover link that shows events with this tag (tags in an event's details link here). */
+export const tagFeedPath = (tag) => `/dashboard?tag=${encodeURIComponent(tag)}`;
+
 export const formatPlace = (location) => (location ? location.name || location.city || '' : '');
