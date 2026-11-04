@@ -2,19 +2,15 @@ import React, { useContext, useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
 import api from '../api/client';
 import { AuthContext } from '../context/AuthContext';
-import { useGoogleLogin } from '@react-oauth/google';
 import './FriendGroups.css'; // .group-button and the settings top line
 
+/** Your name and contact details. Account things (Google Calendar, deleting the account) are in Settings. */
 const EditProfile = () => {
-    const { user, logout, updateCurrentUser } = useContext(AuthContext);
+    const { user, updateCurrentUser } = useContext(AuthContext);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState(null);
     const [success, setSuccess] = useState(false);
     const [saving, setSaving] = useState(false);
-    const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
-    
-    const [isSyncing, setIsSyncing] = useState(false);
-    const [calendarStatus, setCalendarStatus] = useState(null);
     
     const [formData, setFormData] = useState({
         firstName: '',
@@ -82,41 +78,6 @@ const EditProfile = () => {
             setSaving(false);
         }
     };
-
-    const handleDeleteAccount = async () => {
-        try {
-            await api.delete(`/v1/users/${user.id}`);
-            logout();
-        } catch (err) {
-            setError('Failed to delete account. Please try again or contact support.');
-            setShowDeleteConfirm(false);
-        }
-    };
-
-    const linkGoogleCalendar = useGoogleLogin({
-        scope: 'https://www.googleapis.com/auth/calendar.readonly',
-        
-        onSuccess: async (tokenResponse) => {
-            setIsSyncing(true);
-            setCalendarStatus(null);
-            try {                
-                await api.post('/v1/calendar/sync', {
-                    token: tokenResponse.access_token || tokenResponse.code
-                });
-                
-                setCalendarStatus({ type: 'success', msg: 'Calendar successfully linked and synced!' });
-            } catch (err) {
-                console.error('Calendar Sync Error:', err);
-                setCalendarStatus({ type: 'error', msg: 'Failed to sync calendar with backend.' });
-            } finally {
-                setIsSyncing(false);
-            }
-        },
-        onError: (errorResponse) => {
-            console.error("Google Auth Failed:", errorResponse);
-            setCalendarStatus({ type: 'error', msg: 'Google authorization was cancelled or failed.' });
-        }
-    });
 
     if (loading) return <div style={{ textAlign: 'center', marginTop: '50px', color: 'var(--text-muted)' }}>Loading profile data...</div>;
     if (!user) return <div style={{ textAlign: 'center', marginTop: '50px' }}>Not logged in</div>; 
@@ -209,63 +170,6 @@ const EditProfile = () => {
                     </div>
 
                 </form>
-
-                <hr style={{ margin: '48px 0 32px 0', borderColor: 'var(--border)' }} />
-
-                {/* CONNECTED ACCOUNTS SECTION  */}
-                <div style={{ marginBottom: '48px' }}>
-                    <h4 style={{ fontSize: '1.1rem', marginBottom: '8px', color: 'var(--primary)' }}>Connected Accounts</h4>
-                    <p style={{ color: 'var(--text-muted)', fontSize: '0.9rem', marginBottom: '24px' }}>
-                        Link third-party services to enrich your application data.
-                    </p>
-
-                    <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '16px', border: '1px solid var(--border)', borderRadius: '8px' }}>
-                        <div>
-                            <h5 style={{ margin: '0 0 4px 0', fontSize: '1rem' }}>Google Calendar</h5>
-                            <p style={{ margin: 0, fontSize: '0.85rem', color: 'var(--text-muted)' }}>
-                                Import your events and schedules directly.
-                            </p>
-                        </div>
-                        
-                        <button 
-                            onClick={() => linkGoogleCalendar()} 
-                            disabled={isSyncing}
-                            className="btn-modern-secondary" 
-                            style={{ padding: '8px 16px', display: 'flex', alignItems: 'center', gap: '8px' }}
-                        >
-                            {isSyncing ? 'Syncing...' : 'Connect Calendar'}
-                        </button>
-                    </div>
-                    
-                    {calendarStatus && (
-                        <div className={`availability-message ${calendarStatus.type === 'error' ? 'msg-error' : 'msg-success'}`} style={{ marginTop: '16px', fontSize: '0.9rem' }}>
-                            {calendarStatus.msg}
-                        </div>
-                    )}
-                </div>
-
-                <div style={{ border: '1px solid rgba(239, 68, 68, 0.3)', backgroundColor: 'rgba(239, 68, 68, 0.05)', borderRadius: '12px', padding: '24px' }}>
-                    <h4 style={{ fontSize: '1.1rem', color: '#EF4444', marginBottom: '8px' }}>Danger Zone</h4>
-                    <p style={{ color: 'var(--text-muted)', fontSize: '0.9rem', marginBottom: '16px' }}>
-                        Permanently delete your account and all associated calendar data. This action cannot be undone.
-                    </p>
-                    
-                    {!showDeleteConfirm ? (
-                        <button onClick={() => setShowDeleteConfirm(true)} style={{ backgroundColor: 'transparent', border: '1px solid #EF4444', color: '#EF4444', padding: '8px 16px', borderRadius: '8px', fontWeight: '600', transition: '0.2s' }}>
-                            Delete Account
-                        </button>
-                    ) : (
-                        <div style={{ display: 'flex', gap: '12px', alignItems: 'center' }}>
-                            <span style={{ color: '#EF4444', fontWeight: '600', fontSize: '0.9rem' }}>Are you absolutely sure?</span>
-                            <button onClick={handleDeleteAccount} style={{ backgroundColor: '#EF4444', border: 'none', color: 'white', padding: '8px 16px', borderRadius: '8px', fontWeight: '600' }}>
-                                Yes, Delete My Data
-                            </button>
-                            <button onClick={() => setShowDeleteConfirm(false)} className="btn-modern-secondary" style={{ padding: '8px 16px' }}>
-                                Cancel
-                            </button>
-                        </div>
-                    )}
-                </div>
 
             </div>
         </div>

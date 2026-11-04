@@ -5,7 +5,6 @@ import { AuthContext } from '../context/AuthContext';
 import api from '../api/client';
 
 jest.mock('../api/client', () => ({ __esModule: true, default: { get: jest.fn(), put: jest.fn(), post: jest.fn(), delete: jest.fn() } }));
-jest.mock('@react-oauth/google', () => ({ useGoogleLogin: () => jest.fn() }));
 
 const alice = { id: 1, firstName: 'Alice', lastName: 'Meier', email: 'alice@example.com', contactData: { city: 'Munich' } };
 
@@ -45,4 +44,10 @@ test('a failed save shows the error at the top', async () => {
     fireEvent.click(screen.getByRole('button', { name: 'Save' }));
     expect(await screen.findByRole('alert')).toHaveTextContent('Name is too long.');
     await waitFor(() => expect(screen.getByRole('button', { name: 'Save' })).toBeEnabled());
+});
+
+test('Google Calendar and deleting the account are not on the edit page any more', () => {
+    renderPage();
+    expect(screen.queryByText('Google Calendar')).not.toBeInTheDocument();
+    expect(screen.queryByRole('button', { name: /delete account/i })).not.toBeInTheDocument();
 });

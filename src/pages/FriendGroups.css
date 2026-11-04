@@ -640,8 +640,44 @@
   font-weight: 700;
 }
 
-.settings-card a { color: var(--chip-text); }
-.settings-card a:hover { color: var(--chip-text-hover); }
+.settings-link { color: var(--chip-text); }
+.settings-link:hover { color: var(--chip-text-hover); }
+
+.settings-item-title {
+  margin: 0;
+  font-size: 0.98rem;
+  font-weight: 600;
+}
+
+.settings-card .group-muted { margin: 4px 0 12px; }
+.settings-row .group-muted { margin: 2px 0 0; }
+
+.settings-card .availability-message { margin: 12px 0 0; }
+
+/* Deleting the account: a quiet red frame, the final button solid red */
+.settings-danger { border-color: rgba(239, 68, 68, 0.3); }
+.settings-danger h2 { color: #FCA5A5; }
+
+.settings-confirm {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+
+.settings-confirm-text {
+  color: #FCA5A5;
+  font-weight: 600;
+  font-size: 0.9rem;
+}
+
+.settings-delete-final {
+  border: none;
+  background: #DC2626;
+  color: #FFFFFF;
+}
+
+.settings-delete-final:hover:not(:disabled) { background: #B91C1C; color: #FFFFFF; }
 
 .settings-row {
   display: flex;
