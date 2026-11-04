@@ -907,6 +907,17 @@ button.btn-primary:hover,
   box-shadow: 0 0 0 2px var(--surface), 0 0 0 3px rgba(240, 106, 37, 0.7);
 }
 
+/* Profile photos (components/Avatar.js): the photo fills the circle; rings drawn with box-shadow stay visible */
+.pm-avatar-pic { overflow: hidden; }
+.pm-avatar-pic > img {
+  width: 100%;
+  height: 100%;
+  display: block;
+  object-fit: cover;
+  border-radius: inherit;
+}
+.pm-avatar-pic.has-photo { background: rgba(255, 255, 255, 0.08); }
+
 .person-pill-text {
   display: flex;
   flex-direction: column;

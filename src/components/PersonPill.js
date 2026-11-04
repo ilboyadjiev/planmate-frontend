@@ -1,16 +1,16 @@
 import React from 'react';
-import { avatarColor, initials } from './feed/feedText';
+import Avatar from './Avatar';
 import { RESPONSE_LABELS } from './calendarStatus';
 
 /**
  * A person, as a frosted two-line pill: picture, first name (and their answer to an invitation) on top,
  * @username below. Used wherever the app lists people; tags and status labels use the plain .pm-chip bubble.
  *
- * person: { id, firstName, lastName, username }. label replaces the first name (e.g. "You").
+ * person: { id, firstName, lastName, username, avatarKey }. label replaces the first name (e.g. "You").
  * answer: 'accepted' | 'maybe' | 'declined' | 'pending' (optional). note: extra text instead of an answer
  * (e.g. "organizer"). With onClick the pill is a button (e.g. to open the person's profile).
  *
- * There are no uploaded profile pictures yet: the picture is the person's initials on their colour.
+ * The picture is their profile photo, or their initials on their colour when they have none.
  */
 const PersonPill = ({ person, label, answer, note, onClick, ariaLabel }) => {
     const name = label || person.firstName || person.lastName || person.username || 'Someone';
@@ -19,9 +19,7 @@ const PersonPill = ({ person, label, answer, note, onClick, ariaLabel }) => {
 
     const content = (
         <>
-            <span className="person-pill-picture" style={{ background: avatarColor(person.id) }} aria-hidden="true">
-                {initials(person.firstName, person.lastName, person.username)}
-            </span>
+            <Avatar person={person} className="person-pill-picture" />
             <span className="person-pill-text">
                 <span className="person-pill-name">
                     {name}

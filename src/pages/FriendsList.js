@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useContext, useCallback, useRef } from 'react';
+import Avatar from '../components/Avatar';
 import api from '../api/client';
 import { AuthContext } from '../context/AuthContext';
 import SocialTabs from '../components/SocialTabs';
@@ -251,19 +252,10 @@ const Section = ({ title, color, children, empty }) => {
 };
 
 const UserListItem = ({ userData, subText, actionButton, onOpen }) => {
-    const initial = (userData.firstName || userData.username || '?').charAt(0).toUpperCase();
-
     return (
         <div className="user-list-item">
             <div style={{ display: 'flex', alignItems: 'center', gap: '16px', minWidth: 0 }}>
-                <div style={{
-                    width: '40px', height: '40px', borderRadius: '50%', flex: '0 0 auto',
-                    backgroundColor: 'var(--primary)', color: '#1A0B02',
-                    display: 'flex', alignItems: 'center', justifyContent: 'center',
-                    fontWeight: 'bold', fontSize: '1.1rem'
-                }} aria-hidden="true">
-                    {initial}
-                </div>
+                <Avatar person={userData} className="user-list-avatar" />
                 <div style={{ minWidth: 0 }}>
                     <button type="button" className="person-link person-link-button" onClick={() => onOpen(userData.id)}
                         aria-haspopup="dialog">

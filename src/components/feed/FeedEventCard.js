@@ -1,7 +1,8 @@
 import React from 'react';
 import { Link } from 'react-router-dom';
 import moment from 'moment';
-import { avatarColor, initials, socialProof, formatWhen, formatPlace } from './feedText';
+import { initials, socialProof, formatWhen, formatPlace } from './feedText';
+import Avatar from '../Avatar';
 import { RESPONSES } from '../calendarStatus';
 
 const MAX_AVATARS = 3;
@@ -22,12 +23,6 @@ const CheckIcon = () => (
     <svg aria-hidden="true" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
         <path d="M5 12.5l4.5 4.5L19 7.5" />
     </svg>
-);
-
-const Avatar = ({ text, colorKey, className = '', title }) => (
-    <span className={`feed-avatar ${className}`} style={{ background: avatarColor(colorKey) }} title={title} aria-hidden="true">
-        {text}
-    </span>
 );
 
 /**
@@ -106,8 +101,8 @@ const FeedEventCard = ({ event, loggedIn, pending, onToggleGoing, onRespond, onO
             </div>
 
             <div className="feed-host">
-                <Avatar text={initials(hostFirst, hostLast, host.name)}
-                    colorKey={host.username || host.name} className="feed-avatar-sm" />
+                <Avatar person={host} text={initials(hostFirst, hostLast, host.name)}
+                    colorKey={host.username || host.name} className="feed-avatar feed-avatar-sm" />
                 <span>
                     Hosted by <strong>{host.you ? 'you' : host.name}</strong>
                     {host.username && !host.you && <span className="feed-host-username"> @{host.username}</span>}
@@ -128,8 +123,7 @@ const FeedEventCard = ({ event, loggedIn, pending, onToggleGoing, onRespond, onO
                     {friends.length > 0 && (
                         <div className="feed-avatar-stack">
                             {friends.slice(0, MAX_AVATARS).map(f => (
-                                <Avatar key={f.id} text={initials(f.firstName, f.lastName, f.username)} colorKey={f.id}
-                                    title={f.firstName || f.username} />
+                                <Avatar key={f.id} person={f} className="feed-avatar" title={f.firstName || f.username} />
                             ))}
                         </div>
                     )}

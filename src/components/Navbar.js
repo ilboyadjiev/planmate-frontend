@@ -1,6 +1,7 @@
 import React, { useContext, useEffect, useState } from 'react';
 import { Link, NavLink, useLocation } from 'react-router-dom';
 import { AuthContext } from '../context/AuthContext';
+import Avatar from './Avatar';
 import api from '../api/client';
 import { FRIENDS_CHANGED, countIncomingRequests } from '../services/friendEvents';
 import { requestSearchFocus } from '../services/searchFocus';
@@ -133,7 +134,7 @@ const Navbar = () => {
                     {loggedIn ? (
                         // Your picture opens your profile, like on social apps; settings and log out live there
                         <NavLink to={profilePath} className="pm-avatar-button" aria-label="Your profile">
-                            <span className="pm-avatar" aria-hidden="true">{initialsOf(user)}</span>
+                            <Avatar person={user} className="pm-avatar" text={initialsOf(user)} tint={false} />
                         </NavLink>
                     ) : (
                         <div className="pm-auth-links">
