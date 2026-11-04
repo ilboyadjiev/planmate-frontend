@@ -4,7 +4,7 @@ import api from '../../api/client';
 import AddFriendButton from '../AddFriendButton';
 import FeedEventCard from '../feed/FeedEventCard';
 import useFriendships from '../../hooks/useFriendships';
-import { avatarColor, initials } from '../feed/feedText';
+import Avatar from '../Avatar';
 import '../../pages/FriendGroups.css';
 import '../feed/DiscoveryFeed.css';
 
@@ -91,9 +91,7 @@ const ProfileContent = ({ personId: id, onOpenPerson, onLoaded, onPlan }) => {
     return (
         <div className="profile-content">
             <header className="profile-header">
-                <span className="profile-avatar" style={{ background: avatarColor(profile.id) }} aria-hidden="true">
-                    {initials(profile.firstName, profile.lastName, profile.username)}
-                </span>
+                <Avatar person={profile} className="profile-avatar" />
                 <div className="profile-identity">
                     <h2 className="profile-name" id={`profile-name-${profile.id}`}>{name}</h2>
                     <span className="profile-handle">@{profile.username}</span>

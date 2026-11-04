@@ -3,9 +3,10 @@ import { Link } from 'react-router-dom';
 import api from '../api/client';
 import { AuthContext } from '../context/AuthContext';
 import GlassPanel from '../components/GlassPanel';
+import ProfilePhotoPicker from '../components/profile/ProfilePhotoPicker';
 import './FriendGroups.css'; // .group-button and the settings top line
 
-/** Your name and contact details. Account things (Google Calendar, deleting the account) are in Settings. */
+/** Your photo, name and contact details. Account things (Google Calendar, deleting the account) are in Settings. */
 const EditProfile = () => {
     const { user, updateCurrentUser } = useContext(AuthContext);
     const [loading, setLoading] = useState(true);
@@ -105,6 +106,8 @@ const EditProfile = () => {
                     {error && <div className="availability-message msg-error" role="alert" style={{ marginBottom: '16px', fontSize: '0.9rem' }}>{error}</div>}
                     {success && <div className="availability-message msg-success" style={{ marginBottom: '16px', fontSize: '0.9rem', fontWeight: '600' }}>Profile updated successfully!</div>}
                 </div>
+
+                <ProfilePhotoPicker />
 
                 <form id="profile-form" onSubmit={handleSubmit} style={{ marginTop: '16px' }}>
                     

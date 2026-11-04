@@ -331,6 +331,19 @@
   flex: 0 0 auto;
 }
 
+.user-list-avatar {
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  flex: 0 0 auto;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  color: #0B0F19;
+  font-size: 1rem;
+  font-weight: 800;
+}
+
 .profile-identity { flex: 1; min-width: 160px; }
 
 .profile-name {
@@ -711,3 +724,71 @@
   gap: 12px;
   flex-wrap: wrap;
 }
+
+/* Profile photo on Edit profile (components/profile/ProfilePhotoPicker.js) */
+.photo-picker {
+  display: flex;
+  align-items: center;
+  gap: 20px;
+  margin-top: 8px;
+  padding: 16px;
+  border-radius: 16px;
+  background: var(--glass-soft);
+  box-shadow: var(--glass-highlight);
+  border: 1px solid var(--glass-soft-line);
+}
+.photo-picker .profile-avatar { box-shadow: 0 0 0 2px var(--bg-color), 0 0 0 3px rgba(240, 106, 37, 0.7); }
+.photo-picker-body { min-width: 0; flex: 1; }
+.photo-picker-title { margin: 0 0 10px; font-size: 1rem; font-weight: 700; }
+.photo-picker-actions { display: flex; flex-wrap: wrap; gap: 8px; }
+.photo-picker-actions .group-button { display: inline-flex; align-items: center; gap: 6px; }
+.photo-picker-hint { margin: 8px 0 0; font-size: 0.8rem; color: var(--text-muted); }
+.photo-picker .availability-message { margin: 8px 0 0; }
+
+@media (max-width: 600px) {
+  .photo-picker { gap: 14px; padding: 14px; }
+  .photo-picker .profile-avatar { width: 60px; height: 60px; font-size: 1.3rem; }
+}
+
+/* Framing a new photo (components/profile/PhotoCropModal.js, react-easy-crop) */
+.photo-crop-title { margin: 0; font-size: 1.15rem; font-weight: 700; }
+.photo-crop-stage {
+  position: relative;
+  width: 100%;
+  max-width: 360px;
+  aspect-ratio: 1 / 1;
+  margin: 0 auto;
+  border-radius: 18px;
+  overflow: hidden;
+  background: #0B0F19;
+  box-shadow: var(--glass-highlight), 0 0 0 1px var(--glass-soft-line);
+  touch-action: none; /* drags and pinches move the photo, not the page */
+}
+/* Doubled class: react-easy-crop injects its own styles after ours */
+.photo-crop-stage .photo-crop-frame.photo-crop-frame {
+  border: 2px solid rgba(255, 255, 255, 0.9);
+  color: rgba(11, 15, 25, 0.62); /* the dimmed area around the circle */
+}
+.photo-crop-hint { margin: 12px 0 0; text-align: center; font-size: 0.85rem; color: var(--text-muted); }
+.photo-crop-zoom {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  max-width: 360px;
+  margin: 12px auto 0;
+}
+.photo-crop-zoom input[type="range"] { flex: 1; accent-color: var(--primary); }
+.photo-crop-step {
+  width: 32px;
+  height: 32px;
+  flex: 0 0 auto;
+  border-radius: 50%;
+  border: 1px solid var(--glass-soft-line);
+  background: var(--glass-soft);
+  color: var(--text-main);
+  font-size: 1.1rem;
+  line-height: 1;
+}
+.photo-crop-step:hover:not(:disabled) { background: var(--glass-soft-hover); }
+.photo-crop-step:disabled { opacity: 0.4; }
+.photo-crop-footer { gap: 8px; border-top-color: rgba(255, 255, 255, 0.08); }
