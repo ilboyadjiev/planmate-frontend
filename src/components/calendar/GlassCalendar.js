@@ -7,6 +7,7 @@ import {
     layoutLanes, segmentTime, agendaDays, newEventSlot,
 } from './calendarMath';
 import GlassPanel from '../GlassPanel';
+import { formatHour, usePreferences } from '../../services/preferences';
 import './GlassCalendar.css';
 
 const STATUS_NAMES = Object.fromEntries(STATUS_LEGEND.map(({ status, label }) => [status, label]));
@@ -65,7 +66,8 @@ const Toolbar = ({ title, view, onView, onPrev, onNext, onToday, onCreateEvent }
 /* ---------- Month: day numbers with coloured dots, and the chosen day's events in a panel ---------- */
 
 const MonthView = ({ date, events, now, selectedDay, onSelectDay, onSelectEvent, onSelectSlot }) => {
-    const days = monthDays(date);
+    const { weekStart, timeFormat } = usePreferences();
+    const days = monthDays(date, weekStart);
     const selected = segmentsOn(events, selectedDay);
     const isToday = sameDay(selectedDay, now);
     const panelTitle = moment(selectedDay).format('D MMMM');
@@ -74,7 +76,7 @@ const MonthView = ({ date, events, now, selectedDay, onSelectDay, onSelectEvent,
         <div className="cal-month">
             <div className="cal-month-main">
                 <div className="cal-weekdays" aria-hidden="true">
-                    {weekDays(date).map(d => <span key={d.toISOString()}>{moment(d).format('ddd')}</span>)}
+                    {weekDays(date, weekStart).map(d => <span key={d.toISOString()}>{moment(d).format('ddd')}</span>)}
                 </div>
                 <div className="cal-month-grid">
                     {days.map(day => {
@@ -118,7 +120,7 @@ const MonthView = ({ date, events, now, selectedDay, onSelectDay, onSelectEvent,
                 <ul className="cal-panel-list">
                     {selected.map(segment => {
                         const { event } = segment;
-                        const time = segmentTime(segment);
+                        const time = segmentTime(segment, timeFormat);
                         const [from, to] = time.includes('–') ? time.split(' – ') : [time, ''];
                         return (
                             <li key={event.id}>
@@ -143,6 +145,7 @@ const MonthView = ({ date, events, now, selectedDay, onSelectDay, onSelectEvent,
 /* ---------- Week and day: a scrolling timeline with events placed by time ---------- */
 
 const TimeGrid = ({ days, events, now, onSelectEvent, onSelectSlot, onOpenDay, compact }) => {
+    const { timeFormat } = usePreferences();
     const scrollRef = useRef(null);
     const firstDayKey = days[0].toDateString();
 
@@ -187,7 +190,7 @@ const TimeGrid = ({ days, events, now, onSelectEvent, onSelectSlot, onOpenDay, c
                 <div className="cal-timegrid-inner">
                     <div className="cal-hours" aria-hidden="true">
                         {Array.from({ length: 23 }, (_, i) => i + 1).map(h => (
-                            <span key={h} className="cal-hour" style={{ top: `${(h / 24) * 100}%` }}>{String(h).padStart(2, '0')}:00</span>
+                            <span key={h} className="cal-hour" style={{ top: `${(h / 24) * 100}%` }}>{formatHour(h, timeFormat)}</span>
                         ))}
                     </div>
                     <div className="cal-columns">
@@ -198,7 +201,7 @@ const TimeGrid = ({ days, events, now, onSelectEvent, onSelectSlot, onOpenDay, c
                                 {layoutLanes(segmentsOn(events, day)).map(segment => {
                                     const { event } = segment;
                                     const status = eventStatus(event);
-                                    const time = segmentTime(segment);
+                                    const time = segmentTime(segment, timeFormat);
                                     return (
                                         <button key={event.id} type="button" className={`cal-event event-status-${status}`}
                                             style={{
@@ -230,6 +233,7 @@ const TimeGrid = ({ days, events, now, onSelectEvent, onSelectSlot, onOpenDay, c
 /* ---------- Agenda: the next two weeks, day by day ---------- */
 
 const AgendaView = ({ date, events, now, onSelectEvent }) => {
+    const { timeFormat } = usePreferences();
     const days = agendaDays(events, date);
     if (days.length === 0) return <p className="cal-muted cal-agenda-empty">Nothing planned in these {AGENDA_DAYS / 7} weeks.</p>;
     return (
@@ -243,7 +247,7 @@ const AgendaView = ({ date, events, now, onSelectEvent }) => {
                     <ul className="cal-agenda-events">
                         {segments.map(segment => {
                             const { event } = segment;
-                            const time = segmentTime(segment);
+                            const time = segmentTime(segment, timeFormat);
                             return (
                                 <li key={event.id}>
                                     <button type="button" className="cal-agenda-event" onClick={() => onSelectEvent(event)} aria-label={describe(event, time)}>
@@ -276,6 +280,7 @@ const AgendaView = ({ date, events, now, onSelectEvent }) => {
 const GlassCalendar = ({
     events, date, onNavigate, defaultView = 'month', onSelectEvent, onSelectSlot, onCreateEvent, compact = false, now: fixedNow,
 }) => {
+    const { weekStart } = usePreferences();
     const [view, setView] = useState(defaultView);
     const [selectedDay, setSelectedDay] = useState(date);
     const [clock, setClock] = useState(() => new Date());
@@ -315,14 +320,14 @@ const GlassCalendar = ({
         body = <AgendaView date={date} events={events} now={now} onSelectEvent={onSelectEvent} />;
     } else {
         body = (
-            <TimeGrid days={view === 'week' ? weekDays(date) : [date]} events={events} now={now} compact={compact}
+            <TimeGrid days={view === 'week' ? weekDays(date, weekStart) : [date]} events={events} now={now} compact={compact}
                 onSelectEvent={onSelectEvent} onSelectSlot={onSelectSlot} onOpenDay={openDay} />
         );
     }
 
     return (
         <GlassPanel shellClassName="cal-shell" className="cal-panel" aria-label="Calendar">
-                <Toolbar title={periodTitle(view, date)} view={view}
+                <Toolbar title={periodTitle(view, date, weekStart)} view={view}
                     onView={next => { setView(next); if (next === 'month') setSelectedDay(date); }}
                     onPrev={() => navigate(shiftDate(view, date, -1))} onNext={() => navigate(shiftDate(view, date, 1))}
                     onToday={goToday} onCreateEvent={onCreateEvent} />

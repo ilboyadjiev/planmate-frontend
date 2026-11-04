@@ -1,6 +1,9 @@
 import moment from 'moment';
 
-/** Date helpers for the calendar views. Weeks start on Monday; times are the browser's local time. */
+/**
+ * Date helpers for the calendar views. Times are the browser's local time. weekStart ('monday', the default, or
+ * 'sunday') and timeFormat ('24h', the default, or '12h') come from your settings (services/preferences).
+ */
 
 export const VIEWS = [
     { key: 'month', label: 'Month' },
@@ -14,22 +17,30 @@ const DAY_MINUTES = 24 * 60;
 
 export const startOfDay = (date) => moment(date).startOf('day').toDate();
 export const sameDay = (a, b) => moment(a).isSame(b, 'day');
-export const startOfWeek = (date) => moment(date).startOf('isoWeek').toDate();
+const firstDay = (weekStart) => (weekStart === 'sunday' ? 0 : 1);
 
-/** The days shown in a month view: whole weeks, Monday to Sunday, covering the month. */
-export const monthDays = (date) => {
-    const first = moment(date).startOf('month');
+/** The first day (at midnight) of the week the date is in. */
+const weekStartMoment = (date, weekStart = 'monday') => {
+    const m = moment(date).startOf('day');
+    return m.subtract((m.day() - firstDay(weekStart) + 7) % 7, 'day');
+};
+
+export const startOfWeek = (date, weekStart = 'monday') => weekStartMoment(date, weekStart).toDate();
+
+/** The days shown in a month view: whole weeks covering the month. */
+export const monthDays = (date, weekStart = 'monday') => {
     const last = moment(date).endOf('month');
     const days = [];
-    for (let day = first.clone().startOf('isoWeek'); day.isBefore(last) || day.isoWeekday() !== 1; day.add(1, 'day')) {
+    for (let day = weekStartMoment(moment(date).startOf('month'), weekStart);
+        day.isBefore(last) || day.day() !== firstDay(weekStart); day.add(1, 'day')) {
         days.push(day.toDate());
     }
     return days;
 };
 
-export const weekDays = (date) => {
-    const monday = moment(date).startOf('isoWeek');
-    return [0, 1, 2, 3, 4, 5, 6].map(i => monday.clone().add(i, 'day').toDate());
+export const weekDays = (date, weekStart = 'monday') => {
+    const first = weekStartMoment(date, weekStart);
+    return [0, 1, 2, 3, 4, 5, 6].map(i => first.clone().add(i, 'day').toDate());
 };
 
 /** Moves the visible period by one step (dir = -1 or 1). */
@@ -48,10 +59,13 @@ const range = (from, to) => {
 };
 
 /** The toolbar title: "November 2026", "2 – 8 Nov 2026", "Wednesday, 4 November", "4 – 17 Nov 2026". */
-export const periodTitle = (view, date) => {
+export const periodTitle = (view, date, weekStart = 'monday') => {
     const m = moment(date);
     if (view === 'month') return m.format('MMMM YYYY');
-    if (view === 'week') return range(m.clone().startOf('isoWeek'), m.clone().endOf('isoWeek'));
+    if (view === 'week') {
+        const first = weekStartMoment(date, weekStart);
+        return range(first, first.clone().add(6, 'day'));
+    }
     if (view === 'day') return m.format('dddd, D MMMM');
     return range(m, m.clone().add(AGENDA_DAYS - 1, 'day'));
 };
@@ -112,14 +126,15 @@ export const layoutLanes = (segments) => {
     return placed;
 };
 
-const hhmm = (minutes) => moment().startOf('day').add(minutes, 'minutes').format('HH:mm');
+const clock = (minutes, timeFormat) => moment().startOf('day').add(minutes, 'minutes')
+    .format(timeFormat === '12h' ? 'h:mm A' : 'HH:mm');
 
 /** "18:00 – 19:30", or "from 22:00" / "until 02:00" / "All day" for events crossing midnight. */
-export const segmentTime = ({ startMin, endMin }) => {
+export const segmentTime = ({ startMin, endMin }, timeFormat = '24h') => {
     if (startMin === 0 && endMin === DAY_MINUTES) return 'All day';
-    if (endMin === DAY_MINUTES) return `from ${hhmm(startMin)}`;
-    if (startMin === 0) return `until ${hhmm(endMin)}`;
-    return `${hhmm(startMin)} – ${hhmm(endMin)}`;
+    if (endMin === DAY_MINUTES) return `from ${clock(startMin, timeFormat)}`;
+    if (startMin === 0) return `until ${clock(endMin, timeFormat)}`;
+    return `${clock(startMin, timeFormat)} – ${clock(endMin, timeFormat)}`;
 };
 
 /** Agenda: the days from date on (AGENDA_DAYS of them) that have events, each with its segments. */

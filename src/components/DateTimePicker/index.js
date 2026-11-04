@@ -4,11 +4,10 @@ import StyledDatePicker from './StyledDatePicker';
 import SlidingTimePicker from './SlidingTimePicker';
 import { describeDuration } from './duration';
 
-const formatTime12Hour = (dateObj) => {
-    return new Date(dateObj).toLocaleTimeString([], { hour: 'numeric', minute: '2-digit', hour12: true });
-};
+import { formatTime, usePreferences } from '../../services/preferences';
 
 const DateTimePicker = ({ start, end, onChange, error }) => {
+    const { timeFormat } = usePreferences();
     const [activeClock, setActiveClock] = useState(null); 
 
     const handleStartChange = (newDate, isTime = false) => {
@@ -67,7 +66,7 @@ const DateTimePicker = ({ start, end, onChange, error }) => {
                             onMouseOver={(e) => e.target.style.borderColor = 'rgba(255, 255, 255, 0.2)'}
                             onMouseOut={(e) => e.target.style.borderColor = 'var(--border)'}
                         >
-                            {formatTime12Hour(start)}
+                            {formatTime(start, timeFormat)}
                         </div>
                     </div>
                 </div>
@@ -96,7 +95,7 @@ const DateTimePicker = ({ start, end, onChange, error }) => {
                             onMouseOver={(e) => e.target.style.borderColor = 'rgba(255, 255, 255, 0.2)'}
                             onMouseOut={(e) => e.target.style.borderColor = 'var(--border)'}
                         >
-                            {formatTime12Hour(end)}
+                            {formatTime(end, timeFormat)}
                         </div>
                     </div>
                 </div>

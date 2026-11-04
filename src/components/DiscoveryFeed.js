@@ -1,5 +1,7 @@
 import React, { useState, useEffect, useContext, useRef, useCallback } from 'react';
+import { Link } from 'react-router-dom';
 import api from '../api/client';
+import { usePreferences } from '../services/preferences';
 import { AuthContext } from '../context/AuthContext';
 import FeedEventCard from './feed/FeedEventCard';
 import useEventCardActions from './feed/useEventCardActions';
@@ -9,6 +11,10 @@ import CalendarLoader from './CalendarLoader';
 
 const PAGE_SIZE = 5;
 const TAGS = ['#munich', '#gaming', '#tech', '#music', '#food'];
+
+/** Tag chips: the topics you like first, then the usual ones, without the topics you hide (Settings). */
+export const topicChips = (likedTags = [], hiddenTags = []) => [...new Set([...likedTags, ...TAGS])]
+    .filter(tag => !hiddenTags.includes(tag));
 const FOR_YOU = { key: 'for-you', label: 'For you' };
 const AROUND_ME = { key: 'around-me', label: 'Around me', nearby: true };
 
@@ -43,6 +49,7 @@ export { withResponse } from './feed/useEventCardActions';
  */
 const DiscoveryFeed = ({ onAttendanceChange, onRespond, onEventChanged, onError }) => {
     const { user } = useContext(AuthContext);
+    const { likedTags, hiddenTags } = usePreferences();
     const [groups, setGroups] = useState([]);
     const [active, setActive] = useState(FOR_YOU); // { key, label, tag?, groupId? }
     const [events, setEvents] = useState([]);
@@ -113,7 +120,7 @@ const DiscoveryFeed = ({ onAttendanceChange, onRespond, onEventChanged, onError 
         FOR_YOU,
         ...(user ? [AROUND_ME] : []),
         ...groups.map(g => ({ key: `group-${g.id}`, label: g.name, groupId: g.id })),
-        ...TAGS.map(tag => ({ key: `tag-${tag}`, label: tag, tag })),
+        ...topicChips(likedTags, hiddenTags).map(tag => ({ key: `tag-${tag}`, label: tag, tag })),
     ];
 
     let emptyText = 'No upcoming public events yet.';
@@ -144,8 +151,8 @@ const DiscoveryFeed = ({ onAttendanceChange, onRespond, onEventChanged, onError 
 
             {active.nearby && !loading && !loadError && nearbyCity === null && (
                 <p className="feed-city-missing">
-                    "Around me" shows public events in your city. It turns on once you add a city
-                    to <a href="/profile/edit">your profile</a>.
+                    "Around me" shows public events in your city. It turns on once you set your home city
+                    in <Link to="/settings#discover">Settings</Link>.
                 </p>
             )}
             {active.nearby && nearbyCity && <p className="feed-city">Public events in {nearbyCity}</p>}

@@ -8,6 +8,7 @@ import { createEvent, blankEvent } from '../services/eventService';
 import { AuthContext } from '../context/AuthContext';
 import { getGuestId } from '../services/guestService';
 import useIsMobile from '../hooks/useIsMobile';
+import { usePreferences } from '../services/preferences';
 
 const PlusIcon = () => (
     <svg aria-hidden="true" width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round">
@@ -29,6 +30,7 @@ const Dashboard = ({ view = 'discover' }) => {
     const [notice, setNotice] = useState(null); // { type: 'success' | 'error', text }
 
     const isMobile = useIsMobile();
+    const { calendarView } = usePreferences();
     const [searchParams] = useSearchParams();
 
     const openNewEvent = useCallback((start, end) => {
@@ -87,7 +89,7 @@ const Dashboard = ({ view = 'discover' }) => {
                     <div className="dashboard-calendar">
                         <PlanMateCalendar userEmail={user?.username || user?.email} refreshKey={refreshKey}
                             onSlotSelect={openNewEvent} onCreateEvent={openBlankEvent}
-                            defaultView={isMobile ? 'day' : 'month'} />
+                            defaultView={calendarView === 'auto' ? (isMobile ? 'day' : 'month') : calendarView} />
                     </div>
                 )}
             </div>

@@ -162,10 +162,11 @@ const Privacy = () => (
         <h2>7. Your rights</h2>
         <p>Under the GDPR you have the right to:</p>
         <ul>
-            <li>access the data we hold about you and receive a copy (Art. 15, 20),</li>
+            <li>access the data we hold about you and receive a copy (Art. 15, 20). You can download a copy
+                yourself under <Link to="/settings">Settings</Link> › Download my data.</li>
             <li>have incorrect data corrected (Art. 16). You can edit your profile and events yourself.</li>
             <li>have your data deleted (Art. 17). You can delete your account yourself
-                under <Link to="/profile/edit">Edit profile</Link>.</li>
+                under <Link to="/settings">Settings</Link>.</li>
             <li>restrict processing (Art. 18),</li>
             <li>object to processing based on our legitimate interests (Art. 21),</li>
             <li>lodge a complaint with a data protection authority. For us this is the Bavarian Data Protection

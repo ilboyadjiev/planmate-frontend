@@ -4,6 +4,7 @@ import moment from 'moment';
 import { initials, socialProof, formatWhen, formatPlace } from './feedText';
 import Avatar from '../Avatar';
 import { RESPONSES } from '../calendarStatus';
+import { usePreferences } from '../../services/preferences';
 
 const MAX_AVATARS = 3;
 
@@ -30,6 +31,7 @@ const CheckIcon = () => (
  * description, tags, and who is going above the action.
  */
 const FeedEventCard = ({ event, loggedIn, pending, onToggleGoing, onRespond, onOpen, opening }) => {
+    const { timeFormat } = usePreferences();
     const start = moment(event.startTime);
     const host = event.host || {};
     const friends = event.friendsGoing || [];
@@ -95,7 +97,7 @@ const FeedEventCard = ({ event, loggedIn, pending, onToggleGoing, onRespond, onO
                             </button>
                         ) : event.title}
                     </h4>
-                    <div className="feed-meta"><ClockIcon /><span>{formatWhen(event.startTime, event.endTime)}</span></div>
+                    <div className="feed-meta"><ClockIcon /><span>{formatWhen(event.startTime, event.endTime, timeFormat)}</span></div>
                     {place && <div className="feed-meta"><PinIcon /><span className="feed-meta-text">{place}</span></div>}
                 </div>
             </div>

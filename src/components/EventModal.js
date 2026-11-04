@@ -8,12 +8,14 @@ import LocationSearch from './LocationSearch';
 import { RESPONSES } from './calendarStatus';
 import AddFriendButton from './AddFriendButton';
 import PersonPill from './PersonPill';
+import { usePreferences } from '../services/preferences';
 import useFriendships from '../hooks/useFriendships';
 
 const labelStyle = { fontWeight: '600', color: 'var(--text-main)' };
 
-const formatRange = (start, end) => {
-    const opts = { weekday: 'short', day: 'numeric', month: 'short', hour: 'numeric', minute: '2-digit' };
+const formatRange = (start, end, timeFormat = '24h') => {
+    const opts = { weekday: 'short', day: 'numeric', month: 'short', hour: 'numeric', minute: '2-digit',
+        hour12: timeFormat === '12h' };
     return `${new Date(start).toLocaleString([], opts)} – ${new Date(end).toLocaleString([], opts)}`;
 };
 
@@ -107,6 +109,7 @@ const Collapsible = ({ id, title, count, defaultOpen = false, children }) => {
 const EventModal = ({ show, onHide, initialData, onSave, isNewEvent, readOnly = false, onRespond,
     availabilityCheck, availabilityName }) => {
     const { user } = useContext(AuthContext);
+    const { timeFormat } = usePreferences();
 
     const [formData, setFormData] = useState(initialData);
     const [tagInput, setTagInput] = useState('');
@@ -389,7 +392,7 @@ const EventModal = ({ show, onHide, initialData, onSave, isNewEvent, readOnly = 
                             responses={formData.responses}
                         />
                     )}
-                    <Section label="When">{formatRange(formData.start, formData.end)}</Section>
+                    <Section label="When">{formatRange(formData.start, formData.end, timeFormat)}</Section>
                     <Section label="Organizer">{organizerName()}</Section>
                     {formData.location && <Section label="Location">{formatLocation(formData.location)}</Section>}
                     {formData.description && (

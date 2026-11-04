@@ -1,6 +1,6 @@
 import { render, screen, fireEvent, waitFor, within } from '@testing-library/react';
 import { MemoryRouter } from 'react-router-dom';
-import DiscoveryFeed from './DiscoveryFeed';
+import DiscoveryFeed, { topicChips } from './DiscoveryFeed';
 import { AuthContext } from '../context/AuthContext';
 import api from '../api/client';
 
@@ -152,7 +152,7 @@ describe('Around me', () => {
         expect(feedCalls().pop()).toEqual(['/v2/events/feed', { params: { nearby: true, page: 0, size: 5 } }]);
     });
 
-    test('asks for a city when the profile has none', async () => {
+    test('asks for a home city in Settings when there is none', async () => {
         feedResponses = [
             { data: { events: [], hasMore: false } },
             { data: { events: [], hasMore: false, city: null } },
@@ -161,8 +161,8 @@ describe('Around me', () => {
 
         fireEvent.click(await screen.findByRole('button', { name: 'Around me' }));
 
-        expect(await screen.findByText(/turns on once you add a city/)).toBeInTheDocument();
-        expect(screen.getByRole('link', { name: 'your profile' })).toHaveAttribute('href', '/profile/edit');
+        expect(await screen.findByText(/turns on once you set your home city/)).toBeInTheDocument();
+        expect(screen.getByRole('link', { name: 'Settings' })).toHaveAttribute('href', '/settings#discover');
     });
 });
 
@@ -221,4 +221,10 @@ describe('opening a card', () => {
         expect(api.put).toHaveBeenCalledWith('/v2/events/a/response', { response: 'maybe' });
         expect(onRespond).toHaveBeenCalledWith(expect.objectContaining({ id: 'a', myResponse: 'maybe' }), 'maybe');
     });
+});
+
+test('tag chips: liked topics first, hidden topics left out (Settings)', () => {
+    expect(topicChips()).toEqual(['#munich', '#gaming', '#tech', '#music', '#food']);
+    expect(topicChips(['#jazz', '#music'], ['#gaming', '#jazz'])).toEqual(['#music', '#munich', '#tech', '#food']);
+    expect(topicChips(['#jazz'], [])).toEqual(['#jazz', '#munich', '#gaming', '#tech', '#music', '#food']);
 });

@@ -2,6 +2,7 @@ import React, { useEffect, useRef, useState } from 'react';
 import ReactMarkdown from 'react-markdown';
 import moment from 'moment';
 import api from '../api/client';
+import { formatTime, usePreferences } from '../services/preferences';
 
 const cacheKeyFor = (user) => `planmate_game_plan_${user.id}`;
 const collapsedKeyFor = (user) => `planmate_game_plan_collapsed_${user.id}`;
@@ -41,6 +42,7 @@ const readCache = (user) => {
  * calendarVersion changes whenever the calendar's events change, so an older plan can be marked as outdated.
  */
 const GamePlan = ({ user, calendarVersion }) => {
+    const { timeFormat } = usePreferences();
     const [plan, setPlan] = useState(() => readCache(user)); // { summary, createdAt, nextAvailableAt, remaining }
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState('');
@@ -75,7 +77,7 @@ const GamePlan = ({ user, calendarVersion }) => {
 
     const coolingDown = nextAvailableAt > now;
     const limitReached = plan?.remaining === 0;
-    const availableAt = moment(nextAvailableAt).format('HH:mm');
+    const availableAt = formatTime(nextAvailableAt, timeFormat);
 
     const requestPlan = async () => {
         setLoading(true);
@@ -139,7 +141,7 @@ const GamePlan = ({ user, calendarVersion }) => {
                     </h4>
                     {!collapsed && plan?.createdAt && (
                         <div className="game-plan-meta">
-                            {`Planned at ${moment(plan.createdAt).format('HH:mm')}`}
+                            {`Planned at ${formatTime(plan.createdAt, timeFormat)}`}
                             {typeof plan.remaining === 'number' && !limitReached && ` · ${plan.remaining} left today`}
                         </div>
                     )}

@@ -12,6 +12,7 @@ import Settings from './pages/Settings';
 import 'bootstrap/dist/css/bootstrap.min.css';
 import { AuthProvider } from './context/AuthContext';
 import Navbar from './components/Navbar';
+import PreferencesLoader from './components/PreferencesLoader';
 import ProtectedRoute from './components/ProtectedRoute';
 import CookieBanner from './components/CookieBanner';
 import Impressum from './pages/legal/Impressum';
@@ -25,6 +26,7 @@ function App() {
     <GoogleOAuthProvider clientId={config.googleClientId}>
       <Router>
         <AuthProvider>
+          <PreferencesLoader />
           <Navbar />
           <CookieBanner />
           <Routes>

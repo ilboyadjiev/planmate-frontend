@@ -1,0 +1,210 @@
+/* Settings page controls (pages/Settings.js, components/settings/*), on the glass cards from FriendGroups.css */
+
+.settings-card-head {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+
+.settings-status {
+  font-size: 0.8rem;
+  font-weight: 600;
+  color: #6EE7B7;
+  min-height: 1em;
+}
+.settings-status.is-error { color: #FCA5A5; }
+
+/* One setting: what it is on the left, its control on the right; stacks on narrow screens */
+.setting-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 12px 20px;
+  padding: 16px 0;
+  border-top: 1px solid var(--glass-soft-line);
+}
+.settings-card-head + .setting-row { border-top: none; padding-top: 8px; }
+.setting-row-stacked { flex-direction: column; align-items: stretch; }
+/* Stacked, the side-by-side sizes below would become heights */
+.setting-row.setting-row-stacked > * { flex: none; }
+/* A switch stays beside its label, also on phones */
+.setting-row.setting-row-switch { flex-wrap: nowrap; }
+.setting-row-switch .setting-text { flex: 1 1 auto; }
+
+.setting-text { flex: 1 1 260px; min-width: 0; }
+
+.setting-label {
+  display: block;
+  margin: 0;
+  font-size: 0.95rem;
+  font-weight: 700;
+  color: var(--text-main);
+}
+
+.setting-description {
+  margin: 4px 0 0;
+  font-size: 0.85rem;
+  line-height: 1.45;
+  color: var(--glass-muted);
+}
+
+.setting-empty { margin: 0; font-size: 0.85rem; color: var(--glass-muted); }
+
+/* Choices: a glass pill holding the options; the chosen one gets the orange glass */
+.setting-choices {
+  display: inline-flex;
+  flex-wrap: wrap;
+  gap: 4px;
+  padding: 4px;
+  border-radius: 999px;
+  background: var(--glass-soft);
+  border: 1px solid var(--glass-soft-line);
+}
+
+.setting-choice { position: relative; margin: 0; cursor: pointer; }
+
+/* The radio stays focusable and announced; the pill is what you see */
+.setting-choice input {
+  position: absolute;
+  inset: 0;
+  opacity: 0;
+  margin: 0;
+  cursor: pointer;
+}
+
+.setting-choice span {
+  display: inline-flex;
+  align-items: center;
+  min-height: 36px;
+  padding: 0 14px;
+  border-radius: 999px;
+  font-size: 0.85rem;
+  font-weight: 600;
+  color: var(--glass-muted);
+  transition: background 0.15s, color 0.15s;
+}
+
+.setting-choice:hover span { color: var(--text-main); }
+
+.setting-choice.is-active span {
+  background: var(--glass-active-bg);
+  color: var(--glass-active-text);
+  box-shadow: var(--glass-active-shadow);
+}
+
+.setting-choice input:focus-visible + span { outline: 2px solid #FDBA74; outline-offset: 2px; }
+.setting-choice input:disabled + span { opacity: 0.5; cursor: default; }
+
+/* On/off switch */
+.setting-switch {
+  appearance: none;
+  -webkit-appearance: none;
+  position: relative;
+  flex: 0 0 auto;
+  width: 48px;
+  height: 28px;
+  margin: 0;
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.12);
+  border: 1px solid rgba(255, 255, 255, 0.18);
+  box-shadow: inset 0 1px 2px rgba(0, 0, 0, 0.3);
+  cursor: pointer;
+  transition: background 0.2s, border-color 0.2s;
+}
+
+.setting-switch::before {
+  content: '';
+  position: absolute;
+  top: 3px;
+  left: 3px;
+  width: 20px;
+  height: 20px;
+  border-radius: 50%;
+  background: #D1D5DB;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.35);
+  transition: transform 0.2s, background 0.2s;
+}
+
+.setting-switch:checked { background: var(--primary); border-color: transparent; }
+.setting-switch:checked::before { transform: translateX(20px); background: #fff; }
+.setting-switch:focus-visible { outline: 2px solid #FDBA74; outline-offset: 3px; }
+.setting-switch:disabled { opacity: 0.5; cursor: default; }
+
+/* A text field with its button (home city, adding a topic) */
+.setting-inline,
+.topic-add {
+  display: flex;
+  gap: 8px;
+  flex: 1 1 260px;
+  max-width: 380px;
+}
+.setting-inline input,
+.topic-add input { flex: 1; min-width: 0; }
+.topic-add { margin-top: 10px; }
+
+/* Topics: the chosen ones as bubbles (.pm-chip) with a remove button, then suggestions */
+.topic-list {
+  list-style: none;
+  margin: 10px 0 0;
+  padding: 0;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.topic-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 2px;
+  padding-right: 4px;
+}
+
+.topic-remove {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 26px;
+  height: 26px;
+  padding: 0;
+  border: none;
+  border-radius: 50%;
+  background: transparent;
+  color: inherit;
+  cursor: pointer;
+}
+.topic-remove:hover { background: rgba(255, 255, 255, 0.1); }
+.topic-remove:focus-visible { outline: 2px solid #FDBA74; outline-offset: 1px; }
+
+.topic-suggestions { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 12px; }
+
+.topic-suggestion {
+  min-height: 32px;
+  padding: 0 12px;
+  border-radius: 999px;
+  border: 1px dashed rgba(255, 255, 255, 0.2);
+  background: transparent;
+  color: var(--glass-muted);
+  font-size: 0.8rem;
+  font-weight: 600;
+  cursor: pointer;
+}
+.topic-suggestion:hover { color: var(--text-main); border-color: rgba(255, 255, 255, 0.35); background: var(--glass-soft); }
+.topic-suggestion:focus-visible { outline: 2px solid #FDBA74; outline-offset: 2px; }
+
+/* Account */
+.password-form { padding: 16px 0; border-top: 1px solid var(--glass-soft-line); margin-top: 12px; }
+.password-form .setting-label { margin-bottom: 12px; }
+.password-form .form-row { margin-bottom: 16px; }
+.password-actions { display: flex; align-items: center; flex-wrap: wrap; gap: 12px; }
+.password-actions .availability-message { margin: 0; }
+.settings-google-note { padding-top: 12px; border-top: 1px solid var(--glass-soft-line); margin-top: 12px; }
+.settings-export { padding-top: 16px; border-top: 1px solid var(--glass-soft-line); }
+
+@media (max-width: 600px) {
+  .setting-choices { border-radius: 18px; }
+  .setting-inline, .topic-add { max-width: none; }
+  .password-form .form-row { grid-template-columns: 1fr; gap: 16px; }
+}

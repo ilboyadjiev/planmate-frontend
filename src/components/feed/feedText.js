@@ -41,15 +41,16 @@ export const socialProof = ({ friendsGoing = [], attendeeCount = 0, going = fals
     return { headline: `${names[0]}, ${names[1]} + ${plural(names.length - 2, 'friend', 'friends')} going`, detail };
 };
 
-/** "Fri, 19:00 – 23:00", or both dates when the event runs past midnight. */
-export const formatWhen = (start, end) => {
+/** "Fri, 19:00 – 23:00" (or "Fri, 7:00 PM – 11:00 PM"), with both dates when the event runs past midnight. */
+export const formatWhen = (start, end, timeFormat = '24h') => {
     const s = moment(start);
     const e = moment(end);
+    const t = timeFormat === '12h' ? 'h:mm A' : 'HH:mm';
     if (!s.isValid()) return '';
-    if (!e.isValid()) return s.format('ddd, HH:mm');
+    if (!e.isValid()) return s.format(`ddd, ${t}`);
     return s.isSame(e, 'day')
-        ? `${s.format('ddd, HH:mm')} – ${e.format('HH:mm')}`
-        : `${s.format('ddd D MMM, HH:mm')} – ${e.format('ddd D MMM, HH:mm')}`;
+        ? `${s.format(`ddd, ${t}`)} – ${e.format(t)}`
+        : `${s.format(`ddd D MMM, ${t}`)} – ${e.format(`ddd D MMM, ${t}`)}`;
 };
 
 export const formatPlace = (location) => (location ? location.name || location.city || '' : '');

@@ -62,3 +62,25 @@ test('a new event from the month panel starts at the next full hour today, at 18
     expect(newEventSlot(at(2026, 11, 4), now).start).toEqual(at(2026, 11, 4, 16));
     expect(newEventSlot(at(2026, 11, 9), now)).toEqual({ start: at(2026, 11, 9, 18), end: at(2026, 11, 9, 19) });
 });
+
+test('weeks can start on Sunday (settings)', () => {
+    const days = monthDays(at(2026, 11, 4), 'sunday');
+    expect(days[0]).toEqual(at(2026, 11, 1)); // 1 November 2026 is a Sunday
+    expect(days[0].getDay()).toBe(0);
+    expect(days.length % 7).toBe(0);
+    expect(days[days.length - 1].getDay()).toBe(6);
+    expect(weekDays(at(2026, 11, 4), 'sunday')[0]).toEqual(at(2026, 11, 1));
+    expect(weekDays(at(2026, 11, 1), 'sunday')[6]).toEqual(at(2026, 11, 7));
+    expect(periodTitle('week', at(2026, 11, 4), 'sunday')).toBe('1 – 7 Nov 2026');
+    // A Sunday belongs to the week it starts, not the one before
+    expect(periodTitle('week', at(2026, 11, 8), 'sunday')).toBe('8 – 14 Nov 2026');
+    expect(periodTitle('week', at(2026, 11, 8))).toBe('2 – 8 Nov 2026');
+});
+
+test('times can be shown in 12-hour format (settings)', () => {
+    const evening = segmentOn(ev('a', at(2026, 11, 6, 18, 30), at(2026, 11, 6, 20)), at(2026, 11, 6));
+    expect(segmentTime(evening, '12h')).toBe('6:30 PM – 8:00 PM');
+    expect(segmentTime(evening)).toBe('18:30 – 20:00');
+    const late = segmentOn(ev('b', at(2026, 11, 6, 22), at(2026, 11, 7, 2)), at(2026, 11, 7));
+    expect(segmentTime(late, '12h')).toBe('until 2:00 AM');
+});

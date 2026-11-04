@@ -22,7 +22,6 @@ const EditProfile = () => {
         mobile: '',
         street: '',
         zipcode: '',
-        city: '',
         country: ''
     });
 
@@ -35,7 +34,6 @@ const EditProfile = () => {
                 mobile: user.contactData?.mobile || '',
                 street: user.contactData?.street || '',
                 zipcode: user.contactData?.zipcode || '',
-                city: user.contactData?.city || '',
                 country: user.contactData?.country || ''
             });
             setLoading(false);
@@ -65,12 +63,12 @@ const EditProfile = () => {
                     mobile: formData.mobile,
                     street: formData.street,
                     zipcode: formData.zipcode,
-                    city: formData.city,
                     country: formData.country
                 }
             };
 
-            const response = await api.put(`/v1/users/${user.id}`, payload);
+            // PATCH changes only what is sent, so the home city (set in Settings) is left as it is
+            const response = await api.patch(`/v1/users/${user.id}`, payload);
             // Keep the navbar, calendar etc. in sync with what the server saved
             updateCurrentUser(response.data);
             setSuccess(true);
@@ -158,21 +156,14 @@ const EditProfile = () => {
                             <input type="text" name="zipcode" id="zipcode" value={formData.zipcode} onChange={handleChange} />
                         </div>
                         <div className="form-group" style={{ marginBottom: 0 }}>
-                            <label htmlFor="city">City</label>
-                            <input type="text" name="city" id="city" value={formData.city} onChange={handleChange}
-                                aria-describedby="city-hint" />
-                            <span id="city-hint" className="availability-message" style={{ color: 'var(--text-muted)' }}>
-                                Shows public events in your city under "Around me" in Discover.
-                            </span>
-                        </div>
-                    </div>
-
-                    <div className="form-row">
-                        <div className="form-group" style={{ marginBottom: 0 }}>
                             <label htmlFor="country">Country</label>
                             <input type="text" name="country" id="country" value={formData.country} onChange={handleChange} />
                         </div>
                     </div>
+
+                    <p className="group-muted edit-city-note">
+                        Your home city for "Around me" is set in <Link to="/settings#discover" className="settings-link">Settings</Link>.
+                    </p>
 
                 </form>
 

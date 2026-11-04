@@ -792,3 +792,6 @@
 .photo-crop-step:hover:not(:disabled) { background: var(--glass-soft-hover); }
 .photo-crop-step:disabled { opacity: 0.4; }
 .photo-crop-footer { gap: 8px; border-top-color: rgba(255, 255, 255, 0.08); }
+
+/* Edit profile: where the home city went */
+.edit-city-note { margin: 16px 0 0; font-size: 0.85rem; }

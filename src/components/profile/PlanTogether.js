@@ -1,6 +1,7 @@
 import React, { useCallback, useEffect, useState } from 'react';
 import moment from 'moment';
 import api from '../../api/client';
+import { formatTime, usePreferences } from '../../services/preferences';
 
 const LENGTHS = [
     { minutes: 30, label: '30 min' },
@@ -32,6 +33,7 @@ export const dayLabel = (date, today = moment()) => {
  * onPick({ start, end }) when a time is chosen; onPickOwnTime(minutes) to choose a time yourself.
  */
 const PlanTogether = ({ person, onPick, onPickOwnTime }) => {
+    const { timeFormat } = usePreferences();
     const [minutes, setMinutes] = useState(60);
     const [fromDay, setFromDay] = useState(() => moment().format('YYYY-MM-DD'));
     const [days, setDays] = useState([]);
@@ -91,9 +93,9 @@ const PlanTogether = ({ person, onPick, onPickOwnTime }) => {
                                 {day.slots.map(slot => (
                                     <button key={slot.start} type="button" className="plan-slot"
                                         onClick={() => onPick({ start: new Date(slot.start), end: new Date(slot.end) })}
-                                        aria-label={`${dayLabel(day.date)}, ${slot.part.toLowerCase()}: ${moment(slot.start).format('HH:mm')} to ${moment(slot.end).format('HH:mm')}`}>
+                                        aria-label={`${dayLabel(day.date)}, ${slot.part.toLowerCase()}: ${formatTime(slot.start, timeFormat)} to ${formatTime(slot.end, timeFormat)}`}>
                                         <span className="plan-slot-part">{slot.part}</span>
-                                        <span className="plan-slot-time">{moment(slot.start).format('HH:mm')}–{moment(slot.end).format('HH:mm')}</span>
+                                        <span className="plan-slot-time">{formatTime(slot.start, timeFormat)}–{formatTime(slot.end, timeFormat)}</span>
                                     </button>
                                 ))}
                             </div>

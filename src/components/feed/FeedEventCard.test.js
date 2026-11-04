@@ -52,6 +52,7 @@ describe('who is going', () => {
 test('times show both dates only when an event runs past midnight', () => {
     expect(formatWhen('2026-11-06T18:00:00', '2026-11-06T22:00:00')).toBe('Fri, 18:00 – 22:00');
     expect(formatWhen('2026-11-06T22:00:00', '2026-11-07T02:00:00')).toBe('Fri 6 Nov, 22:00 – Sat 7 Nov, 02:00');
+    expect(formatWhen('2026-11-06T18:00:00', '2026-11-06T22:00:00', '12h')).toBe('Fri, 6:00 PM – 10:00 PM');
 });
 
 test('the card shows host, place, tags and up to three friend avatars', () => {

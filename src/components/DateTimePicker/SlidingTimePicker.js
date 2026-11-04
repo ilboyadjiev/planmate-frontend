@@ -2,8 +2,10 @@ import React, { useState, useEffect } from 'react';
 import { Modal, Button } from 'react-bootstrap';
 import { MultiSectionDigitalClock } from '@mui/x-date-pickers/MultiSectionDigitalClock';
 import dayjs from 'dayjs';
+import { usePreferences } from '../../services/preferences';
 
 const SlidingTimePicker = ({ show, onHide, value, onChange }) => {
+    const { timeFormat } = usePreferences();
     const [tempValue, setTempValue] = useState(dayjs(value));
 
     // Reset the temp value every time the modal opens
@@ -22,7 +24,7 @@ const SlidingTimePicker = ({ show, onHide, value, onChange }) => {
                     <MultiSectionDigitalClock
                         value={tempValue}
                         onChange={(newValue) => setTempValue(newValue)}
-                        ampm={true}
+                        ampm={timeFormat === '12h'}
                         sx={{ width: 'max-content', margin: '0 auto' }}
                     />
                 </div>
