@@ -1,13 +1,16 @@
 import React, { useContext, useEffect, useState } from 'react';
+import { Link } from 'react-router-dom';
 import api from '../api/client';
 import { AuthContext } from '../context/AuthContext';
 import { useGoogleLogin } from '@react-oauth/google';
+import './FriendGroups.css'; // .group-button and the settings top line
 
 const EditProfile = () => {
     const { user, logout, updateCurrentUser } = useContext(AuthContext);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState(null);
     const [success, setSuccess] = useState(false);
+    const [saving, setSaving] = useState(false);
     const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
     
     const [isSyncing, setIsSyncing] = useState(false);
@@ -53,7 +56,8 @@ const EditProfile = () => {
         e.preventDefault();
         setError(null);
         setSuccess(false);
-        
+        setSaving(true);
+
         try {
             const payload = {
                 firstName: formData.firstName,
@@ -74,6 +78,8 @@ const EditProfile = () => {
             
         } catch (err) {
             setError(err.response?.data?.error || 'Failed to update profile. Please try again.');
+        } finally {
+            setSaving(false);
         }
     };
 
@@ -119,12 +125,26 @@ const EditProfile = () => {
         <div style={{ padding: '40px 20px', display: 'flex', justifyContent: 'center' }}>
             <div className="form-container" style={{ maxWidth: '800px', width: '100%', margin: 0 }}>
                 
-                <h2 style={{ marginBottom: '8px', fontWeight: '700' }}>Account Settings</h2>
-                <p style={{ color: 'var(--text-muted)', marginBottom: '32px', fontSize: '0.95rem' }}>
+                {/* Reached from the pencil on your profile. Save sits up here, outside the form (form="profile-form"),
+                    so it is in reach without scrolling, as in social apps. */}
+                <div className="settings-topline">
+                    <Link to={`/people/${user.id}`} className="settings-back">← Your profile</Link>
+                    <button type="submit" form="profile-form" className="group-button group-button-primary" disabled={saving}>
+                        {saving ? 'Saving…' : 'Save'}
+                    </button>
+                </div>
+                <h2 style={{ marginBottom: '8px', fontWeight: '700' }}>Edit profile</h2>
+                <p style={{ color: 'var(--text-muted)', marginBottom: '16px', fontSize: '0.95rem' }}>
                     Manage your personal information and contact details.
                 </p>
 
-                <form onSubmit={handleSubmit}>
+                {/* Right under the Save button, so the result is visible without scrolling */}
+                <div aria-live="polite">
+                    {error && <div className="availability-message msg-error" role="alert" style={{ marginBottom: '16px', fontSize: '0.9rem' }}>{error}</div>}
+                    {success && <div className="availability-message msg-success" style={{ marginBottom: '16px', fontSize: '0.9rem', fontWeight: '600' }}>Profile updated successfully!</div>}
+                </div>
+
+                <form id="profile-form" onSubmit={handleSubmit} style={{ marginTop: '16px' }}>
                     
                     <h4 style={{ fontSize: '1.1rem', marginBottom: '16px', color: 'var(--primary)' }}>Personal Info</h4>
                     
@@ -188,14 +208,6 @@ const EditProfile = () => {
                         </div>
                     </div>
 
-                    {error && <div className="availability-message msg-error" style={{ marginBottom: '16px', fontSize: '0.9rem' }}>{error}</div>}
-                    {success && <div className="availability-message msg-success" style={{ marginBottom: '16px', fontSize: '0.9rem', fontWeight: '600' }}>Profile updated successfully!</div>}
-
-                    <div style={{ display: 'flex', justifyContent: 'flex-end', marginTop: '24px' }}>
-                        <button type="submit" className="btn-modern-primary" style={{ padding: '12px 32px' }}>
-                            Save Changes
-                        </button>
-                    </div>
                 </form>
 
                 <hr style={{ margin: '48px 0 32px 0', borderColor: 'var(--border)' }} />

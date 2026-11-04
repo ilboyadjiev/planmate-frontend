@@ -8,6 +8,19 @@ import { avatarColor, initials } from '../feed/feedText';
 import '../../pages/FriendGroups.css';
 import '../feed/DiscoveryFeed.css';
 
+const PencilIcon = () => (
+    <svg aria-hidden="true" width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+        <path d="M16.5 3.5a2.1 2.1 0 0 1 3 3L8 18l-4 1 1-4z" /><path d="M14.5 5.5l3 3" />
+    </svg>
+);
+
+const GearIcon = () => (
+    <svg aria-hidden="true" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+        <circle cx="12" cy="12" r="3" />
+        <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 1 1-4 0v-.09a1.65 1.65 0 0 0-1.08-1.51 1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 1 1 0-4h.09a1.65 1.65 0 0 0 1.51-1.08 1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 1 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 1 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z" />
+    </svg>
+);
+
 const displayName = (person) => [person.firstName, person.lastName].filter(Boolean).join(' ') || person.username;
 
 /**
@@ -86,7 +99,16 @@ const ProfileContent = ({ personId: id, onOpenPerson, onLoaded, onPlan }) => {
                     <span className="profile-handle">@{profile.username}</span>
                 </div>
                 <div className="profile-action">
-                    {profile.self && <Link to="/profile/edit" className="group-button">Edit profile</Link>}
+                    {profile.self && (
+                        <>
+                            <Link to="/profile/edit" className="profile-icon-button" aria-label="Edit profile" title="Edit profile">
+                                <PencilIcon />
+                            </Link>
+                            <Link to="/settings" className="profile-icon-button profile-settings" aria-label="Settings" title="Settings">
+                                <GearIcon />
+                            </Link>
+                        </>
+                    )}
                     {!profile.self && relation.state === 'friend' && <span className="pm-chip">Friends</span>}
                     {!profile.self && <AddFriendButton person={profile} friendships={friendships} />}
                 </div>

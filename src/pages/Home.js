@@ -27,7 +27,7 @@ const Home = () => {
         <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '16px' }}>
           {user ? (
             <button className="btn-modern-primary" onClick={() => navigate('/dashboard')}>
-              Go to Dashboard
+              Discover
             </button>
           ) : (
             <>

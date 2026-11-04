@@ -320,6 +320,37 @@
   gap: 8px;
 }
 
+/* Your own profile: edit (pencil) and settings (gear) as round icon buttons, like on social apps */
+.profile-icon-button {
+  width: 44px;
+  height: 44px;
+  border-radius: 50%;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid var(--border);
+  color: var(--text-muted);
+  transition: color 0.2s, background 0.2s;
+}
+
+.profile-icon-button:hover {
+  color: var(--text-main);
+  background: rgba(255, 255, 255, 0.1);
+}
+
+.profile-icon-button:focus-visible {
+  outline: 2px solid #FDBA74;
+  outline-offset: 2px;
+}
+
+.profile-settings svg { transition: transform 0.3s ease; }
+.profile-settings:hover svg { transform: rotate(45deg); }
+
+@media (prefers-reduced-motion: reduce) {
+  .profile-settings svg { transition: none; }
+}
+
 .profile-action .group-button {
   display: inline-flex;
   align-items: center;
@@ -572,3 +603,50 @@
 }
 
 .group-button-danger:hover:not(:disabled) { background: rgba(239, 68, 68, 0.2); color: #FCA5A5; }
+
+/* Back to your profile, on the settings and edit profile pages */
+.settings-topline {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  flex-wrap: wrap;
+  margin-bottom: 20px;
+}
+
+.settings-back {
+  min-height: 38px;
+  display: inline-flex;
+  align-items: center;
+  color: var(--text-muted);
+  font-weight: 600;
+  text-decoration: none;
+}
+
+.settings-back:hover { color: var(--text-main); }
+
+/* Settings page (/settings) */
+.settings-card {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  padding: 20px;
+  margin-top: 16px;
+}
+
+.settings-card h2 {
+  margin: 0 0 4px;
+  font-size: 1.05rem;
+  font-weight: 700;
+}
+
+.settings-card a { color: var(--chip-text); }
+.settings-card a:hover { color: var(--chip-text-hover); }
+
+.settings-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  flex-wrap: wrap;
+}

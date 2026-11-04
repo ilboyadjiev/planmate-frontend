@@ -1,7 +1,5 @@
 import React, { useContext, useEffect, useState } from 'react';
 import { Link, NavLink, useLocation } from 'react-router-dom';
-// Modal and Button were only used by the disabled Local Mode pop-up
-import { Dropdown } from 'react-bootstrap';
 import { AuthContext } from '../context/AuthContext';
 import api from '../api/client';
 import { FRIENDS_CHANGED, countIncomingRequests } from '../services/friendEvents';
@@ -44,13 +42,14 @@ const Badge = ({ count, label }) => (count > 0 ? (
 
 /**
  * App navigation.
- * - Large screens: sticky top bar with Discover / Search / Friends / Groups and an avatar menu. The calendar is always on the
+ * - Large screens: sticky top bar with Discover / Search / Friends / Groups, and your picture, which opens your
+ *   profile. The calendar is always on the
  *   dashboard there, so it needs no entry.
  * - Small screens: slim top bar plus a bottom tab bar (Discover, Calendar, Search, Friends, You). Calendar is its own
  *   page (/calendar), opening in the day view.
  */
 const Navbar = () => {
-    const { authToken, user, logout } = useContext(AuthContext);
+    const { authToken, user } = useContext(AuthContext);
     // Disabled: Local Mode warning (its privacy message now lives on the register page)
     // const [showOfflineInfo, setShowOfflineInfo] = useState(false);
     const [incomingRequests, setIncomingRequests] = useState(0);
@@ -85,6 +84,10 @@ const Navbar = () => {
             requestSearchFocus();
         }
     };
+
+    // "You" and your picture open your profile; edit profile and settings are reached from there
+    const profilePath = userId ? `/people/${userId}` : '/profile/edit';
+    const onSettings = ['/profile/edit', '/settings'].includes(location.pathname);
 
     const requestLabel = `new friend request${incomingRequests === 1 ? '' : 's'}`;
 
@@ -128,31 +131,10 @@ const Navbar = () => {
                     */}
 
                     {loggedIn ? (
-                        <Dropdown align="end">
-                            <Dropdown.Toggle as="button" type="button" className="pm-avatar-button"
-                                aria-label={`Account menu for ${user.firstName || user.username || 'you'}`}>
-                                <span className="pm-avatar">{initialsOf(user)}</span>
-                                {incomingRequests > 0 && <span className="pm-avatar-dot" aria-hidden="true" />}
-                            </Dropdown.Toggle>
-                            <Dropdown.Menu className="pm-menu">
-                                <div className="pm-menu-header">
-                                    <span className="pm-avatar pm-avatar-lg" aria-hidden="true">{initialsOf(user)}</span>
-                                    <div>
-                                        <div className="pm-menu-name">{[user.firstName, user.lastName].filter(Boolean).join(' ') || user.username}</div>
-                                        {user.username && <div className="pm-menu-handle">@{user.username}</div>}
-                                    </div>
-                                </div>
-                                <Dropdown.Divider />
-                                <Dropdown.Item as={Link} to={`/people/${user.id}`}>View my profile</Dropdown.Item>
-                                <Dropdown.Item as={Link} to="/profile/edit">Edit profile</Dropdown.Item>
-                                <Dropdown.Item as={Link} to="/profile/friends">
-                                    Friends <Badge count={incomingRequests} label={requestLabel} />
-                                </Dropdown.Item>
-                                <Dropdown.Item as={Link} to="/profile/groups">Friend groups</Dropdown.Item>
-                                <Dropdown.Divider />
-                                <Dropdown.Item as="button" type="button" onClick={logout}>Log out</Dropdown.Item>
-                            </Dropdown.Menu>
-                        </Dropdown>
+                        // Your picture opens your profile, like on social apps; settings and log out live there
+                        <NavLink to={profilePath} className="pm-avatar-button" aria-label="Your profile">
+                            <span className="pm-avatar" aria-hidden="true">{initialsOf(user)}</span>
+                        </NavLink>
                     ) : (
                         <div className="pm-auth-links">
                             <Link className="pm-login-link" to="/login">Log in</Link>
@@ -180,7 +162,8 @@ const Navbar = () => {
                             <span className="pm-tab-icon"><FriendsIcon /><Badge count={incomingRequests} label={requestLabel} /></span>
                             <span>Friends</span>
                         </NavLink>
-                        <NavLink to="/profile/edit" className="pm-tab">
+                        <NavLink to={profilePath}
+                            className={({ isActive }) => `pm-tab${isActive || onSettings ? ' active' : ''}`}>
                             <UserIcon /><span>You</span>
                         </NavLink>
                     </>

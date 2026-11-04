@@ -76,7 +76,12 @@ test('your own profile shows how others see you', async () => {
     renderProfile(daveProfile({ self: true }));
 
     expect(await screen.findByText('This is how others see your profile.')).toBeInTheDocument();
-    expect(screen.getByRole('link', { name: 'Edit profile' })).toHaveAttribute('href', '/profile/edit');
+    const edit = screen.getByRole('link', { name: 'Edit profile' });
+    const settings = screen.getByRole('link', { name: 'Settings' });
+    expect(edit).toHaveAttribute('href', '/profile/edit');
+    expect(settings).toHaveAttribute('href', '/settings');
+    // The pencil comes first, left of the gear
+    expect(edit.compareDocumentPosition(settings) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
     expect(screen.queryByRole('button', { name: /add .* as a friend/i })).not.toBeInTheDocument();
 });
 

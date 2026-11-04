@@ -81,12 +81,27 @@ test('logged-in users get Friends with a request badge, and the badge refreshes 
 
     expect(await within(tabBar()).findByText('1')).toBeInTheDocument();
     expect(api.get).toHaveBeenCalledWith('/v1/users/1/friends');
-    expect(within(tabBar()).getByRole('link', { name: /you/i })).toHaveAttribute('href', '/profile/edit');
-    expect(screen.getByRole('button', { name: /account menu for alice/i })).toHaveTextContent('AM');
 
     api.get.mockResolvedValueOnce({ data: [] });
     await act(async () => { notifyFriendsChanged(); });
     expect(within(tabBar()).queryByText('1')).not.toBeInTheDocument();
+});
+
+test('"You" and your picture open your profile, and "You" stays active in settings', async () => {
+    renderNavbar(alice, '/settings');
+    await waitFor(() => expect(api.get).toHaveBeenCalled());
+
+    const you = within(tabBar()).getByRole('link', { name: 'You' });
+    expect(you).toHaveAttribute('href', '/people/1');
+    expect(you).toHaveClass('active');
+
+    const picture = screen.getByRole('link', { name: 'Your profile' });
+    expect(picture).toHaveAttribute('href', '/people/1');
+    expect(picture).toHaveTextContent('AM');
+    expect(screen.queryByRole('button', { name: /account menu/i })).not.toBeInTheDocument();
+
+    fireEvent.click(picture);
+    expect(screen.getByTestId('location')).toHaveTextContent('/people/1');
 });
 
 test('guests see log in and sign up, no friends and no local mode warning', () => {
