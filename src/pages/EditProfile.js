@@ -5,6 +5,7 @@ import { AuthContext } from '../context/AuthContext';
 import GlassPanel from '../components/GlassPanel';
 import ProfilePhotoPicker from '../components/profile/ProfilePhotoPicker';
 import './FriendGroups.css'; // .group-button and the settings top line
+import CalendarLoader from '../components/CalendarLoader';
 
 /** Your photo, name and contact details. Account things (Google Calendar, deleting the account) are in Settings. */
 const EditProfile = () => {
@@ -81,7 +82,7 @@ const EditProfile = () => {
         }
     };
 
-    if (loading) return <div style={{ textAlign: 'center', marginTop: '50px', color: 'var(--text-muted)' }}>Loading profile data...</div>;
+    if (loading) return <CalendarLoader label="Loading your profile…" size={88} className="is-page" />;
     if (!user) return <div style={{ textAlign: 'center', marginTop: '50px' }}>Not logged in</div>; 
 
     return (

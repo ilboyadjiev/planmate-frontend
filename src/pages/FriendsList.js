@@ -8,6 +8,7 @@ import useFriendships from '../hooks/useFriendships';
 import ProfileModal from '../components/profile/ProfileModal';
 import './FriendGroups.css';
 import GlassPanel from '../components/GlassPanel';
+import CalendarLoader from '../components/CalendarLoader';
 
 const displayName = (person) => [person.firstName, person.lastName].filter(Boolean).join(' ') || person.username;
 
@@ -102,7 +103,7 @@ const FriendsList = () => {
         }
     };
 
-    if (!friendships.loaded) return <div style={{ textAlign: 'center', marginTop: '50px', color: 'var(--text-muted)' }}>Loading network...</div>;
+    if (!friendships.loaded) return <CalendarLoader label="Loading your friends…" size={88} className="is-page" />;
 
     const all = friendships.friendships;
     const other = (f) => (f.userA.id === user.id ? f.userB : f.userA);

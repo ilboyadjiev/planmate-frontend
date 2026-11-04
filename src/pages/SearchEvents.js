@@ -10,6 +10,7 @@ import GlassPanel from '../components/GlassPanel';
 import { FOCUS_SEARCH } from '../services/searchFocus';
 import '../components/feed/DiscoveryFeed.css';
 import './SearchEvents.css';
+import CalendarLoader from '../components/CalendarLoader';
 
 const PAGE_SIZE = 10;
 const MIN_LENGTH = 2;
@@ -257,7 +258,7 @@ const SearchEvents = () => {
                             );
                         })}
 
-                        {loading && events.length === 0 && <p className="feed-status">Searching…</p>}
+                        {loading && events.length === 0 && <CalendarLoader label="Searching…" />}
                         {!loading && loadError && (
                             <p className="feed-status" role="alert">
                                 Search didn't work this time.{' '}

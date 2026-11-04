@@ -7,6 +7,7 @@ import useFriendships from '../../hooks/useFriendships';
 import Avatar from '../Avatar';
 import '../../pages/FriendGroups.css';
 import '../feed/DiscoveryFeed.css';
+import CalendarLoader from '../CalendarLoader';
 
 const PencilIcon = () => (
     <svg aria-hidden="true" width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
@@ -68,7 +69,7 @@ const ProfileContent = ({ personId: id, onOpenPerson, onLoaded, onPlan }) => {
         }
     };
 
-    if (status === 'loading') return <p className="profile-status">Loading profile…</p>;
+    if (status === 'loading') return <CalendarLoader label="Loading profile…" size={80} />;
     if (status === 'notFound') return <p className="profile-status">This person could not be found.</p>;
     if (status === 'error') {
         return (

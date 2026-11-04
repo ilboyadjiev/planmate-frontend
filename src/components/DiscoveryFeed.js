@@ -5,6 +5,7 @@ import FeedEventCard from './feed/FeedEventCard';
 import useEventCardActions from './feed/useEventCardActions';
 import GlassPanel from './GlassPanel';
 import './feed/DiscoveryFeed.css';
+import CalendarLoader from './CalendarLoader';
 
 const PAGE_SIZE = 5;
 const TAGS = ['#munich', '#gaming', '#tech', '#music', '#food'];
@@ -156,7 +157,7 @@ const DiscoveryFeed = ({ onAttendanceChange, onRespond, onEventChanged, onError 
                         onOpen={openDetails} opening={openingId === event.id} />
                 ))}
 
-                {loading && events.length === 0 && <p className="feed-status">Loading events…</p>}
+                {loading && events.length === 0 && <CalendarLoader label="Loading events…" />}
                 {!loading && loadError && (
                     <p className="feed-status" role="alert">
                         Couldn't load events.{' '}

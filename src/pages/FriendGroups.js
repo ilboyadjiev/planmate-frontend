@@ -10,6 +10,7 @@ import ProfileModal from '../components/profile/ProfileModal';
 import useFriendships from '../hooks/useFriendships';
 import { blankEvent, createEvent } from '../services/eventService';
 import './FriendGroups.css';
+import CalendarLoader from '../components/CalendarLoader';
 
 const MAX_NAME_LENGTH = 60;
 
@@ -275,7 +276,7 @@ const FriendGroups = () => {
             {createError && <p id="new-group-error" className="field-error" role="alert">{createError}</p>}
             {planNotice && <p className="group-plan-notice" role="status">{planNotice}</p>}
 
-            {loading && <p className="group-muted">Loading your groups…</p>}
+            {loading && <CalendarLoader label="Loading your groups…" />}
             {!loading && loadError && (
                 <p className="field-error" role="alert">
                     Your groups could not be loaded.{' '}

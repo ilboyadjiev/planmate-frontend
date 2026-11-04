@@ -1,0 +1,105 @@
+/*
+ * The loading calendar (components/CalendarLoader.js). Everything is sized in em from the icon's font-size, so one
+ * variable scales the whole drawing. --cal-loader-turn is one page: tear, fall, next page.
+ */
+.cal-loader {
+  --cal-loader-turn: 0.3s;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 14px;
+  padding: 32px 16px;
+  opacity: 0;
+  animation: cal-loader-in 0.25s ease-out var(--cal-loader-delay, 300ms) forwards;
+}
+
+@keyframes cal-loader-in { to { opacity: 1; } }
+
+.cal-loader-icon {
+  position: relative;
+  display: block;
+  width: 1em;
+  height: 1em;
+  font-size: var(--cal-loader-size, 72px);
+}
+
+.cal-loader-ring {
+  position: absolute;
+  top: 0;
+  width: 0.07em;
+  height: 0.17em;
+  border-radius: 0.035em;
+  background: #D1D5DB;
+  z-index: 6;
+}
+.cal-loader-ring.is-left { left: 0.27em; }
+.cal-loader-ring.is-right { right: 0.27em; }
+
+/* The pages underneath: a sliver shows below the current page */
+.cal-loader-frame {
+  position: absolute;
+  top: 0.08em;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  border-radius: 0.16em;
+  background: #D9D3CD;
+  box-shadow: 0 0.06em 0.16em rgba(0, 0, 0, 0.35);
+}
+
+.cal-loader-head {
+  position: absolute;
+  left: 0;
+  right: 0;
+  top: 0.08em;
+  height: 0.26em;
+  border-radius: 0.16em 0.16em 0 0;
+  background: linear-gradient(180deg, #FB8A4C, #F06A25);
+  z-index: 5;
+}
+
+.cal-loader-body {
+  position: absolute;
+  left: 0;
+  right: 0;
+  top: 0.34em;
+  bottom: 0.035em;
+}
+
+.cal-loader-page {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 0 0 0.15em 0.15em;
+  background: #FBF8F5;
+}
+
+/* Today's page tears from its left corner, tilts, then falls away */
+.cal-loader-page.is-front {
+  z-index: 2;
+  transform-origin: 0.06em 0;
+  box-shadow: 0 0.03em 0.08em rgba(0, 0, 0, 0.18);
+  animation: cal-loader-fall var(--cal-loader-turn) infinite;
+}
+
+@keyframes cal-loader-fall {
+  0%, 22% { transform: none; opacity: 1; animation-timing-function: ease-out; }
+  36% { transform: rotate(7deg); opacity: 1; animation-timing-function: cubic-bezier(0.5, 0, 0.9, 0.6); }
+  80%, 100% { transform: translate(0.12em, 0.8em) rotate(24deg); opacity: 0; }
+}
+
+.cal-loader-label {
+  font-size: 0.9rem;
+  color: var(--glass-muted, #AEB4C0);
+}
+
+/* Less motion asked for: the calendar stays still on today's page */
+@media (prefers-reduced-motion: reduce) {
+  .cal-loader-page.is-front { animation: none; }
+}
+
+/* A whole page waiting for its data: the calendar sits in the middle of the screen */
+.cal-loader.is-page { min-height: 50vh; }
