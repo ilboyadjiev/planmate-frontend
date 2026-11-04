@@ -23,7 +23,7 @@ const ProfileModal = ({ personId, onHide, onPlanned }) => {
 
     return (
         <>
-        <Modal show={!!current && !planningWith} onHide={onHide} contentClassName="modern-modal" centered size="lg"
+        <Modal show={!!current && !planningWith} onHide={onHide} contentClassName="modern-modal pm-glass-modal" centered size="lg"
             aria-labelledby={current ? `profile-name-${current}` : undefined}>
             <Modal.Header closeButton closeLabel="Close profile">
                 {previous ? (

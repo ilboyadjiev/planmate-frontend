@@ -1,19 +1,22 @@
-import React, { useEffect, useState, useContext, useMemo } from 'react';
+import React, { useEffect, useState, useContext } from 'react';
 import api from '../api/client';
-import './PlanMateCalendar.css'; 
-import { Calendar, momentLocalizer } from 'react-big-calendar';
+import './PlanMateCalendar.css';
 import moment from 'moment';
-import 'react-big-calendar/lib/css/react-big-calendar.css';
 import { getGuestId } from '../services/guestService';
 import { AuthContext } from '../context/AuthContext';
 import EventModal from './EventModal';
 import GamePlan from './GamePlan';
-import CalendarToolbar from './CalendarToolbar';
+import GlassCalendar from './calendar/GlassCalendar';
+import useIsMobile from '../hooks/useIsMobile';
 import { toCalendarEvent, updateEvent, respondToInvite } from '../services/eventService';
-import { eventStatus, statusLabel, STATUS_STYLES, STATUS_LEGEND } from './calendarStatus';
+import { STATUS_STYLES, STATUS_LEGEND } from './calendarStatus';
 
-const localizer = momentLocalizer(moment);
 moment.updateLocale('en', { week: { dow: 1, doy: 1 } });
+
+/**
+ * The calendar with its data: loads the events around the visible period, opens them in the details window,
+ * and shows the AI Game plan above and the colour legend below. The look is GlassCalendar.
+ */
 
 const PlanMateCalendar = ({ userEmail, refreshKey, onSlotSelect, onCreateEvent, defaultView = 'month' }) => {
     const [events, setEvents] = useState([]);
@@ -23,6 +26,7 @@ const PlanMateCalendar = ({ userEmail, refreshKey, onSlotSelect, onCreateEvent, 
     const [internalRefresh, setInternalRefresh] = useState(0); 
     
     const { user } = useContext(AuthContext);
+    const isMobile = useIsMobile();
 
     // Fetch Events
     useEffect(() => {
@@ -66,34 +70,6 @@ const PlanMateCalendar = ({ userEmail, refreshKey, onSlotSelect, onCreateEvent, 
         setInternalRefresh(prev => prev + 1);
     };
 
-    const getScrollToTime = () => {
-        const todayEvents = events.filter(e => 
-            e.start && 
-            e.start.getFullYear() === currentDate.getFullYear() &&
-            e.start.getMonth() === currentDate.getMonth() &&
-            e.start.getDate() === currentDate.getDate()
-        );
-
-        if (todayEvents.length > 0) {
-            const earliestEvent = todayEvents.reduce((earliest, current) => 
-                (current.start < earliest.start ? current : earliest)
-            );
-            
-            const scrollTime = new Date(earliestEvent.start);
-            scrollTime.setHours(Math.max(0, scrollTime.getHours() - 1)); 
-            return scrollTime;
-        }
-
-        const defaultTime = new Date(currentDate);
-        defaultTime.setHours(8, 0, 0, 0);
-        return defaultTime;
-    };
-
-    // The toolbar carries the "New event" button; memoised so the calendar does not remount it on every render
-    const toolbarComponents = useMemo(() => ({
-        toolbar: (toolbarProps) => <CalendarToolbar {...toolbarProps} onCreateEvent={onCreateEvent} />,
-    }), [onCreateEvent]);
-
     return (
         <div className="calendar-container">
             {/* AI Game plan: generated only on request */}
@@ -114,26 +90,15 @@ const PlanMateCalendar = ({ userEmail, refreshKey, onSlotSelect, onCreateEvent, 
                 </div>
             )}
 
-            <Calendar
-                localizer={localizer}
+            <GlassCalendar
                 events={events}
-                components={toolbarComponents}
-                defaultView={defaultView}
-                startAccessor="start" 
-                endAccessor="end"
-                style={{ height: 700 }}
-                dayPropGetter={d => (d.toDateString() === new Date().toDateString() ? { className: 'custom-today' } : {})}
-                eventPropGetter={event => {
-                    const status = eventStatus(event);
-                    return { className: `event-status-${status}`, style: STATUS_STYLES[status] };
-                }}
-                tooltipAccessor={event => (event.isOwn ? event.title : `${event.title} (${statusLabel(eventStatus(event))})`)}
-                onSelectEvent={handleSelectEvent}
                 date={currentDate}
-                onNavigate={d => { setCurrentDate(d); }}
-                selectable={true}
-                onSelectSlot={slotInfo => onSlotSelect && onSlotSelect(slotInfo.start, slotInfo.end)}
-                scrollToTime={getScrollToTime()}
+                onNavigate={setCurrentDate}
+                defaultView={defaultView}
+                compact={isMobile}
+                onSelectEvent={handleSelectEvent}
+                onSelectSlot={onSlotSelect}
+                onCreateEvent={onCreateEvent}
             />
 
             {user && (

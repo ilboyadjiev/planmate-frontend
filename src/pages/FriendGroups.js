@@ -2,6 +2,7 @@ import React, { useCallback, useContext, useEffect, useMemo, useRef, useState } 
 import api from '../api/client';
 import { AuthContext } from '../context/AuthContext';
 import SocialTabs from '../components/SocialTabs';
+import GlassPanel from '../components/GlassPanel';
 import AddFriendButton from '../components/AddFriendButton';
 import PersonPill from '../components/PersonPill';
 import EventModal from '../components/EventModal';
@@ -253,6 +254,7 @@ const FriendGroups = () => {
 
     return (
         <div className="groups-page">
+            <GlassPanel tall className="social-panel">
             <SocialTabs />
             <h1>Friend Groups</h1>
             <p className="groups-intro">
@@ -293,6 +295,7 @@ const FriendGroups = () => {
                         autoOpenAdd={group.id === justCreatedId} onChanged={replaceGroup} onGone={dropGroup} onReload={load} />
                 ))}
             </div>
+            </GlassPanel>
 
             <ProfileModal personId={profileId} onHide={() => setProfileId(null)}
                 onPlanned={(event, person) => setPlanNotice(`"${event.title}" is planned and ${person.firstName || person.username} is invited. It's in your calendar.`)} />

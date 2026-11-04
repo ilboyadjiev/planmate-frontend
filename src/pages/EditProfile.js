@@ -2,6 +2,7 @@ import React, { useContext, useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
 import api from '../api/client';
 import { AuthContext } from '../context/AuthContext';
+import GlassPanel from '../components/GlassPanel';
 import './FriendGroups.css'; // .group-button and the settings top line
 
 /** Your name and contact details. Account things (Google Calendar, deleting the account) are in Settings. */
@@ -83,8 +84,8 @@ const EditProfile = () => {
     if (!user) return <div style={{ textAlign: 'center', marginTop: '50px' }}>Not logged in</div>; 
 
     return (
-        <div style={{ padding: '40px 20px', display: 'flex', justifyContent: 'center' }}>
-            <div className="form-container" style={{ maxWidth: '800px', width: '100%', margin: 0 }}>
+        <div className="groups-page">
+            <GlassPanel tall className="social-panel">
                 
                 {/* Reached from the pencil on your profile. Save sits up here, outside the form (form="profile-form"),
                     so it is in reach without scrolling, as in social apps. */}
@@ -171,7 +172,7 @@ const EditProfile = () => {
 
                 </form>
 
-            </div>
+            </GlassPanel>
         </div>
     );
 };

@@ -6,6 +6,7 @@ import AddFriendButton from '../components/AddFriendButton';
 import useFriendships from '../hooks/useFriendships';
 import ProfileModal from '../components/profile/ProfileModal';
 import './FriendGroups.css';
+import GlassPanel from '../components/GlassPanel';
 
 const displayName = (person) => [person.firstName, person.lastName].filter(Boolean).join(' ') || person.username;
 
@@ -109,8 +110,8 @@ const FriendsList = () => {
     const sent = all.filter(f => f.status !== 'accepted' && f.userA.id === user.id);
 
     return (
-        <div style={{ padding: '40px 20px', display: 'flex', justifyContent: 'center' }}>
-            <div className="form-container" style={{ maxWidth: '800px', width: '100%', margin: 0 }}>
+        <div className="groups-page social-page">
+            <GlassPanel tall className="social-panel">
 
                 <SocialTabs />
                 <h2 style={{ marginBottom: '8px', fontWeight: '700' }}>Network</h2>
@@ -128,7 +129,7 @@ const FriendsList = () => {
                         onChange={(e) => setSearchTerm(e.target.value)}
                         style={{ flexGrow: 1 }}
                     />
-                    <button type="submit" className="btn-modern-secondary" style={{ padding: '10px 24px' }}>
+                    <button type="submit" className="pm-glass-button" style={{ minHeight: '44px', padding: '0 24px', fontSize: '14px' }}>
                         Search
                     </button>
                 </form>
@@ -229,7 +230,7 @@ const FriendsList = () => {
                     })}
                 </Section>
 
-            </div>
+            </GlassPanel>
 
             <ProfileModal personId={profileId} onHide={() => setProfileId(null)}
                 onPlanned={(event, person) => setSuccessMsg(`"${event.title}" is planned and ${person.firstName || person.username} is invited. It's in your calendar.`)} />
@@ -243,7 +244,7 @@ const Section = ({ title, color, children, empty }) => {
     <section aria-labelledby={headingId} style={{ marginBottom: '40px' }}>
         <h4 id={headingId} style={{ fontSize: '1.1rem', marginBottom: '16px', color }}>{title}</h4>
         {empty || (
-            <div style={{ border: '1px solid var(--border)', borderRadius: '12px', overflow: 'hidden' }}>{children}</div>
+            <div className="social-list">{children}</div>
         )}
     </section>
     );

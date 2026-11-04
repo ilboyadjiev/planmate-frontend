@@ -25,6 +25,18 @@
   --chip-text-hover: #F2B28E;
   --chip-faint-bg: rgba(217, 86, 22, 0.04);
   --chip-faint-border: rgba(217, 86, 22, 0.18);
+
+  /* Liquid glass (calendar, Discover): frosted panels over soft colour glows */
+  --glass-panel: rgba(22, 27, 43, 0.55);
+  --glass-line: rgba(255, 255, 255, 0.13);
+  --glass-soft: rgba(255, 255, 255, 0.05);
+  --glass-soft-hover: rgba(255, 255, 255, 0.09);
+  --glass-soft-line: rgba(255, 255, 255, 0.09);
+  --glass-highlight: inset 0 1px 0 rgba(255, 255, 255, 0.12);
+  --glass-muted: #AEB4C0;
+  --glass-active-bg: rgba(240, 106, 37, 0.28);
+  --glass-active-text: #FFE4D2;
+  --glass-active-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.28), inset 0 0 0 1px rgba(240, 106, 37, 0.55), 0 4px 14px rgba(240, 106, 37, 0.25);
 }
 
 /*
@@ -38,6 +50,112 @@
   --bs-emphasis-color: #FFFFFF;
   --bs-secondary-color: var(--text-muted);
 }
+
+/*
+ * Liquid glass, shared by the calendar and the Discover feed (see the "Calendar Redesign" canvas):
+ *   <div class="pm-glass">
+ *     <div class="pm-glows" aria-hidden="true"><span></span><span></span><span></span></div>
+ *     <section class="pm-glass-panel">…</section>
+ *   </div>
+ * The glows sit inside the panel's shape, so nothing spills over the page. Add .is-tall to .pm-glows for long
+ * panels such as the feed, so the colour is spread down the whole panel.
+ */
+.pm-glass {
+  position: relative;
+  isolation: isolate;
+  border-radius: 26px;
+}
+
+.pm-glows {
+  position: absolute;
+  inset: 0;
+  z-index: 0;
+  overflow: hidden;
+  border-radius: inherit;
+  pointer-events: none;
+}
+
+.pm-glows span {
+  position: absolute;
+  border-radius: 50%;
+  filter: blur(80px);
+}
+
+.pm-glows span:nth-child(1) { width: 55%; aspect-ratio: 1; left: -15%; top: -20%; background: rgba(240, 106, 37, 0.38); }
+.pm-glows span:nth-child(2) { width: 60%; aspect-ratio: 1; right: -20%; top: 25%; background: rgba(79, 70, 229, 0.40); }
+.pm-glows span:nth-child(3) { width: 45%; aspect-ratio: 1; left: 30%; bottom: -30%; background: rgba(16, 185, 129, 0.20); }
+
+.pm-glows.is-tall span:nth-child(1) { width: 110%; left: -40%; top: -4%; }
+.pm-glows.is-tall span:nth-child(2) { width: 120%; right: -60%; top: 35%; }
+.pm-glows.is-tall span:nth-child(3) { width: 100%; left: -20%; top: 70%; bottom: auto; }
+
+.pm-glass-panel {
+  position: relative;
+  z-index: 1;
+  border-radius: inherit;
+  background: var(--glass-panel);
+  -webkit-backdrop-filter: blur(30px) saturate(170%);
+  backdrop-filter: blur(30px) saturate(170%);
+  border: 1px solid var(--glass-line);
+  box-shadow: var(--glass-highlight), 0 24px 60px rgba(0, 0, 0, 0.45);
+  color: var(--text-main);
+}
+
+/* Without blur support, or when people ask for less transparency: a solid panel, no glows */
+@supports not ((backdrop-filter: blur(1px)) or (-webkit-backdrop-filter: blur(1px))) {
+  .pm-glass-panel { background: var(--surface); }
+}
+
+@media (prefers-reduced-transparency: reduce) {
+  .pm-glows { display: none; }
+  .pm-glass-panel { background: var(--surface); -webkit-backdrop-filter: none; backdrop-filter: none; }
+}
+
+/* A frosted pill button (Today, Show more) */
+.pm-glass-button {
+  min-height: 36px;
+  padding: 0 16px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.07);
+  border: 1px solid rgba(255, 255, 255, 0.16);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.20), 0 4px 14px rgba(0, 0, 0, 0.25);
+  color: var(--text-main);
+  font-size: 13px;
+  font-weight: 700;
+  cursor: pointer;
+  transition: background 0.2s;
+}
+
+.pm-glass-button:hover:not(:disabled) { background: rgba(255, 255, 255, 0.12); }
+.pm-glass-button:disabled { cursor: wait; opacity: 0.7; }
+
+.pm-glass-button:focus-visible {
+  outline: 2px solid #FDBA74;
+  outline-offset: 2px;
+}
+
+/* A pop-up in glass (the profile pop-up): frosted over the dimmed page */
+.modern-modal.pm-glass-modal {
+  background-color: rgba(22, 27, 43, 0.78) !important;
+  -webkit-backdrop-filter: blur(30px) saturate(170%);
+  backdrop-filter: blur(30px) saturate(170%);
+  border: 1px solid var(--glass-line) !important;
+  border-radius: 24px !important;
+  box-shadow: var(--glass-highlight), 0 24px 60px rgba(0, 0, 0, 0.5) !important;
+}
+
+.modern-modal.pm-glass-modal .modal-header { border-bottom-color: rgba(255, 255, 255, 0.08); }
+
+@media (prefers-reduced-transparency: reduce) {
+  .modern-modal.pm-glass-modal { background-color: var(--surface) !important; -webkit-backdrop-filter: none; backdrop-filter: none; }
+}
+
+/* The dark base under the body's gradient: overscroll and anything the gradient does not reach stays dark */
+html { background-color: #0B0F19; }
 
 body {
   margin: 0;
@@ -125,24 +243,6 @@ button.btn-primary:hover,
   box-shadow: var(--shadow-md);
 }
 
-.form-container {
-  max-width: 500px;
-  width: 100%;
-  margin: 0;
-  padding: 32px;
-  background: var(--surface);
-  border-radius: var(--radius);
-  box-shadow: var(--shadow-md);
-  border: 1px solid var(--border);
-}
-
-.form-container h1 {
-  font-size: 24px;
-  font-weight: 700;
-  text-align: center;
-  margin-bottom: 24px;
-}
-
 .form-group {
   margin-bottom: 20px;
   display: flex;
@@ -201,9 +301,91 @@ button.btn-primary:hover,
   display: flex;
   justify-content: center;
   align-items: center;
-  background: radial-gradient(circle at top right, rgba(79, 70, 229, 0.15) 0%, transparent 60%);
-  padding: 20px;
+  padding: 32px 20px;
   animation: fadeUp 0.6s ease-out;
+}
+
+/* Login and Register: one glass panel (components/GlassPanel.js), like the rest of the app */
+.auth-glass { width: 100%; max-width: 460px; }
+.auth-glass-wide { max-width: 620px; }
+.auth-panel { padding: 36px 32px 28px; }
+
+.auth-panel h1 {
+  margin: 0;
+  font-size: 1.6rem;
+  font-weight: 800;
+  text-align: center;
+}
+
+.auth-subtitle {
+  margin: 6px 0 28px;
+  text-align: center;
+  color: var(--glass-muted);
+  font-size: 0.95rem;
+}
+
+.auth-submit.btn-modern-primary {
+  width: 100%;
+  min-height: 46px;
+  margin-top: 8px;
+  border-radius: 999px;
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.28), 0 8px 24px rgba(240, 106, 37, 0.35);
+}
+
+.auth-error { margin: 0 0 12px; text-align: center; }
+
+.auth-check { min-height: 42px; flex: 0 0 auto; }
+
+.auth-divider {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin: 24px 0;
+  color: var(--glass-muted);
+  font-size: 0.85rem;
+}
+.auth-divider::before,
+.auth-divider::after {
+  content: '';
+  flex: 1;
+  height: 1px;
+  background: var(--glass-soft-line);
+}
+.auth-divider-left::before { display: none; }
+.auth-divider-left span { font-weight: 600; }
+
+.auth-google { display: flex; justify-content: center; }
+
+.auth-note {
+  margin: 24px 0 0;
+  text-align: center;
+  font-size: 0.8rem;
+  line-height: 1.5;
+  color: var(--glass-muted);
+}
+
+.auth-switch {
+  margin: 20px 0 0;
+  padding-top: 18px;
+  border-top: 1px solid var(--glass-soft-line);
+  text-align: center;
+  font-size: 0.9rem;
+  color: var(--glass-muted);
+}
+.auth-switch a { color: var(--chip-text); font-weight: 700; text-decoration: none; }
+.auth-switch a:hover { text-decoration: underline; }
+
+.auth-panel .privacy-promise {
+  background: rgba(79, 70, 229, 0.12);
+  box-shadow: var(--glass-highlight);
+}
+
+@media (max-width: 600px) {
+  .auth-page-wrapper { align-items: flex-start; padding: 20px 16px 32px; }
+  .auth-panel { padding: 28px 20px 22px; }
+  .auth-panel .form-row { grid-template-columns: 1fr; gap: 0; margin-bottom: 0; }
+  .auth-panel .form-row .form-group { margin-bottom: 20px !important; }
+  .auth-panel .form-row .form-group:empty { display: none; }
 }
 
 .modern-modal {
@@ -325,7 +507,7 @@ button.btn-primary:hover,
   }
 
   /* The floating button replaces the toolbar's "New event" on phones */
-  .toolbar-new-event { display: none; }
+  .cal-new-event { display: none; }
 }
 
 /* Answering an invitation (EventModal) */

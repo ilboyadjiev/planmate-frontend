@@ -3,6 +3,7 @@ import api from '../api/client';
 import { AuthContext } from '../context/AuthContext';
 import FeedEventCard from './feed/FeedEventCard';
 import useEventCardActions from './feed/useEventCardActions';
+import GlassPanel from './GlassPanel';
 import './feed/DiscoveryFeed.css';
 
 const PAGE_SIZE = 5;
@@ -120,7 +121,7 @@ const DiscoveryFeed = ({ onAttendanceChange, onRespond, onEventChanged, onError 
     else if (active.tag) emptyText = `No upcoming events for ${active.tag} yet.`;
 
     return (
-        <section className="feed-panel" aria-labelledby="discover-heading">
+        <GlassPanel tall shellClassName="feed-glass" className="feed-panel" aria-labelledby="discover-heading">
             <h3 id="discover-heading">Discover</h3>
 
             <div className="feed-chips" role="group" aria-label="Filter events">
@@ -168,12 +169,12 @@ const DiscoveryFeed = ({ onAttendanceChange, onRespond, onEventChanged, onError 
             </div>
 
             {hasMore && events.length > 0 && (
-                <button type="button" className="feed-more" disabled={loading} onClick={() => loadPage(page + 1)}>
+                <button type="button" className="feed-more pm-glass-button" disabled={loading} onClick={() => loadPage(page + 1)}>
                     {loading ? 'Loading…' : 'Show more'}
                 </button>
             )}
             {detailsModal}
-        </section>
+        </GlassPanel>
     );
 };
 

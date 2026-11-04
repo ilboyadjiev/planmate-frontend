@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { useParams } from 'react-router-dom';
 import ProfileContent from '../components/profile/ProfileContent';
 import PlanWithFriend from '../components/profile/PlanWithFriend';
+import GlassPanel from '../components/GlassPanel';
 import './FriendGroups.css';
 
 /** A profile as its own page (/people/:id), e.g. "View my profile". Elsewhere profiles open as a pop-up. */
@@ -11,8 +12,10 @@ const PersonProfile = () => {
     const [notice, setNotice] = useState('');
     return (
         <div className="groups-page profile-page">
-            {notice && <p className="group-plan-notice" role="status">{notice}</p>}
-            <ProfileContent personId={id} onPlan={(person) => { setNotice(''); setPlanningWith(person); }} />
+            <GlassPanel tall className="social-panel">
+                {notice && <p className="group-plan-notice" role="status">{notice}</p>}
+                <ProfileContent personId={id} onPlan={(person) => { setNotice(''); setPlanningWith(person); }} />
+            </GlassPanel>
             {planningWith && (
                 <PlanWithFriend person={planningWith} show onClose={() => setPlanningWith(null)}
                     onPlanned={(event) => {

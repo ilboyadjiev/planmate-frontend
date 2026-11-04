@@ -3,6 +3,7 @@ import { Link } from 'react-router-dom';
 import { useGoogleLogin } from '@react-oauth/google';
 import api from '../api/client';
 import { AuthContext } from '../context/AuthContext';
+import GlassPanel from '../components/GlassPanel';
 import './FriendGroups.css';
 
 /**
@@ -49,6 +50,7 @@ const Settings = () => {
 
     return (
         <div className="groups-page settings-page">
+            <GlassPanel tall className="social-panel">
             <div className="settings-topline">
                 <Link to={user ? `/people/${user.id}` : '/dashboard'} className="settings-back">← Your profile</Link>
             </div>
@@ -107,6 +109,7 @@ const Settings = () => {
                 )}
                 {deleteError && <p className="availability-message msg-error" role="alert">{deleteError}</p>}
             </section>
+            </GlassPanel>
         </div>
     );
 };

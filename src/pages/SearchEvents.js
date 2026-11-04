@@ -6,6 +6,7 @@ import FeedEventCard from '../components/feed/FeedEventCard';
 import useEventCardActions from '../components/feed/useEventCardActions';
 import NoticeToast, { attendanceNotice, responseNotice } from '../components/NoticeToast';
 import useSearchHistory from '../hooks/useSearchHistory';
+import GlassPanel from '../components/GlassPanel';
 import { FOCUS_SEARCH } from '../services/searchFocus';
 import '../components/feed/DiscoveryFeed.css';
 import './SearchEvents.css';
@@ -168,7 +169,7 @@ const SearchEvents = () => {
 
     return (
         <main className="search-page">
-            <section className="feed-panel" aria-labelledby="search-heading">
+            <GlassPanel tall shellClassName="feed-glass" className="feed-panel" aria-labelledby="search-heading">
                 <h1 id="search-heading" className="search-title">Search events</h1>
 
                 <div className={`search-box${query ? ' has-results' : ''}`}
@@ -277,11 +278,11 @@ const SearchEvents = () => {
                 )}
 
                 {hasMore && events.length > 0 && (
-                    <button type="button" className="feed-more" disabled={loading} onClick={() => loadPage(page + 1)}>
+                    <button type="button" className="feed-more pm-glass-button" disabled={loading} onClick={() => loadPage(page + 1)}>
                         {loading ? 'Loading…' : 'Show more'}
                     </button>
                 )}
-            </section>
+            </GlassPanel>
 
             {detailsModal}
             <NoticeToast notice={notice} onClose={() => setNotice(null)} />

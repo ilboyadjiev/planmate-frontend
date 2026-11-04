@@ -2,6 +2,7 @@ import React, { useState, useContext } from 'react';
 import { AuthContext } from '../context/AuthContext';
 import { Link, useNavigate } from 'react-router-dom';
 import api from '../api/client';
+import GlassPanel from '../components/GlassPanel';
 
 const Register = () => {
     const [formData, setFormData] = useState({
@@ -50,25 +51,26 @@ const Register = () => {
 
     return (
         <div className="auth-page-wrapper">
-            <div className="form-container" style={{ maxWidth: '600px' }}>
-                <h1>Create Account</h1>
+            <GlassPanel tall shellClassName="auth-glass auth-glass-wide" className="auth-panel" aria-labelledby="register-title">
+                <h1 id="register-title">Create your account</h1>
+                <p className="auth-subtitle">Plan with friends and find what's on around you.</p>
                 <form onSubmit={handleSubmit}>
                     <div className="form-row">
                         <div className="form-group" style={{ marginBottom: 0 }}>
-                            <label>First Name</label>
-                            <input type="text" name="firstName" value={formData.firstName} onChange={handleChange} />
+                            <label htmlFor="register-firstName">First Name</label>
+                            <input type="text" id="register-firstName" name="firstName" value={formData.firstName} onChange={handleChange} />
                         </div>
                         <div className="form-group" style={{ marginBottom: 0 }}>
-                            <label>Last Name</label>
-                            <input type="text" name="lastName" value={formData.lastName} onChange={handleChange} />
+                            <label htmlFor="register-lastName">Last Name</label>
+                            <input type="text" id="register-lastName" name="lastName" value={formData.lastName} onChange={handleChange} />
                         </div>
                     </div>
 
                     <div className="form-group">
-                        <label>Email Address *</label>
+                        <label htmlFor="register-email">Email Address *</label>
                         <div className="input-with-button">
-                            <input type="email" name="email" value={formData.email} onChange={handleChange} required />
-                            <button type="button" className="btn-modern-secondary" onClick={() => checkAvailability('email', formData.email)}>Check</button>
+                            <input type="email" id="register-email" name="email" value={formData.email} onChange={handleChange} required />
+                            <button type="button" className="pm-glass-button auth-check" onClick={() => checkAvailability('email', formData.email)}>Check</button>
                         </div>
                         {emailStatus === 'success' && <span className="availability-message msg-success">Email is available!</span>}
                         {emailStatus === 'error' && <span className="availability-message msg-error">Email is already taken.</span>}
@@ -76,31 +78,30 @@ const Register = () => {
 
                     <div className="form-row">
                         <div className="form-group" style={{ marginBottom: 0 }}>
-                            <label>Username *</label>
+                            <label htmlFor="register-username">Username *</label>
                             <div className="input-with-button">
-                                <input type="text" name="username" value={formData.username} onChange={handleChange} required />
-                                <button type="button" className="btn-modern-secondary" onClick={() => checkAvailability('username', formData.username)}>Check</button>
+                                <input type="text" id="register-username" name="username" value={formData.username} onChange={handleChange} required />
+                                <button type="button" className="pm-glass-button auth-check" onClick={() => checkAvailability('username', formData.username)}>Check</button>
                             </div>
                             {userStatus === 'success' && <span className="availability-message msg-success">Username is available!</span>}
                             {userStatus === 'error' && <span className="availability-message msg-error">Username is taken.</span>}
                         </div>
                         <div className="form-group" style={{ marginBottom: 0 }}>
-                            <label>Password *</label>
-                            <input type="password" name="password" value={formData.password} onChange={handleChange} required />
+                            <label htmlFor="register-password">Password *</label>
+                            <input type="password" id="register-password" name="password" value={formData.password} onChange={handleChange} required />
                         </div>
                     </div>
 
-                    <hr style={{ margin: '24px 0', borderColor: 'var(--border)' }} />
-                    <p style={{ color: 'var(--text-muted)', fontSize: '0.9rem', marginBottom: '16px' }}>Optional Contact Info</p>
+                    <div className="auth-divider auth-divider-left"><span>Optional contact info</span></div>
 
                     <div className="form-row">
                         <div className="form-group" style={{ marginBottom: 0 }}>
-                            <label>Street</label>
-                            <input type="text" name="street" value={formData.street} onChange={handleChange} />
+                            <label htmlFor="register-street">Street</label>
+                            <input type="text" id="register-street" name="street" value={formData.street} onChange={handleChange} />
                         </div>
                         <div className="form-group" style={{ marginBottom: 0 }}>
-                            <label>Zipcode</label>
-                            <input type="text" name="zipcode" value={formData.zipcode} onChange={handleChange} />
+                            <label htmlFor="register-zipcode">Zipcode</label>
+                            <input type="text" id="register-zipcode" name="zipcode" value={formData.zipcode} onChange={handleChange} />
                         </div>
                     </div>
 
@@ -114,12 +115,12 @@ const Register = () => {
 
                     <div className="form-row">
                         <div className="form-group" style={{ marginBottom: 0 }}>
-                            <label>Country</label>
-                            <input type="text" name="country" value={formData.country} onChange={handleChange} />
+                            <label htmlFor="register-country">Country</label>
+                            <input type="text" id="register-country" name="country" value={formData.country} onChange={handleChange} />
                         </div>
                         <div className="form-group" style={{ marginBottom: 0 }}>
-                            <label>Mobile</label>
-                            <input type="text" name="mobile" value={formData.mobile} onChange={handleChange} />
+                            <label htmlFor="register-mobile">Mobile</label>
+                            <input type="text" id="register-mobile" name="mobile" value={formData.mobile} onChange={handleChange} />
                         </div>
                     </div>
 
@@ -138,13 +139,14 @@ const Register = () => {
                         </div>
                     </aside>
 
-                    {error && <div className="availability-message msg-error" style={{ marginBottom: '16px', textAlign: 'center' }}>{error}</div>}
+                    {error && <div className="availability-message msg-error auth-error" role="alert">{error}</div>}
 
-                    <button type="submit" className="btn-modern-primary" style={{ width: '100%', marginTop: '16px' }}>
+                    <button type="submit" className="btn-modern-primary auth-submit">
                         Create Account
                     </button>
                 </form>
-            </div>
+                <p className="auth-switch">Already have an account? <Link to="/login">Log in</Link></p>
+            </GlassPanel>
         </div>
     );
 };
