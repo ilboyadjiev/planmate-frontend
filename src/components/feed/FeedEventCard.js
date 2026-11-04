@@ -63,7 +63,7 @@ const FeedEventCard = ({ event, loggedIn, pending, onToggleGoing, onRespond, onO
             </div>
         );
     } else if (event.hosting) {
-        action = <span className="feed-hosting-pill">You're hosting</span>;
+        action = <span className="pm-chip feed-hosting">You're hosting</span>;
     } else if (!loggedIn) {
         action = <Link to="/login" className="feed-action feed-action-login">Log in to join</Link>;
     } else if (event.going) {
@@ -112,14 +112,14 @@ const FeedEventCard = ({ event, loggedIn, pending, onToggleGoing, onRespond, onO
                     Hosted by <strong>{host.you ? 'you' : host.name}</strong>
                     {host.username && !host.you && <span className="feed-host-username"> @{host.username}</span>}
                 </span>
-                {host.friend && <span className="feed-friend-badge">Friend</span>}
+                {host.friend && <span className="pm-chip pm-chip-sm">Friend</span>}
             </div>
 
             {event.description && <p className="feed-description">{event.description}</p>}
 
             {(event.tags || []).length > 0 && (
                 <ul className="feed-tags" aria-label="Tags">
-                    {event.tags.map(tag => <li key={tag}>{tag}</li>)}
+                    {event.tags.map(tag => <li key={tag} className="pm-chip pm-chip-sm">{tag}</li>)}
                 </ul>
             )}
 

@@ -82,7 +82,8 @@ test('planning with a friend: pick a shared free time, then create the event wit
 
     // Step 2: the usual form, with Dave invited and the time filled in
     const form = await screen.findByRole('dialog', { name: /create new event/i });
-    expect(within(form).getByText('Dave Fields')).toBeInTheDocument();
+    expect(within(form).getByText('Dave')).toBeInTheDocument(); // his pill: first name and @dave
+    expect(within(form).getByText('@dave')).toBeInTheDocument();
     expect(await within(form).findByText('✓ You and Dave are both free then')).toBeInTheDocument();
     fireEvent.change(within(form).getByPlaceholderText(/weekend hike/i), { target: { value: 'Coffee' } });
     fireEvent.click(within(form).getByRole('button', { name: /create event/i }));

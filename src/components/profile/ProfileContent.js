@@ -87,7 +87,7 @@ const ProfileContent = ({ personId: id, onOpenPerson, onLoaded, onPlan }) => {
                 </div>
                 <div className="profile-action">
                     {profile.self && <Link to="/profile/edit" className="group-button">Edit profile</Link>}
-                    {!profile.self && relation.state === 'friend' && <span className="profile-friend-badge">Friends</span>}
+                    {!profile.self && relation.state === 'friend' && <span className="pm-chip">Friends</span>}
                     {!profile.self && <AddFriendButton person={profile} friendships={friendships} />}
                 </div>
             </header>

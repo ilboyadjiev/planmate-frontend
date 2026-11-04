@@ -118,62 +118,12 @@
 
 .group-rename input { flex: 1; min-width: 160px; }
 
-.group-members,
-.group-add-list {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 8px;
-  margin: 0;
-  padding: 0;
-  list-style: none;
-}
 
-.group-member {
-  display: inline-flex;
-  align-items: center;
-  gap: 8px;
-  padding: 4px 6px 4px 4px;
-  border-radius: 999px;
-  background: rgba(255, 255, 255, 0.05);
-  border: 1px solid var(--border);
-}
 
-.group-avatar {
-  width: 28px;
-  height: 28px;
-  border-radius: 50%;
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  color: #0B0F19;
-  font-size: 11px;
-  font-weight: 700;
-  flex: 0 0 auto;
-}
 
-.group-member-name {
-  font-size: 0.9rem;
-  font-weight: 600;
-}
 
-.group-member-handle {
-  font-weight: 400;
-  color: var(--text-muted);
-}
 
-.group-remove {
-  width: 28px;
-  height: 28px;
-  border-radius: 50%;
-  border: none;
-  background: transparent;
-  color: var(--text-muted);
-  font-size: 1.1rem;
-  line-height: 1;
-  cursor: pointer;
-}
 
-.group-remove:hover:not(:disabled) { background: rgba(239, 68, 68, 0.15); color: #FCA5A5; }
 
 /* Adding friends */
 .group-add {
@@ -189,21 +139,8 @@
   margin-bottom: 8px;
 }
 
-.group-add-list {
-  flex-direction: column;
-  margin-top: 10px;
-  max-height: 260px;
-  overflow-y: auto;
-}
 
-.group-add-list li {
-  display: flex;
-  align-items: center;
-  gap: 10px;
-  padding: 6px 4px;
-}
 
-.group-add-list .group-member-name { flex: 1; min-width: 0; }
 
 /* Footer and buttons */
 .group-card-footer {
@@ -225,34 +162,10 @@
   font-size: 0.9rem;
 }
 
-.group-button {
-  min-height: 38px;
-  padding: 0 14px;
-  border-radius: 8px;
-  border: 1px solid var(--border);
-  background: transparent;
-  color: var(--text-main);
-  font-weight: 600;
-  font-size: 0.9rem;
-  cursor: pointer;
-}
 
-.group-button:hover:not(:disabled) { background: rgba(255, 255, 255, 0.06); }
-.group-button:disabled { opacity: 0.7; cursor: wait; }
 
-.group-button-primary {
-  background: var(--primary);
-  border-color: var(--primary);
-  color: #1A0B02;
-}
 
-.group-button-primary:hover:not(:disabled) { background: #F58A50; }
 
-.group-button-danger {
-  background: rgba(239, 68, 68, 0.15);
-  border-color: rgba(239, 68, 68, 0.5);
-  color: #FCA5A5;
-}
 
 .group-link {
   background: none;
@@ -337,12 +250,7 @@
 }
 
 /* "Plan something" with a group */
-.group-plan-button {
-  border-color: rgba(240, 106, 37, 0.6);
-  color: #FDBA74;
-}
 
-.group-plan-button:hover:not(:disabled) { background: rgba(240, 106, 37, 0.12); }
 
 .group-plan-notice {
   margin: 16px 0 0;
@@ -354,8 +262,6 @@
   font-weight: 600;
 }
 
-.group-member .add-friend-button,
-.group-member .add-friend-status { margin-left: 2px; }
 
 /* Names that open someone's profile */
 .person-link {
@@ -420,14 +326,6 @@
   text-decoration: none;
 }
 
-.profile-friend-badge {
-  font-size: 0.85rem;
-  font-weight: 700;
-  padding: 6px 12px;
-  border-radius: 999px;
-  background: rgba(16, 185, 129, 0.15);
-  color: #6EE7B7;
-}
 
 .profile-section { margin-top: 28px; }
 
@@ -603,3 +501,74 @@
 @media (max-width: 520px) {
   .plan-day { grid-template-columns: 1fr; gap: 6px; }
 }
+
+/* Members: one per line, a name bubble with the friend action and a quiet remove next to it */
+.group-members,
+.group-add-list {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 8px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.group-add-list {
+  margin-top: 12px;
+  max-height: 260px;
+  overflow-y: auto;
+}
+
+.group-member-line {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+
+.group-remove { color: var(--text-muted); }
+.group-remove:hover:not(:disabled) { color: #FCA5A5; }
+
+/* Buttons, in the app's theme:
+   primary = solid orange with a soft glow (like the calendar's "New event"),
+   default = the muted orange of the bubbles, danger = quiet red */
+.group-button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  min-height: 38px;
+  padding: 0 16px;
+  border-radius: 999px;
+  border: 1px solid var(--chip-border);
+  background: var(--chip-bg);
+  color: var(--chip-text);
+  font-size: 0.88rem;
+  font-weight: 700;
+  text-decoration: none;
+  cursor: pointer;
+  transition: background 0.2s, transform 0.1s;
+}
+
+.group-button:hover:not(:disabled) { background: var(--chip-bg-hover); color: var(--chip-text-hover); }
+.group-button:disabled { opacity: 0.6; cursor: wait; }
+
+.group-button-small { min-height: 30px; padding: 0 12px; font-size: 0.8rem; }
+
+.group-button-primary {
+  border: none;
+  background: var(--primary);
+  color: #1A0B02;
+  box-shadow: 0 6px 18px rgba(240, 106, 37, 0.3);
+}
+
+.group-button-primary:hover:not(:disabled) { background: #F58A50; color: #1A0B02; transform: translateY(-1px); }
+
+.group-button-danger {
+  border-color: rgba(239, 68, 68, 0.4);
+  background: rgba(239, 68, 68, 0.12);
+  color: #FCA5A5;
+}
+
+.group-button-danger:hover:not(:disabled) { background: rgba(239, 68, 68, 0.2); color: #FCA5A5; }

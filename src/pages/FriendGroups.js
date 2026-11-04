@@ -3,11 +3,11 @@ import api from '../api/client';
 import { AuthContext } from '../context/AuthContext';
 import SocialTabs from '../components/SocialTabs';
 import AddFriendButton from '../components/AddFriendButton';
+import PersonPill from '../components/PersonPill';
 import EventModal from '../components/EventModal';
 import ProfileModal from '../components/profile/ProfileModal';
 import useFriendships from '../hooks/useFriendships';
 import { blankEvent, createEvent } from '../services/eventService';
-import { avatarColor, initials } from '../components/feed/feedText';
 import './FriendGroups.css';
 
 const MAX_NAME_LENGTH = 60;
@@ -21,11 +21,6 @@ const errorMessage = (err, fallback) => {
     return fallback;
 };
 
-const Avatar = ({ person }) => (
-    <span className="group-avatar" style={{ background: avatarColor(person.id) }} aria-hidden="true">
-        {initials(person.firstName, person.lastName, person.username)}
-    </span>
-);
 
 /** One group: rename, see members, add your friends, remove members, leave. */
 const GroupCard = ({ group, me, friends, friendships, autoOpenAdd, onChanged, onGone, onReload, onPlan, onOpenProfile }) => {
@@ -116,16 +111,12 @@ const GroupCard = ({ group, me, friends, friendships, autoOpenAdd, onChanged, on
 
             <ul className="group-members" aria-label={`Members of ${group.name}`}>
                 {group.members.map(person => (
-                    <li key={person.id} className="group-member">
-                        <Avatar person={person} />
-                        <button type="button" className="group-member-name person-link person-link-button"
-                            onClick={() => onOpenProfile(person.id)} aria-haspopup="dialog">
-                            {person.id === me.id ? 'You' : displayName(person)}
-                            <span className="group-member-handle"> @{person.username}</span>
-                        </button>
+                    <li key={person.id} className="group-member-line">
+                        <PersonPill person={person} label={person.id === me.id ? 'You' : null}
+                            onClick={() => onOpenProfile(person.id)} ariaLabel={`Open ${displayName(person)}'s profile`} />
                         {person.id !== me.id && <AddFriendButton person={person} friendships={friendships} />}
                         {person.id !== me.id && (
-                            <button type="button" className="group-remove" disabled={busy}
+                            <button type="button" className="pm-chip-remove group-remove" disabled={busy}
                                 aria-label={`Remove ${displayName(person)} from ${group.name}`}
                                 onClick={() => removeMember(person)}>
                                 ×
@@ -147,12 +138,9 @@ const GroupCard = ({ group, me, friends, friendships, autoOpenAdd, onChanged, on
                     ) : (
                         <ul className="group-add-list">
                             {addable.map(friend => (
-                                <li key={friend.id}>
-                                    <Avatar person={friend} />
-                                    <span className="group-member-name">
-                                        {displayName(friend)}<span className="group-member-handle"> @{friend.username}</span>
-                                    </span>
-                                    <button type="button" className="group-button group-button-primary" disabled={busy}
+                                <li key={friend.id} className="group-member-line">
+                                    <PersonPill person={friend} />
+                                    <button type="button" className="group-button group-button-small" disabled={busy}
                                         onClick={() => addFriend(friend)} aria-label={`Add ${displayName(friend)} to ${group.name}`}>
                                         Add
                                     </button>
@@ -167,12 +155,12 @@ const GroupCard = ({ group, me, friends, friendships, autoOpenAdd, onChanged, on
             {error && <p className="field-error" role="alert">{error}</p>}
 
             <footer className="group-card-footer">
-                <button type="button" className="group-button group-plan-button" onClick={() => onPlan(group)}
+                <button type="button" className="group-button group-button-primary" onClick={() => onPlan(group)}
                     aria-label={`Plan something with ${group.name}`}>
                     Plan something
                 </button>
                 {!adding && (
-                    <button type="button" className="group-button group-button-primary" onClick={() => setAdding(true)}>
+                    <button type="button" className="group-button" onClick={() => setAdding(true)}>
                         + Add friends
                     </button>
                 )}

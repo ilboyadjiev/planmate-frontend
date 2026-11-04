@@ -150,14 +150,6 @@
 
 .feed-host-username { color: var(--text-muted); }
 
-.feed-friend-badge {
-  font-size: 11px;
-  font-weight: 600;
-  padding: 2px 8px;
-  border-radius: 999px;
-  background: rgba(129, 140, 248, 0.15);
-  color: #A5B4FC;
-}
 
 .feed-description {
   margin: 0;
@@ -179,14 +171,6 @@
   list-style: none;
 }
 
-.feed-tags li {
-  font-size: 12px;
-  font-weight: 500;
-  padding: 3px 10px;
-  border-radius: 999px;
-  background: rgba(255, 255, 255, 0.06);
-  color: var(--text-muted);
-}
 
 /* Who's going sits on its own row above the full-width action, so neither feels cramped */
 .feed-card-footer {
@@ -289,15 +273,6 @@
 
 .feed-action-login:hover { color: #FED7AA; background: rgba(240, 106, 37, 0.08); }
 
-.feed-hosting-pill {
-  align-self: flex-start;
-  font-size: 12px;
-  font-weight: 700;
-  padding: 6px 10px;
-  border-radius: 999px;
-  background: rgba(129, 140, 248, 0.15);
-  color: #A5B4FC;
-}
 
 .feed-more {
   align-self: center;
@@ -426,7 +401,7 @@
 /* Controls inside the card stay clickable above the stretched title button */
 .feed-card-footer .feed-action,
 .feed-card-footer .feed-rsvp,
-.feed-card-footer .feed-hosting-pill,
+.feed-card-footer .feed-hosting,
 .feed-host a {
   position: relative;
   z-index: 1;
@@ -459,3 +434,5 @@
     scroll-snap-align: start;
   }
 }
+
+.feed-hosting { align-self: flex-start; }

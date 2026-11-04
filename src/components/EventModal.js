@@ -5,8 +5,9 @@ import { AuthContext } from '../context/AuthContext';
 import DateTimePicker from './DateTimePicker/index';
 import VisibilityToggle from './VisibilityToggle';
 import LocationSearch from './LocationSearch';
-import { RESPONSES, RESPONSE_LABELS } from './calendarStatus';
+import { RESPONSES } from './calendarStatus';
 import AddFriendButton from './AddFriendButton';
+import PersonPill from './PersonPill';
 import useFriendships from '../hooks/useFriendships';
 
 const labelStyle = { fontWeight: '600', color: 'var(--text-main)' };
@@ -95,10 +96,6 @@ const Collapsible = ({ id, title, count, defaultOpen = false, children }) => {
     );
 };
 
-/** A participant's answer next to their name, e.g. "Bob · Going". */
-const ResponseNote = ({ response }) => (
-    <span className={`participant-response response-${response}`}>· {RESPONSE_LABELS[response]}</span>
-);
 
 /**
  * Create/edit form for the event creator, or a read-only details view (readOnly) for invited participants.
@@ -204,6 +201,9 @@ const EventModal = ({ show, onHide, initialData, onSave, isNewEvent, readOnly = 
         />
     ) : null;
 
+    // Everything we know about someone (their name and username), for their pill
+    const personData = (p) => (isMe(p) ? { ...user, ...p, id: p.id } : { ...peopleById.get(String(p.id)), ...p });
+
     // Answers are only known for saved events; people added in this edit have not been asked yet
     const responseOf = (p) => (formData?.responses ? formData.responses[String(p.id)] || 'pending' : null);
 
@@ -305,15 +305,14 @@ const EventModal = ({ show, onHide, initialData, onSave, isNewEvent, readOnly = 
                         aria-label={`Remove group ${group.name || ''}`.trim()} onClick={() => removeGroup(group)}>×</button>
                 )}
             </div>
-            <div className="invited-group-members">
+            <ul className="person-lines">
                 {membersOf(group).map(m => (
-                    <span key={m.id} className="pm-chip">
-                        {participantName(m)}
-                        {!isNewEvent && responseOf(m) && <ResponseNote response={responseOf(m)} />}
-                        <AddFriendButton person={m} friendships={friendships} />
-                    </span>
+                    <li key={m.id} className="person-line">
+                        <PersonPill person={personData(m)} answer={!isNewEvent ? responseOf(m) : null} />
+                        <AddFriendButton person={personData(m)} friendships={friendships} />
+                    </li>
                 ))}
-            </div>
+            </ul>
         </div>
     );
 
@@ -354,13 +353,10 @@ const EventModal = ({ show, onHide, initialData, onSave, isNewEvent, readOnly = 
         // One person per line: their bubble (name and answer), with "Add friend" next to it when they aren't yet
         const personLine = (person) => (
             <li key={person.id} className="person-line">
-                <span className="pm-chip">
-                    {participantName(person)}
-                    {String(person.id) === organizerId
-                        ? <span className="participant-response response-organizer">· organizer</span>
-                        : responseOf(person) && <ResponseNote response={responseOf(person)} />}
-                </span>
-                <AddFriendButton person={{ ...peopleById.get(String(person.id)), ...person }} friendships={friendships} />
+                <PersonPill person={personData(person)}
+                    note={String(person.id) === organizerId ? 'organizer' : null}
+                    answer={String(person.id) === organizerId ? null : responseOf(person)} />
+                <AddFriendButton person={personData(person)} friendships={friendships} />
             </li>
         );
         return (
@@ -513,11 +509,10 @@ const EventModal = ({ show, onHide, initialData, onSave, isNewEvent, readOnly = 
                                 </p>
                             )}
                             {selectedGroups.map(g => groupMembersList(g, true))}
-                            <div style={{ display: 'flex', flexWrap: 'wrap', gap: '8px', marginBottom: '8px' }}>
+                            <div className="person-lines" style={{ marginBottom: '10px' }}>
                                 {individualParticipants.map(p => (
-                                    <div key={p.id} className="pm-chip">
-                                        {participantName(p)}
-                                        {!isNewEvent && responseOf(p) && <ResponseNote response={responseOf(p)} />}
+                                    <div key={p.id} className="person-line">
+                                        <PersonPill person={personData(p)} answer={!isNewEvent ? responseOf(p) : null} />
                                         <button type="button" className="pm-chip-remove" aria-label={`Remove ${participantName(p)}`} onClick={() => toggleParticipant(p)}>×</button>
                                     </div>
                                 ))}

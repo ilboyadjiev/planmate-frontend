@@ -226,7 +226,9 @@ describe("who's invited, as an invitee sees it (Alice's birthday)", () => {
         renderAs(viewer, <EventModal show initialData={birthday(viewer, groupIds)} onSave={jest.fn()} onHide={jest.fn()} readOnly />);
     };
 
-    const lineTexts = (container) => within(container).getAllByRole('listitem').map(li => li.textContent.replace(/\+ Add friend/, '').trim());
+    // Each line's pill: "First name · answer" and "@username"
+    const lineTexts = (container) => within(container).getAllByRole('listitem').map(li =>
+        `${within(li).getByText(/./, { selector: '.person-pill-name' }).textContent} ${within(li).getByText(/^@/).textContent}`);
 
     test('Charlie (in the group) sees Alice and Bob inside a "Trip to Italy" bubble under Friends', async () => {
         viewAs(charlie, [alice2, bob2, david], [tripToItaly], [7]);
@@ -234,9 +236,9 @@ describe("who's invited, as an invitee sees it (Alice's birthday)", () => {
         const friendsToggle = await screen.findByRole('button', { name: /^Friends/ });
         expect(friendsToggle).toHaveAttribute('aria-expanded', 'true'); // open by default
         const group = await screen.findByRole('group', { name: 'Group: Trip to Italy' });
-        expect(lineTexts(group)).toEqual(['Alice· organizer', 'Bob· Going']);
+        expect(lineTexts(group)).toEqual(['Alice · organizer @alice', 'Bob · Going @bob']);
         // David is outside the group, Elena and Fred are not Charlie's friends
-        expect(screen.getByText(/^David/, { selector: '.person-line .pm-chip' })).toBeVisible();
+        expect(screen.getByText(/^David/, { selector: '.person-line .person-pill-name' })).toBeVisible();
         expect(screen.getByRole('button', { name: /other people invited/i })).toHaveAttribute('aria-expanded', 'false');
         expect(screen.getByRole('button', { name: /other people invited/i })).toHaveTextContent('2');
         expect(screen.queryByText(/invited groups/i)).not.toBeInTheDocument();
@@ -249,7 +251,7 @@ describe("who's invited, as an invitee sees it (Alice's birthday)", () => {
         expect(screen.queryByRole('group', { name: /Group:/ })).not.toBeInTheDocument();
         expect(screen.queryByText('Trip to Italy')).not.toBeInTheDocument();
         const friends = screen.getAllByRole('list')[0];
-        expect(lineTexts(friends)).toEqual(['Bob· Going', 'Elena· Going', 'Charlie· Not answered yet', 'Fred· Not answered yet']);
+        expect(lineTexts(friends)).toEqual(['Bob · Going @bob', 'Elena · Going @elena', 'Charlie · Not answered yet @charlie', 'Fred · Not answered yet @fred']);
         expect(screen.queryByRole('button', { name: /other people invited/i })).not.toBeInTheDocument();
     });
 
