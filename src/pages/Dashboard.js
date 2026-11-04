@@ -3,7 +3,7 @@ import { Navigate, useSearchParams } from 'react-router-dom';
 import PlanMateCalendar from '../components/PlanMateCalendar';
 import DiscoveryFeed from '../components/DiscoveryFeed';
 import EventModal from '../components/EventModal';
-import { Toast, ToastContainer } from 'react-bootstrap';
+import NoticeToast, { attendanceNotice, responseNotice } from '../components/NoticeToast';
 import { createEvent, blankEvent } from '../services/eventService';
 import { AuthContext } from '../context/AuthContext';
 import { getGuestId } from '../services/guestService';
@@ -46,21 +46,13 @@ const Dashboard = ({ view = 'discover' }) => {
 
     // Joined events show in the calendar read-only, so refresh it after joining or leaving
     const handleAttendanceChange = (event) => {
-        setNotice({
-            type: 'success',
-            text: event.going ? `You're going to "${event.title}". It's in your calendar now.` : `You left "${event.title}".`,
-        });
+        setNotice(attendanceNotice(event));
         setRefreshKey(prev => prev + 1);
     };
 
     // An invitation answered in the feed: the calendar recolours the event
     const handleFeedResponse = (event, response) => {
-        const text = {
-            accepted: `You're going to "${event.title}".`,
-            maybe: `You answered maybe to "${event.title}".`,
-            declined: `You can't make "${event.title}". The organizer will see your answer.`,
-        }[response];
-        setNotice({ type: 'success', text });
+        setNotice(responseNotice(event, response));
         setRefreshKey(prev => prev + 1);
     };
 
@@ -106,19 +98,7 @@ const Dashboard = ({ view = 'discover' }) => {
                 </button>
             )}
 
-            <ToastContainer position="bottom-end" className="p-3 dashboard-toasts" style={{ position: 'fixed', zIndex: 2000 }}>
-                <Toast
-                    show={!!notice}
-                    onClose={() => setNotice(null)}
-                    delay={4000}
-                    autohide
-                    bg={notice?.type === 'error' ? 'danger' : 'success'}
-                >
-                    <Toast.Body style={{ color: 'white' }} role={notice?.type === 'error' ? 'alert' : 'status'}>
-                        {notice?.text}
-                    </Toast.Body>
-                </Toast>
-            </ToastContainer>
+            <NoticeToast notice={notice} onClose={() => setNotice(null)} />
 
             <EventModal
                 show={showModal}

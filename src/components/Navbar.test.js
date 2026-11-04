@@ -1,4 +1,4 @@
-import { render, screen, within, act, waitFor } from '@testing-library/react';
+import { render, screen, within, act, waitFor, fireEvent } from '@testing-library/react';
 import { MemoryRouter, Route, Routes, useLocation } from 'react-router-dom';
 import Navbar from './Navbar';
 import { AuthContext } from '../context/AuthContext';
@@ -49,6 +49,30 @@ test('the Calendar tab is its own page and is marked active there', async () => 
     expect(calendarTab).toHaveAttribute('href', '/calendar');
     expect(calendarTab).toHaveAttribute('aria-current', 'page');
     expect(within(tabBar()).getByRole('link', { name: 'Discover' })).not.toHaveAttribute('aria-current');
+});
+
+test('Search sits between Calendar and Friends on phones, and after Discover in the top bar', async () => {
+    renderNavbar(alice, '/search');
+    await waitFor(() => expect(api.get).toHaveBeenCalled());
+
+    const tabs = within(tabBar()).getAllByRole('link').map(link => link.textContent.trim());
+    expect(tabs.slice(0, 4)).toEqual(['Discover', 'Calendar', 'Search', 'Friends']);
+    expect(within(tabBar()).getByRole('link', { name: 'Search' })).toHaveAttribute('aria-current', 'page');
+
+    const topBar = screen.getAllByRole('navigation', { name: 'Main' })[0];
+    expect(within(topBar).getAllByRole('link').map(link => link.textContent.trim()).slice(0, 3))
+        .toEqual(['Discover', 'Search', 'Friends']);
+});
+
+test('tapping Search again on the search page focuses the field instead of reloading the page', async () => {
+    const focus = jest.fn();
+    window.addEventListener('planmate:focus-search', focus);
+    renderNavbar(alice, '/search');
+    await waitFor(() => expect(api.get).toHaveBeenCalled());
+
+    fireEvent.click(within(tabBar()).getByRole('link', { name: 'Search' }));
+    expect(focus).toHaveBeenCalledTimes(1);
+    window.removeEventListener('planmate:focus-search', focus);
 });
 
 test('logged-in users get Friends with a request badge, and the badge refreshes when friends change', async () => {

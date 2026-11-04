@@ -5,6 +5,7 @@ import { Dropdown } from 'react-bootstrap';
 import { AuthContext } from '../context/AuthContext';
 import api from '../api/client';
 import { FRIENDS_CHANGED, countIncomingRequests } from '../services/friendEvents';
+import { requestSearchFocus } from '../services/searchFocus';
 import planmateIcon from '../assets/planmate-icon.png';
 import './Navbar.css';
 
@@ -18,6 +19,7 @@ const Icon = ({ children, size = 22 }) => (
 
 const CompassIcon = () => <Icon><circle cx="12" cy="12" r="9" /><path d="M15.5 8.5l-2 5-5 2 2-5z" /></Icon>;
 const CalendarIcon = () => <Icon><rect x="3.5" y="5" width="17" height="15.5" rx="2.5" /><path d="M3.5 10h17M8 3v4M16 3v4" /></Icon>;
+const SearchIcon = () => <Icon><circle cx="11" cy="11" r="7" /><path d="M20 20l-3.5-3.5" /></Icon>;
 const FriendsIcon = () => <Icon><circle cx="9" cy="8.5" r="3.5" /><path d="M2.5 20c.6-3.6 3.2-5.5 6.5-5.5s5.9 1.9 6.5 5.5" /><path d="M16 5.2a3.3 3.3 0 0 1 0 6.6M18 14.8c2 .6 3.2 2.3 3.5 5.2" /></Icon>;
 const GroupsIcon = () => <Icon><circle cx="7" cy="9" r="2.5" /><circle cx="17" cy="9" r="2.5" /><circle cx="12" cy="6" r="2.5" /><path d="M3 19c.4-2.6 2-4 4-4M21 19c-.4-2.6-2-4-4-4M7.5 20c.6-3 2.4-4.5 4.5-4.5s3.9 1.5 4.5 4.5" /></Icon>;
 const UserIcon = () => <Icon><circle cx="12" cy="8" r="4" /><path d="M4 20.5c.8-4 3.9-6 8-6s7.2 2 8 6" /></Icon>;
@@ -42,9 +44,9 @@ const Badge = ({ count, label }) => (count > 0 ? (
 
 /**
  * App navigation.
- * - Large screens: sticky top bar with Discover / Friends and an avatar menu. The calendar is always on the
+ * - Large screens: sticky top bar with Discover / Search / Friends / Groups and an avatar menu. The calendar is always on the
  *   dashboard there, so it needs no entry.
- * - Small screens: slim top bar plus a bottom tab bar (Discover, Calendar, Friends, You). Calendar is its own
+ * - Small screens: slim top bar plus a bottom tab bar (Discover, Calendar, Search, Friends, You). Calendar is its own
  *   page (/calendar), opening in the day view.
  */
 const Navbar = () => {
@@ -76,6 +78,14 @@ const Navbar = () => {
         };
     }, [loggedIn, userId, location.pathname]);
 
+    // Search tapped again while on the search page: keep the results and put the cursor in the field instead
+    const onSearchClick = (e) => {
+        if (location.pathname === '/search') {
+            e.preventDefault();
+            requestSearchFocus();
+        }
+    };
+
     const requestLabel = `new friend request${incomingRequests === 1 ? '' : 's'}`;
 
     return (
@@ -89,6 +99,9 @@ const Navbar = () => {
                 <nav className="pm-topnav" aria-label="Main">
                     <NavLink to="/dashboard" className="pm-topnav-link">
                         <CompassIcon /> Discover
+                    </NavLink>
+                    <NavLink to="/search" className="pm-topnav-link" onClick={onSearchClick}>
+                        <SearchIcon /> Search
                     </NavLink>
                     {loggedIn && (
                         <NavLink to="/profile/friends" className="pm-topnav-link">
@@ -155,6 +168,9 @@ const Navbar = () => {
                 </NavLink>
                 <NavLink to="/calendar" className="pm-tab">
                     <CalendarIcon /><span>Calendar</span>
+                </NavLink>
+                <NavLink to="/search" className="pm-tab" onClick={onSearchClick}>
+                    <SearchIcon /><span>Search</span>
                 </NavLink>
                 {loggedIn ? (
                     <>

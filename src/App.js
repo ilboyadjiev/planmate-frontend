@@ -7,6 +7,7 @@ import EditProfile from './pages/EditProfile';
 import FriendsList from './pages/FriendsList';
 import FriendGroups from './pages/FriendGroups';
 import PersonProfile from './pages/PersonProfile';
+import SearchEvents from './pages/SearchEvents';
 import 'bootstrap/dist/css/bootstrap.min.css';
 import { AuthProvider } from './context/AuthContext';
 import Navbar from './components/Navbar';
@@ -34,6 +35,7 @@ function App() {
             
             <Route path="/dashboard" element={<Dashboard view="discover" />} />
             <Route path="/calendar" element={<Dashboard view="calendar" />} />
+            <Route path="/search" element={<SearchEvents />} />
             <Route 
               path="/profile/edit" 
               element={

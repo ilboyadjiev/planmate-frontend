@@ -144,7 +144,9 @@ const Privacy = () => (
         <h2>5. Data stored in your browser</h2>
         <p>
             PlanMate uses your browser's local storage (not tracking cookies) for things that are strictly necessary
-            for the service: your sign-in tokens, your guest ID, your cookie-notice choice and today's AI Game plan.
+            for the service: your sign-in tokens, your guest ID, your cookie-notice choice, today's AI Game plan and your recent event
+            searches. The list of recent searches is kept only on your device, and you can remove it on the search
+            page.
             Logging out removes your sign-in tokens. You can delete everything at any time by clearing your browser's
             site data for PlanMate.
         </p>

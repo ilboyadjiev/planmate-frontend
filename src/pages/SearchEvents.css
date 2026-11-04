@@ -1,0 +1,274 @@
+/* Event search: see the "Event Search" design canvas. Cards, chips, statuses and "Show more" are the Discover
+   feed's own classes (DiscoveryFeed.css); only the search field and the text around the results live here. */
+
+.search-page {
+  max-width: 720px;
+  margin: 0 auto;
+  padding: 20px;
+}
+
+.search-title {
+  margin: 0;
+  font-size: 1.2rem;
+  font-weight: 700;
+  color: var(--text-main);
+}
+
+.search-form {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.search-field {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  min-height: 48px;
+  padding: 0 8px 0 14px;
+  border-radius: 999px;
+  background: var(--bg-color);
+  border: 1px solid var(--border);
+  color: var(--text-muted);
+  transition: border-color 0.2s, box-shadow 0.2s;
+}
+
+.search-field:focus-within {
+  border-color: rgba(240, 106, 37, 0.55);
+  box-shadow: 0 0 0 3px rgba(240, 106, 37, 0.15);
+}
+
+.search-field input {
+  flex: 1;
+  min-width: 0;
+  border: none;
+  outline: none;
+  background: transparent;
+  color: var(--text-main);
+  font-size: 1rem; /* 16px: phones do not zoom into the field */
+}
+
+.search-field input::placeholder { color: var(--text-muted); }
+
+/* Our own clear button replaces the browser's */
+.search-field input::-webkit-search-cancel-button { -webkit-appearance: none; appearance: none; }
+
+.search-enter-hint {
+  flex: 0 0 auto;
+  font-size: 11px;
+  font-weight: 600;
+  padding: 3px 8px;
+  border-radius: 6px;
+  border: 1px solid rgba(255, 255, 255, 0.15);
+  color: var(--text-muted);
+}
+
+.search-clear {
+  flex: 0 0 auto;
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  border: none;
+  background: rgba(255, 255, 255, 0.06);
+  color: var(--text-muted);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+}
+
+.search-clear:hover { color: var(--text-main); background: rgba(255, 255, 255, 0.1); }
+
+.search-clear:focus-visible {
+  outline: 2px solid #FDBA74;
+  outline-offset: 2px;
+}
+
+.search-hint {
+  margin: 0;
+  font-size: 0.9rem;
+  line-height: 1.5;
+  color: var(--text-muted);
+}
+
+.search-intro {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.search-count {
+  margin: 0;
+  font-size: 13px;
+  color: var(--text-muted);
+}
+
+.search-count strong { color: var(--text-main); font-weight: 600; }
+
+.search-results { gap: 18px; }
+
+.search-result {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+/* Why an event matched: deliberately quiet */
+.search-matched {
+  margin: 0;
+  padding: 0 6px;
+  font-size: 12px;
+  color: #858C99; /* quiet, but still readable (5:1 on the panel) */
+}
+
+.search-empty {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  gap: 10px;
+  padding: 24px 12px 8px;
+}
+
+.search-empty h2 {
+  margin: 0;
+  font-size: 1.05rem;
+  font-weight: 600;
+  color: var(--text-main);
+}
+
+.search-empty p {
+  margin: 0;
+  max-width: 340px;
+  font-size: 0.9rem;
+  line-height: 1.5;
+  color: var(--text-muted);
+}
+
+.search-empty .search-back {
+  width: auto;
+  margin-top: 6px;
+  padding: 0 22px;
+}
+
+@media (max-width: 900px) {
+  .search-page { padding: 16px; }
+}
+
+/* --- Recent searches: shown while the field has focus, in place of the tips --- */
+
+.search-box {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.search-history {
+  background: var(--bg-color);
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  padding: 8px 0;
+}
+
+/* With results below, the list floats over them instead of pushing them down */
+.search-box.has-results .search-history {
+  position: absolute;
+  top: calc(100% + 6px);
+  left: 0;
+  right: 0;
+  z-index: 20;
+  box-shadow: var(--shadow-md);
+}
+
+.search-history-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 2px 8px 6px 16px;
+}
+
+.search-history-header h2 {
+  margin: 0;
+  font-size: 12px;
+  font-weight: 600;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: var(--text-muted);
+}
+
+.search-history-clear {
+  min-height: 32px;
+  padding: 0 10px;
+  border: none;
+  border-radius: 999px;
+  background: transparent;
+  color: var(--chip-text);
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.search-history-clear:hover { color: var(--chip-text-hover); background: var(--chip-bg); }
+
+.search-history ul {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+
+.search-history-item {
+  display: flex;
+  align-items: center;
+  padding-right: 8px;
+}
+
+.search-history-item:hover { background: rgba(255, 255, 255, 0.04); }
+
+.search-history-query {
+  flex: 1;
+  min-width: 0;
+  min-height: 44px;
+  padding: 0 8px 0 16px;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  border: none;
+  background: transparent;
+  color: var(--text-main);
+  font-size: 0.95rem;
+  text-align: left;
+  cursor: pointer;
+}
+
+.search-history-query svg { flex: 0 0 auto; color: var(--text-muted); }
+
+.search-history-query span {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.search-history-remove {
+  flex: 0 0 auto;
+  width: 36px;
+  height: 36px;
+  border: none;
+  border-radius: 50%;
+  background: transparent;
+  color: var(--text-muted);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+}
+
+.search-history-remove:hover { color: var(--text-main); background: rgba(255, 255, 255, 0.08); }
+
+.search-history-clear:focus-visible,
+.search-history-query:focus-visible,
+.search-history-remove:focus-visible {
+  outline: 2px solid #FDBA74;
+  outline-offset: -2px;
+}

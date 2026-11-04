@@ -2,9 +2,7 @@ import React, { useState, useEffect, useContext, useRef, useCallback } from 'rea
 import api from '../api/client';
 import { AuthContext } from '../context/AuthContext';
 import FeedEventCard from './feed/FeedEventCard';
-import EventModal from './EventModal';
-import { fetchEvent, updateEvent, respondToInvite } from '../services/eventService';
-import { getGuestId } from '../services/guestService';
+import useEventCardActions from './feed/useEventCardActions';
 import './feed/DiscoveryFeed.css';
 
 const PAGE_SIZE = 5;
@@ -24,17 +22,7 @@ const GroupIcon = () => (
     </svg>
 );
 
-/** The card after the viewer answered an invitation, without waiting for a reload. */
-export const withResponse = (event, response) => {
-    const wasGoing = event.myResponse === 'accepted';
-    const nowGoing = response === 'accepted';
-    return {
-        ...event,
-        myResponse: response,
-        going: nowGoing,
-        attendeeCount: Math.max(0, (event.attendeeCount || 0) + (nowGoing ? 1 : 0) - (wasGoing ? 1 : 0)),
-    };
-};
+export { withResponse } from './feed/useEventCardActions';
 
 /**
  * Discover feed with three kinds of chips:
@@ -60,10 +48,6 @@ const DiscoveryFeed = ({ onAttendanceChange, onRespond, onEventChanged, onError 
     const [hasMore, setHasMore] = useState(false);
     const [loading, setLoading] = useState(false);
     const [loadError, setLoadError] = useState(false);
-    const [pendingId, setPendingId] = useState(null);
-    const [details, setDetails] = useState(null); // the opened event, in the calendar's shape
-    const [showDetails, setShowDetails] = useState(false);
-    const [openingId, setOpeningId] = useState(null);
     const [nearbyCity, setNearbyCity] = useState(undefined); // "Around me": the profile city, or null when none is set
     const latestRequest = useRef(0);
 
@@ -119,64 +103,9 @@ const DiscoveryFeed = ({ onAttendanceChange, onRespond, onEventChanged, onError 
         loadPage(0);
     }, [loadPage, userKey]);
 
-    const handleToggleGoing = async (event) => {
-        setPendingId(event.id);
-        try {
-            const url = `/v2/events/${event.id}/attendance`;
-            const res = event.going ? await api.delete(url) : await api.post(url);
-            setEvents(prev => prev.map(e => (e.id === event.id ? res.data : e)));
-            if (onAttendanceChange) onAttendanceChange(res.data);
-        } catch (err) {
-            if (onError) onError(event.going ? 'Could not leave the event. Please try again.' : 'Could not join the event. Please try again.');
-        } finally {
-            setPendingId(null);
-        }
-    };
-
-    const handleRespond = async (event, response) => {
-        if (event.myResponse === response) return;
-        setPendingId(event.id);
-        try {
-            await api.put(`/v2/events/${event.id}/response`, { response });
-            const updated = withResponse(event, response);
-            setEvents(prev => prev.map(e => (e.id === event.id ? updated : e)));
-            if (onRespond) onRespond(updated, response);
-        } catch (err) {
-            if (onError) onError('Your answer could not be saved. Please try again.');
-        } finally {
-            setPendingId(null);
-        }
-    };
-
-    const openDetails = async (card) => {
-        setOpeningId(card.id);
-        try {
-            setDetails(await fetchEvent(card.id, user));
-            setShowDetails(true);
-        } catch (err) {
-            if (onError) onError('This event could not be opened. It may have been deleted.');
-        } finally {
-            setOpeningId(null);
-        }
-    };
-
-    // The creator edited the event: errors propagate to EventModal, which keeps the form open
-    const handleSaveDetails = async (formData) => {
-        await updateEvent(formData, user ? null : getGuestId());
-        setShowDetails(false);
-        loadPage(0);
-        if (onEventChanged) onEventChanged();
-    };
-
-    // Answering inside the details window keeps the feed card in step
-    const handleRespondInDetails = async (response) => {
-        const card = events.find(e => e.id === details.id);
-        const saved = await respondToInvite(details.id, response);
-        setDetails(prev => ({ ...prev, responses: saved.responses || {}, myResponse: response }));
-        const updatedCard = card ? withResponse(card, response) : null;
-        if (updatedCard) setEvents(prev => prev.map(e => (e.id === updatedCard.id ? updatedCard : e)));
-        if (onRespond) onRespond(updatedCard || { id: details.id, title: details.title }, response);
-    };
+    const { pendingId, openingId, toggleGoing, respond, openDetails, detailsModal } = useEventCardActions({
+        user, events, setEvents, reload: () => loadPage(0), onAttendanceChange, onRespond, onEventChanged, onError,
+    });
 
     const chips = [
         FOR_YOU,
@@ -222,7 +151,7 @@ const DiscoveryFeed = ({ onAttendanceChange, onRespond, onEventChanged, onError 
             <div className="feed-list" aria-busy={loading}>
                 {events.map(event => (
                     <FeedEventCard key={event.id} event={event} loggedIn={!!user}
-                        pending={pendingId === event.id} onToggleGoing={handleToggleGoing} onRespond={handleRespond}
+                        pending={pendingId === event.id} onToggleGoing={toggleGoing} onRespond={respond}
                         onOpen={openDetails} opening={openingId === event.id} />
                 ))}
 
@@ -243,17 +172,7 @@ const DiscoveryFeed = ({ onAttendanceChange, onRespond, onEventChanged, onError 
                     {loading ? 'Loading…' : 'Show more'}
                 </button>
             )}
-            {details && (
-                <EventModal
-                    show={showDetails}
-                    onHide={() => setShowDetails(false)}
-                    initialData={details}
-                    onSave={handleSaveDetails}
-                    isNewEvent={false}
-                    readOnly={!details.isOwn}
-                    onRespond={details.viewerRole === 'invited' ? handleRespondInDetails : undefined}
-                />
-            )}
+            {detailsModal}
         </section>
     );
 };
