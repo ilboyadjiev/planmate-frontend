@@ -7,6 +7,7 @@ import GlassPanel from '../components/GlassPanel';
 import CalendarLoader from '../components/CalendarLoader';
 import Avatar from '../components/Avatar';
 import SourceLink from '../components/SourceLink';
+import { RelatedEventsList, hasRelated, useRelatedEvents } from '../components/RelatedEvents';
 import ShareButton from '../components/share/ShareButton';
 import AddToCalendar from '../components/calendarExport/AddToCalendar';
 import { CardAction, ClockIcon, PinIcon } from '../components/feed/FeedEventCard';
@@ -18,6 +19,11 @@ import '../components/feed/DiscoveryFeed.css';
 import './EventPage.css';
 
 const MAX_AVATARS = 5;
+
+/** Another event chosen from "More dates" or "Similar events": start at the top of its page. */
+const toTop = () => {
+    try { window.scrollTo({ top: 0 }); } catch { /* not available (tests) */ }
+};
 
 const LockIcon = () => (
     <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
@@ -62,6 +68,7 @@ const mapsLink = (location) => {
  */
 const EventPage = () => {
     const { id } = useParams();
+    const related = useRelatedEvents(id);
     const location = useLocation();
     const { user } = useContext(AuthContext);
     const { timeFormat } = usePreferences();
@@ -252,6 +259,11 @@ const EventPage = () => {
 
                 {notice && <p className="availability-message msg-error event-notice" role="alert">{notice}</p>}
             </GlassPanel>
+            {hasRelated(related) && (
+                <GlassPanel className="event-panel" shellClassName="event-related-shell" aria-label="More from this event">
+                    <RelatedEventsList related={related} onNavigate={toTop} headingLevel={2} />
+                </GlassPanel>
+            )}
             {detailsModal}
         </div>
     );

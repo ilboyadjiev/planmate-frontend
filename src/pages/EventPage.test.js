@@ -55,6 +55,20 @@ test('a discovered event links to its source page so people can keep reading', a
     expect(screen.getByRole('link', { name: 'ticketmaster.de' })).toHaveAttribute('href', 'https://www.ticketmaster.de/event/123');
 });
 
+test('below the event: its other dates and similar events', async () => {
+    api.get.mockImplementation(url => Promise.resolve({ data: url.endsWith('/related')
+        ? { moreDates: [card({ id: 'abc-2', startTime: '2030-11-13T19:00:00', endTime: '2030-11-13T22:00:00' })],
+            similar: [card({ id: 'blues', title: 'Blues evening' })] }
+        : card() }));
+    renderPage();
+
+    expect(await screen.findByRole('heading', { level: 2, name: 'More dates' })).toBeInTheDocument();
+    expect(api.get).toHaveBeenCalledWith('/v2/events/abc/related');
+    expect(screen.getByRole('link', { name: /Wednesday, 13 November 2030/ })).toHaveAttribute('href', '/events/abc-2');
+    expect(screen.getByRole('heading', { level: 2, name: 'Similar events' })).toBeInTheDocument();
+    expect(screen.getByRole('link', { name: /Blues evening/ })).toHaveAttribute('href', '/events/blues');
+});
+
 test('logged in, people join right from the page', async () => {
     api.get.mockResolvedValue({ data: card() });
     api.post.mockResolvedValue({ data: card({ going: true, attendeeCount: 4 }) });

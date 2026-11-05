@@ -405,7 +405,8 @@
 .feed-card-footer .feed-action,
 .feed-card-footer .feed-rsvp,
 .feed-card-footer .feed-hosting,
-.feed-host a {
+.feed-host a,
+.feed-card .source-link a {
   position: relative;
   z-index: 1;
 }
@@ -447,3 +448,9 @@
 
 /* A cancelled event: a quiet red badge where the action would be */
 .feed-card.is-cancelled .feed-card-title { text-decoration: line-through; text-decoration-thickness: 1px; }
+
+/* "+3 more dates": other dates of the same show, listed on its page */
+.feed-more-dates {
+  color: var(--chip-text);
+  font-weight: 600;
+}

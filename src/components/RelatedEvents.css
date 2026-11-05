@@ -1,0 +1,108 @@
+/* "More dates" and "Similar events" below an event (components/RelatedEvents.js) */
+
+.related-events {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+
+.related-heading {
+  margin: 0 0 10px;
+  font-size: 0.85rem;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: var(--text-muted);
+}
+
+.related-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.related-item {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 10px 12px;
+  border-radius: 12px;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  background: rgba(255, 255, 255, 0.04);
+  color: var(--text-main);
+  text-decoration: none;
+  transition: background-color 0.15s ease, border-color 0.15s ease;
+}
+
+.related-item:hover,
+.related-item:focus-visible {
+  background: rgba(255, 255, 255, 0.08);
+  border-color: rgba(240, 106, 37, 0.45);
+  color: var(--text-main);
+}
+
+.related-item:focus-visible {
+  outline: 2px solid #FDBA74;
+  outline-offset: 2px;
+}
+
+.related-date-block {
+  flex: 0 0 auto;
+  width: 44px;
+  padding: 4px 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  border-radius: 10px;
+  background: rgba(240, 106, 37, 0.14);
+  line-height: 1.1;
+}
+
+.related-date-month {
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  color: var(--chip-text);
+}
+
+.related-date-day {
+  font-size: 17px;
+  font-weight: 700;
+}
+
+.related-text {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+  flex: 1 1 auto;
+}
+
+.related-title {
+  font-weight: 600;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.related-meta {
+  font-size: 13px;
+  color: var(--text-muted);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.related-going { flex: 0 0 auto; }
+
+/* In the event details window */
+.event-modal-related {
+  margin-top: 8px;
+  padding-top: 16px;
+  border-top: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+/* On the event page: its own panel below the event */
+.event-related-shell { margin-top: 20px; }

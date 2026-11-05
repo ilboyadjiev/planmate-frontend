@@ -114,6 +114,9 @@ const FeedEventCard = ({ event, loggedIn, pending, onToggleGoing, onRespond, onO
                     </h4>
                     <div className="feed-meta"><ClockIcon /><span>{formatWhen(event.startTime, event.endTime, timeFormat)}</span></div>
                     {place && <div className="feed-meta"><PinIcon /><span className="feed-meta-text">{place}</span></div>}
+                    {event.moreDates > 0 && (
+                        <div className="feed-meta feed-more-dates">+{event.moreDates} more {event.moreDates === 1 ? 'date' : 'dates'}</div>
+                    )}
                 </div>
             </div>
 

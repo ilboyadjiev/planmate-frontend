@@ -13,6 +13,7 @@ import { useNavigate } from 'react-router-dom';
 import { tagFeedPath } from './feed/feedText';
 import ShareButton from './share/ShareButton';
 import SourceLink from './SourceLink';
+import RelatedEvents from './RelatedEvents';
 import AddToCalendar from './calendarExport/AddToCalendar';
 import { eventUrl } from '../services/shareLinks';
 import useFriendships from '../hooks/useFriendships';
@@ -440,6 +441,11 @@ const EventModal = ({ show, onHide, initialData, onSave, isNewEvent, readOnly = 
                                 ))}
                             </div>
                         </Section>
+                    )}
+                    {show && formData.id && (
+                        <div className="event-modal-related">
+                            <RelatedEvents eventId={formData.id} onNavigate={onHide} />
+                        </div>
                     )}
                 </Modal.Body>
                 <Modal.Footer>

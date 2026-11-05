@@ -113,3 +113,18 @@ describe('source link', () => {
         expect(screen.queryByText(/Read more here/)).not.toBeInTheDocument();
     });
 });
+
+describe('more dates', () => {
+    test('a show with more dates says how many', () => {
+        renderCard({ event: { ...boardGames, moreDates: 4 } });
+        expect(screen.getByText('+4 more dates')).toBeInTheDocument();
+    });
+
+    test('one more date, and none', () => {
+        const { unmount } = renderCard({ event: { ...boardGames, moreDates: 1 } });
+        expect(screen.getByText('+1 more date')).toBeInTheDocument();
+        unmount();
+        renderCard();
+        expect(screen.queryByText(/more date/)).not.toBeInTheDocument();
+    });
+});
