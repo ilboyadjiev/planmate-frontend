@@ -94,6 +94,15 @@ const useEventCardActions = ({ user, events, setEvents, reload, onAttendanceChan
         if (onRespond) onRespond(updatedCard || { id: details.id, title: details.title }, response);
     };
 
+    // Exported from the details window: joined, so the card (and the calendar) say going
+    const joinInDetails = async () => {
+        const res = await api.post(`/v2/events/${details.id}/attendance`);
+        replaceCard(res.data);
+        setDetails(prev => ({ ...prev, viewerRole: 'going' }));
+        if (onAttendanceChange) onAttendanceChange(res.data);
+        return res.data;
+    };
+
     const detailsModal = details ? (
         <EventModal
             show={showDetails}
@@ -103,6 +112,7 @@ const useEventCardActions = ({ user, events, setEvents, reload, onAttendanceChan
             isNewEvent={false}
             readOnly={!details.isOwn}
             onRespond={details.viewerRole === 'invited' ? respondInDetails : undefined}
+            onJoin={joinInDetails}
         />
     ) : null;
 

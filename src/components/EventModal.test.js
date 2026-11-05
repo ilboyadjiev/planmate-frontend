@@ -293,3 +293,49 @@ test('a tag in the details closes them and shows more events with that tag on Di
     expect(onHide).toHaveBeenCalled();
     expect(screen.getByTestId('location')).toHaveTextContent('/dashboard?tag=%23sport');
 });
+
+describe('Export to calendar', () => {
+    const concert = {
+        id: 'tm-1', title: 'Jazz night', creatorId: 'events@planmate.org', hostName: 'PlanMate Picks',
+        start: new Date('2030-11-15T19:00:00Z'), end: new Date('2030-11-15T22:00:00Z'),
+        participants: [], tags: [], isPublic: true, viewerRole: null, isOwn: false,
+    };
+    const exportTo = async (name) => {
+        fireEvent.click(screen.getByRole('button', { name: 'Export to calendar' }));
+        fireEvent.click(screen.getByRole('link', { name: new RegExp(name) }));
+    };
+
+    test('exporting a public event also joins it, so it is in the PlanMate calendar as going', async () => {
+        const onJoin = jest.fn().mockResolvedValue({});
+        renderAs(bob, <EventModal show initialData={concert} onSave={jest.fn()} onHide={jest.fn()} readOnly onJoin={onJoin} />);
+
+        await exportTo('Google Calendar');
+        expect(onJoin).toHaveBeenCalledTimes(1);
+        expect(await screen.findByText(/You're going/)).toBeInTheDocument();
+    });
+
+    test('exporting an invitation accepts it', async () => {
+        const onRespond = jest.fn().mockResolvedValue();
+        const invite = { ...invitedEvent, start: concert.start, end: concert.end, viewerRole: 'invited', myResponse: 'pending' };
+        renderAs(bob, <EventModal show initialData={invite} onSave={jest.fn()} onHide={jest.fn()} readOnly onRespond={onRespond} />);
+
+        await exportTo('Outlook');
+        expect(onRespond).toHaveBeenCalledWith('accepted');
+    });
+
+    test('people already going, guests and past events are left as they are', async () => {
+        const onJoin = jest.fn().mockResolvedValue({});
+        const { unmount } = renderAs(bob, <EventModal show initialData={{ ...concert, viewerRole: 'going' }} onSave={jest.fn()} onHide={jest.fn()} readOnly onJoin={onJoin} />);
+        await exportTo('Google Calendar');
+        unmount();
+
+        const past = { ...concert, start: new Date('2020-01-01T19:00:00Z'), end: new Date('2020-01-01T22:00:00Z') };
+        const view = renderAs(bob, <EventModal show initialData={past} onSave={jest.fn()} onHide={jest.fn()} readOnly onJoin={onJoin} />);
+        await exportTo('Google Calendar');
+        view.unmount();
+
+        renderAs(null, <EventModal show initialData={concert} onSave={jest.fn()} onHide={jest.fn()} readOnly onJoin={onJoin} />);
+        await exportTo('Google Calendar');
+        expect(onJoin).not.toHaveBeenCalled();
+    });
+});

@@ -38,3 +38,13 @@ test('private events are downloaded with the login', async () => {
     expect(api.get).toHaveBeenCalledWith('/v2/events/abc/calendar.ics', { responseType: 'blob' });
     click.mockRestore();
 });
+
+test('takes its own label and says when the event was exported', () => {
+    const onExport = jest.fn();
+    render(<AddToCalendar event={jazz} label="Export to calendar" onExport={onExport} />);
+    fireEvent.click(screen.getByRole('button', { name: 'Export to calendar' }));
+    expect(onExport).not.toHaveBeenCalled();
+    fireEvent.click(screen.getByRole('link', { name: /Google Calendar/ }));
+    expect(onExport).toHaveBeenCalledTimes(1);
+    expect(screen.queryByRole('group', { name: 'Export to calendar' })).toBeNull();
+});

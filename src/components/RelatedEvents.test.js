@@ -53,3 +53,29 @@ test('shows nothing when there is nothing related or it could not be loaded', as
     await waitFor(() => expect(api.get).toHaveBeenCalledTimes(2));
     expect(screen.queryByRole('heading')).not.toBeInTheDocument();
 });
+
+test('shows three dates at first and the rest after "Show more"', async () => {
+    const days = [12, 13, 14, 15, 16];
+    api.get.mockResolvedValue({ data: {
+        moreDates: days.map(d => date(`tm-${d}`, `2030-11-${d}T19:00:00`)),
+        similar: [],
+    } });
+    renderList();
+
+    const region = await screen.findByRole('region', { name: 'More dates' });
+    expect(within(region).getAllByRole('link')).toHaveLength(3);
+    fireEvent.click(screen.getByRole('button', { name: 'Show more' }));
+    expect(within(region).getAllByRole('link')).toHaveLength(5);
+    expect(screen.queryByRole('button', { name: 'Show more' })).not.toBeInTheDocument();
+});
+
+test('three dates or fewer need no "Show more"', async () => {
+    api.get.mockResolvedValue({ data: {
+        moreDates: [12, 13, 14].map(d => date(`tm-${d}`, `2030-11-${d}T19:00:00`)),
+        similar: [],
+    } });
+    renderList();
+
+    expect(await screen.findByRole('heading', { name: 'More dates' })).toBeInTheDocument();
+    expect(screen.queryByRole('button', { name: 'Show more' })).not.toBeInTheDocument();
+});

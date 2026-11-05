@@ -27,8 +27,10 @@ const saveFile = (blob, fileName) => {
  * their calendar app; private ones are fetched with the login first.
  *
  * event: { id, title, description, start, end, location, isPublic }.
+ * label: the button's text. onExport(): called once the event was sent to a calendar app (e.g. to mark the
+ * viewer as going).
  */
-const AddToCalendar = ({ event, className = '' }) => {
+const AddToCalendar = ({ event, className = '', label = 'Add to calendar', onExport }) => {
     const [open, setOpen] = useState(false);
     const [error, setError] = useState(null);
     const root = useRef(null);
@@ -47,12 +49,18 @@ const AddToCalendar = ({ event, className = '' }) => {
         };
     }, [open]);
 
+    const exported = () => {
+        setOpen(false);
+        if (onExport) onExport();
+    };
+
     const downloadPrivate = async () => {
         setError(null);
         try {
             const { data } = await api.get(icsPath(event.id), { responseType: 'blob' });
             saveFile(data instanceof Blob ? data : new Blob([data], { type: 'text/calendar' }), 'planmate-event.ics');
             setOpen(false);
+            if (onExport) onExport();
         } catch (err) {
             setError('The calendar file could not be downloaded. Please try again.');
         }
@@ -62,18 +70,18 @@ const AddToCalendar = ({ event, className = '' }) => {
         <span className={`add-to-calendar ${className}`.trim()} ref={root}>
             <button type="button" className="pm-glass-button add-to-calendar-button" aria-expanded={open}
                 aria-controls={menuId} onClick={() => setOpen(o => !o)}>
-                <CalendarPlusIcon /> Add to calendar
+                <CalendarPlusIcon /> {label}
             </button>
             {open && (
-                <div id={menuId} className="add-to-calendar-menu" role="group" aria-label="Add to calendar">
-                    <a href={googleCalendarUrl(event)} target="_blank" rel="noopener noreferrer" onClick={() => setOpen(false)}>
+                <div id={menuId} className="add-to-calendar-menu" role="group" aria-label={label}>
+                    <a href={googleCalendarUrl(event)} target="_blank" rel="noopener noreferrer" onClick={exported}>
                         Google Calendar<span className="visually-hidden"> (opens a new tab)</span>
                     </a>
-                    <a href={outlookCalendarUrl(event)} target="_blank" rel="noopener noreferrer" onClick={() => setOpen(false)}>
+                    <a href={outlookCalendarUrl(event)} target="_blank" rel="noopener noreferrer" onClick={exported}>
                         Outlook<span className="visually-hidden"> (opens a new tab)</span>
                     </a>
                     {event.isPublic !== false ? (
-                        <a href={icsUrl(event.id)} onClick={() => setOpen(false)}>
+                        <a href={icsUrl(event.id)} onClick={exported}>
                             Apple, Samsung &amp; other apps <span className="add-to-calendar-hint">.ics file</span>
                         </a>
                     ) : (

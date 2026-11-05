@@ -113,7 +113,7 @@ const Collapsible = ({ id, title, count, defaultOpen = false, children }) => {
  * availabilityCheck(start, end) -> { youFree, theyFree }, when planning with a friend (availabilityName):
  * the form then says whether you are both free at the chosen time.
  */
-const EventModal = ({ show, onHide, initialData, onSave, isNewEvent, readOnly = false, onRespond,
+const EventModal = ({ show, onHide, initialData, onSave, isNewEvent, readOnly = false, onRespond, onJoin,
     availabilityCheck, availabilityName }) => {
     const { user } = useContext(AuthContext);
     const { timeFormat } = usePreferences();
@@ -227,6 +227,23 @@ const EventModal = ({ show, onHide, initialData, onSave, isNewEvent, readOnly = 
             setRespondError('Your answer could not be saved. Please try again.');
         } finally {
             setResponding(false);
+        }
+    };
+
+    // Exporting an event means planning to be there: it goes into the PlanMate calendar too, as going.
+    // Invitations are accepted; public events are joined (onJoin). Own, cancelled and past events stay as they are.
+    const markGoingOnExport = async () => {
+        const over = formData.end && new Date(formData.end) < new Date();
+        if (!user || formData.isOwn || formData.cancelled || over) return;
+        try {
+            if (formData.viewerRole === 'invited') {
+                if (onRespond && formData.myResponse !== 'accepted') await handleRespond('accepted');
+            } else if (onJoin && formData.viewerRole !== 'going' && formData.isPublic) {
+                await onJoin();
+                setFormData(prev => ({ ...prev, viewerRole: 'going' }));
+            }
+        } catch (err) {
+            // The export worked; joining failed and can be done from the event's card
         }
     };
 
@@ -451,7 +468,10 @@ const EventModal = ({ show, onHide, initialData, onSave, isNewEvent, readOnly = 
                 <Modal.Footer>
                     {formData.id && (
                         <div className="me-auto event-modal-export">
-                            {(user || formData.isPublic) && <AddToCalendar className="opens-up" event={formData} />}
+                            {(user || formData.isPublic) && (
+                                <AddToCalendar className="opens-up" event={formData} label="Export to calendar"
+                                    onExport={markGoingOnExport} />
+                            )}
                             <ShareButton url={eventUrl(formData.id)} title={formData.title} />
                         </div>
                     )}
@@ -597,7 +617,7 @@ const EventModal = ({ show, onHide, initialData, onSave, isNewEvent, readOnly = 
             <Modal.Footer>
                 {!isNewEvent && formData.id && (
                     <div className="me-auto event-modal-export">
-                        {(user || formData.isPublic) && <AddToCalendar className="opens-up" event={formData} />}
+                        {(user || formData.isPublic) && <AddToCalendar className="opens-up" event={formData} label="Export to calendar" />}
                         <ShareButton url={eventUrl(formData.id)} title={formData.title} />
                     </div>
                 )}

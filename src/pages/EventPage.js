@@ -156,6 +156,17 @@ const EventPage = () => {
     const address = addressOf(event.location);
     const titleId = 'event-title';
 
+    // Exporting an event means planning to be there: it goes into the PlanMate calendar too, as going.
+    // Invitations are accepted; public events are joined. Own, cancelled and past events stay as they are.
+    const markGoingOnExport = () => {
+        if (!user || event.hosting || event.cancelled || ended || pendingId === event.id) return;
+        if (event.invited) {
+            if (event.myResponse !== 'accepted') respond(event, 'accepted');
+        } else if (!event.going && event.isPublic !== false) {
+            toggleGoing(event);
+        }
+    };
+
     return (
         <div className="event-page">
             <GlassPanel tall className="event-panel" aria-labelledby={titleId}>
@@ -163,7 +174,7 @@ const EventPage = () => {
                     {discover}
                     <div className="event-topline-actions">
                         {!ended && !event.cancelled && (user || event.isPublic !== false) && (
-                            <AddToCalendar className="opens-left" event={{
+                            <AddToCalendar className="opens-left" label="Export to calendar" onExport={markGoingOnExport} event={{
                                 id: event.id, title: event.title, description: event.description, start: event.startTime,
                                 end: event.endTime, location: event.location, isPublic: event.isPublic,
                             }} />

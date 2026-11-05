@@ -41,7 +41,7 @@ test('a shared public event shows everything, also without an account', async ()
     expect(screen.queryByText(/Read more here/)).not.toBeInTheDocument();
     expect(screen.getByRole('link', { name: 'Show more #jazz events' })).toHaveAttribute('href', '/dashboard?tag=%23jazz');
     expect(screen.getByRole('button', { name: 'Share' })).toBeInTheDocument();
-    expect(screen.getByRole('button', { name: 'Add to calendar' })).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: 'Export to calendar' })).toBeInTheDocument();
     // Joining needs an account, and logging in comes back here
     expect(screen.getByRole('link', { name: 'Log in to join' })).toHaveAttribute('href', '/login?next=%2Fevents%2Fabc');
     await waitFor(() => expect(document.title).toBe('Jazz night · PlanMate'));
@@ -130,4 +130,43 @@ test('a cancelled event says so and offers no joining or adding to calendars', a
     expect(screen.queryByRole('button', { name: "I'm going" })).toBeNull();
     expect(screen.queryByRole('button', { name: 'Add to calendar' })).toBeNull();
     expect(screen.getByRole('button', { name: 'Share' })).toBeInTheDocument();
+});
+
+describe('Export to calendar', () => {
+    const exportToGoogle = async () => {
+        fireEvent.click(await screen.findByRole('button', { name: 'Export to calendar' }));
+        fireEvent.click(screen.getByRole('link', { name: /Google Calendar/ }));
+    };
+
+    test('exporting a public event also joins it', async () => {
+        api.get.mockResolvedValue({ data: card() });
+        api.post.mockResolvedValue({ data: card({ going: true, attendeeCount: 4 }) });
+        renderPage({ id: 1, email: 'alice@example.com' });
+
+        await exportToGoogle();
+        await waitFor(() => expect(api.post).toHaveBeenCalledWith('/v2/events/abc/attendance'));
+    });
+
+    test('exporting an invitation accepts it', async () => {
+        api.get.mockResolvedValue({ data: card({ isPublic: false, invited: true, myResponse: 'pending' }) });
+        api.put.mockResolvedValue({ data: {} });
+        renderPage({ id: 1, email: 'alice@example.com' });
+
+        await exportToGoogle();
+        await waitFor(() => expect(api.put).toHaveBeenCalledWith('/v2/events/abc/response', { response: 'accepted' }));
+        expect(api.post).not.toHaveBeenCalled();
+    });
+
+    test('people already going and guests are left as they are', async () => {
+        api.get.mockResolvedValue({ data: card({ going: true }) });
+        const { unmount } = renderPage({ id: 1, email: 'alice@example.com' });
+        await exportToGoogle();
+        unmount();
+
+        api.get.mockResolvedValue({ data: card() });
+        renderPage();
+        await exportToGoogle();
+        expect(api.post).not.toHaveBeenCalled();
+        expect(api.delete).not.toHaveBeenCalled();
+    });
 });

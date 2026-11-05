@@ -7,6 +7,9 @@ import { usePreferences } from '../services/preferences';
 import './RelatedEvents.css';
 
 const EMPTY = { moreDates: [], similar: [] };
+/** Dates shown at first, and how many more each "Show more" adds. */
+export const DATES_SHOWN = 3;
+const DATES_STEP = 10;
 
 /**
  * What to show below an event (GET /v2/events/{id}/related): the show's other upcoming dates and similar events.
@@ -50,14 +53,17 @@ export const RelatedEventsList = ({ related, onNavigate, headingLevel = 3 }) => 
     const { timeFormat } = usePreferences();
     const Heading = `h${headingLevel}`;
     const uid = useId();
+    const [datesShown, setDatesShown] = useState(DATES_SHOWN);
+    useEffect(() => setDatesShown(DATES_SHOWN), [related]); // another event: start short again
     if (!hasRelated(related)) return null;
+    const hiddenDates = related.moreDates.length - datesShown;
     return (
         <div className="related-events">
             {related.moreDates.length > 0 && (
                 <section aria-labelledby={`${uid}-dates`}>
                     <Heading id={`${uid}-dates`} className="related-heading">More dates</Heading>
                     <ul className="related-list">
-                        {related.moreDates.map(e => {
+                        {related.moreDates.slice(0, datesShown).map(e => {
                             const start = moment(e.startTime);
                             return (
                                 <li key={e.id}>
@@ -73,6 +79,12 @@ export const RelatedEventsList = ({ related, onNavigate, headingLevel = 3 }) => 
                             );
                         })}
                     </ul>
+                    {hiddenDates > 0 && (
+                        <button type="button" className="pm-glass-button related-show-more"
+                            onClick={() => setDatesShown(n => n + DATES_STEP)}>
+                            Show more
+                        </button>
+                    )}
                 </section>
             )}
             {related.similar.length > 0 && (
