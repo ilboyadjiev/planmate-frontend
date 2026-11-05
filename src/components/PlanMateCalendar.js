@@ -8,6 +8,7 @@ import EventModal from './EventModal';
 import GamePlan from './GamePlan';
 import GlassCalendar from './calendar/GlassCalendar';
 import useIsMobile from '../hooks/useIsMobile';
+import { usePreferences } from '../services/preferences';
 import { toCalendarEvent, updateEvent, respondToInvite } from '../services/eventService';
 import { STATUS_STYLES, STATUS_LEGEND } from './calendarStatus';
 
@@ -23,7 +24,8 @@ const PlanMateCalendar = ({ userEmail, refreshKey, onSlotSelect, onCreateEvent, 
     const [selectedEvent, setSelectedEvent] = useState(null);
     const [showModal, setShowModal] = useState(false);
     const [currentDate, setCurrentDate] = useState(new Date());
-    const [internalRefresh, setInternalRefresh] = useState(0); 
+    const [internalRefresh, setInternalRefresh] = useState(0);
+    const { aiGamePlan } = usePreferences(); 
     
     const { user } = useContext(AuthContext);
     const isMobile = useIsMobile();
@@ -72,9 +74,9 @@ const PlanMateCalendar = ({ userEmail, refreshKey, onSlotSelect, onCreateEvent, 
 
     return (
         <div className="calendar-container">
-            {/* AI Game plan: generated only on request */}
+            {/* AI Game plan: generated only on request, and not at all when turned off in Settings */}
             {user ? (
-                <GamePlan user={user} calendarVersion={`${refreshKey}-${internalRefresh}`} />
+                aiGamePlan && <GamePlan user={user} calendarVersion={`${refreshKey}-${internalRefresh}`} />
             ) : (
                 <div style={{ background: 'rgba(255, 255, 255, 0.03)', borderRadius: '12px', padding: '16px 20px', marginBottom: '24px', display: 'flex', gap: '12px', border: '1px dashed rgba(255, 255, 255, 0.15)' }}>
                     <span style={{ fontSize: '1.5rem', opacity: 0.5, filter: 'grayscale(100%)' }}>✨</span>

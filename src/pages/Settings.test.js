@@ -14,7 +14,7 @@ jest.mock('@react-oauth/google', () => ({ useGoogleLogin: () => mockConnect }));
 
 const DEFAULTS = {
     weekStart: 'monday', timeFormat: '24h', calendarView: 'auto', goingVisibility: 'friends', showInSuggestions: true,
-    groupAdds: 'friends', searchable: true, likedTags: [], hiddenTags: [], homeCity: 'Munich', passwordLogin: true,
+    groupAdds: 'friends', searchable: true, aiGamePlan: true, likedTags: [], hiddenTags: [], homeCity: 'Munich', passwordLogin: true,
 };
 const alice = { id: 1, username: 'alice', contactData: { city: 'Munich', mobile: '123' } };
 
@@ -242,4 +242,19 @@ test('a failed delete says so and keeps you logged in', async () => {
 
     expect(await screen.findByRole('alert')).toHaveTextContent('Failed to delete account');
     expect(logout).not.toHaveBeenCalled();
+});
+
+test('turning the AI Game plan off hides it and forgets today\'s plan in this browser', async () => {
+    serverSaves();
+    localStorage.setItem('planmate_game_plan_1', JSON.stringify({ day: 'today', text: 'Your plan' }));
+    renderSettings();
+    await loaded();
+
+    const toggle = screen.getByRole('switch', { name: 'Show the AI Game plan' });
+    expect(toggle).toBeChecked();
+    fireEvent.click(toggle);
+
+    await waitFor(() => expect(api.patch).toHaveBeenCalledWith('/v1/settings', { aiGamePlan: false }));
+    await waitFor(() => expect(getPreferences().aiGamePlan).toBe(false));
+    expect(localStorage.getItem('planmate_game_plan_1')).toBeNull();
 });

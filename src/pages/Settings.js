@@ -10,6 +10,7 @@ import SettingSwitch from '../components/settings/SettingSwitch';
 import TopicPicker from '../components/settings/TopicPicker';
 import PasswordForm from '../components/settings/PasswordForm';
 import { setPreferences } from '../services/preferences';
+import { forgetGamePlan } from '../services/gamePlanCache';
 import './FriendGroups.css';
 import './Settings.css';
 
@@ -223,6 +224,21 @@ const Settings = () => {
                         description="Automatic: the day on phones, the month on larger screens."
                         options={VIEW_OPTIONS}
                         onChange={value => save('calendar', { calendarView: value })} />
+                </section>
+
+                <section className="settings-card" aria-labelledby="settings-ai">
+                    <div className="settings-card-head">
+                        <h2 id="settings-ai">AI Game plan</h2>
+                        <SectionStatus status={status.ai} />
+                    </div>
+                    <SettingSwitch id="ai-game-plan" label="Show the AI Game plan"
+                        description="A short plan for your next 48 hours, made by Google Gemini when you ask for one. When off, it is hidden and your events are never sent to Gemini."
+                        checked={settings.aiGamePlan}
+                        onChange={value => {
+                            // Turning it off also forgets today's plan kept in this browser
+                            if (!value) forgetGamePlan(user);
+                            save('ai', { aiGamePlan: value });
+                        }} />
                 </section>
 
                 <section className="settings-card" aria-labelledby="settings-privacy">

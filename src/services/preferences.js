@@ -14,6 +14,7 @@ export const DEFAULT_PREFERENCES = Object.freeze({
     calendarView: 'auto', // 'auto' (day on phones, month on larger screens), 'month', 'week', 'day', 'agenda'
     likedTags: [],
     hiddenTags: [],
+    aiGamePlan: true, // false hides the AI Game plan everywhere
 });
 
 const STORAGE_KEY = 'planmate.preferences';

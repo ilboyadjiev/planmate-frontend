@@ -3,8 +3,8 @@ import ReactMarkdown from 'react-markdown';
 import moment from 'moment';
 import api from '../api/client';
 import { formatTime, usePreferences } from '../services/preferences';
+import { cacheKeyFor } from '../services/gamePlanCache';
 
-const cacheKeyFor = (user) => `planmate_game_plan_${user.id}`;
 const collapsedKeyFor = (user) => `planmate_game_plan_collapsed_${user.id}`;
 
 const readCollapsed = (user) => {
