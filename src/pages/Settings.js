@@ -9,6 +9,7 @@ import ChoiceGroup from '../components/settings/ChoiceGroup';
 import SettingSwitch from '../components/settings/SettingSwitch';
 import TopicPicker from '../components/settings/TopicPicker';
 import PasswordForm from '../components/settings/PasswordForm';
+import CalendarSubscription from '../components/settings/CalendarSubscription';
 import { setPreferences } from '../services/preferences';
 import { forgetGamePlan } from '../services/gamePlanCache';
 import './FriendGroups.css';
@@ -224,6 +225,8 @@ const Settings = () => {
                         description="Automatic: the day on phones, the month on larger screens."
                         options={VIEW_OPTIONS}
                         onChange={value => save('calendar', { calendarView: value })} />
+                    <CalendarSubscription feedKey={settings.calendarFeedKey}
+                        onChange={key => setSettings(s => ({ ...s, calendarFeedKey: key }))} />
                 </section>
 
                 <section className="settings-card" aria-labelledby="settings-ai">

@@ -208,3 +208,13 @@
   .setting-inline, .topic-add { max-width: none; }
   .password-form .form-row { grid-template-columns: 1fr; gap: 16px; }
 }
+
+/* Calendar subscription (components/settings/CalendarSubscription.js) */
+.subscription-link { display: flex; gap: 8px; margin-top: 12px; }
+.subscription-link input { flex: 1; min-width: 0; font-size: 0.8rem !important; }
+.subscription-apps { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 12px; }
+.subscription-apps .pm-glass-button { min-height: 40px; text-decoration: none; }
+.subscription-warning { color: #FCD34D; }
+.subscription-manage { display: flex; gap: 20px; margin-top: 10px; }
+.subscription-manage .group-link { margin-top: 0; }
+.setting-row-stacked .settings-confirm { margin-top: 12px; }

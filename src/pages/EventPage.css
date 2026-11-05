@@ -157,3 +157,11 @@
   .event-actions, .event-actions .feed-action, .event-actions .feed-rsvp { width: 100%; }
   .event-actions .pm-glass-button { width: 100%; }
 }
+
+.event-topline-actions { display: flex; align-items: center; flex-wrap: wrap; justify-content: flex-end; gap: 8px; }
+@media (max-width: 600px) {
+  /* Phones: "← Discover" on its own line, the buttons in a row below it */
+  .event-topline { flex-wrap: wrap; }
+  .event-topline-actions { width: 100%; justify-content: flex-start; }
+  .event-topline-actions .add-to-calendar.opens-left .add-to-calendar-menu { left: 0; right: auto; }
+}

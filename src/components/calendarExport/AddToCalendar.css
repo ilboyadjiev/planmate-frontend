@@ -1,0 +1,56 @@
+/* "Add to calendar" (components/calendarExport/AddToCalendar.js): a glass pill with a small frosted menu */
+.add-to-calendar { position: relative; display: inline-flex; flex-direction: column; align-items: flex-start; gap: 6px; }
+.add-to-calendar-button { min-height: 40px; padding: 0 16px; }
+
+.add-to-calendar-menu {
+  position: absolute;
+  top: calc(100% + 8px);
+  left: 0;
+  z-index: 20;
+  min-width: 300px;
+  max-width: calc(100vw - 48px);
+  display: flex;
+  flex-direction: column;
+  padding: 6px;
+  border-radius: 16px;
+  /* Solid, so the event title under it never shows through; the glass comes from the edge and highlight */
+  background: linear-gradient(180deg, #1C2234, #161B2B);
+  border: 1px solid var(--glass-line);
+  box-shadow: var(--glass-highlight), 0 18px 40px rgba(0, 0, 0, 0.45);
+}
+
+.add-to-calendar-menu a,
+.add-to-calendar-menu button {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  min-height: 44px;
+  padding: 0 14px;
+  border: none;
+  border-radius: 10px;
+  background: transparent;
+  color: var(--text-main);
+  font-size: 0.9rem;
+  font-weight: 600;
+  text-align: left;
+  text-decoration: none;
+  cursor: pointer;
+}
+
+.add-to-calendar-menu a:hover,
+.add-to-calendar-menu button:hover { background: var(--glass-soft-hover); }
+.add-to-calendar-menu a:focus-visible,
+.add-to-calendar-menu button:focus-visible { outline: 2px solid #FDBA74; outline-offset: -2px; }
+
+.add-to-calendar-hint { flex: 0 0 auto; white-space: nowrap; font-size: 0.75rem; font-weight: 500; color: var(--glass-muted); }
+
+/* In a footer row aligned to the right, the menu opens towards the left */
+.add-to-calendar.opens-left .add-to-calendar-menu { left: auto; right: 0; }
+
+
+/* At the bottom of a pop-up, the menu opens upwards so the pop-up's edge does not cut it off */
+.add-to-calendar.opens-up .add-to-calendar-menu { top: auto; bottom: calc(100% + 8px); }
+
+/* The export buttons in the event details pop-up's footer */
+.event-modal-export { display: flex; align-items: flex-start; flex-wrap: wrap; gap: 8px; }

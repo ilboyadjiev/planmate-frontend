@@ -258,3 +258,30 @@ test('turning the AI Game plan off hides it and forgets today\'s plan in this br
     await waitFor(() => expect(getPreferences().aiGamePlan).toBe(false));
     expect(localStorage.getItem('planmate_game_plan_1')).toBeNull();
 });
+
+test('the calendar subscription: create a link, subscribe in apps, reset or turn it off', async () => {
+    api.post.mockResolvedValueOnce({ data: { calendarFeedKey: 'FIRSTKEY1234567890ABCD' } })
+        .mockResolvedValueOnce({ data: { calendarFeedKey: 'SECONDKEY234567890ABCD' } });
+    api.delete.mockResolvedValue({});
+    renderSettings();
+    await loaded();
+
+    fireEvent.click(screen.getByRole('button', { name: 'Create subscription link' }));
+    const link = await screen.findByLabelText('Your calendar subscription link');
+    expect(link.value).toMatch(/\/api\/v2\/calendar\/FIRSTKEY1234567890ABCD\.ics$/);
+    expect(api.post).toHaveBeenCalledWith('/v1/settings/calendar-feed', null, undefined);
+    expect(screen.getByRole('link', { name: 'Apple Calendar' })).toHaveAttribute('href', expect.stringMatching(/^webcal:\/\//));
+    expect(screen.getByRole('link', { name: /Google Calendar/ })).toHaveAttribute('href', expect.stringContaining('calendar.google.com'));
+
+    // Resetting asks first, then the old link is replaced
+    fireEvent.click(screen.getByRole('button', { name: 'Reset link' }));
+    expect(screen.getByText(/The old link stops working/)).toBeInTheDocument();
+    fireEvent.click(screen.getAllByRole('button', { name: 'Reset link' })[0]);
+    await waitFor(() => expect(screen.getByLabelText('Your calendar subscription link').value).toContain('SECONDKEY'));
+    expect(api.post).toHaveBeenLastCalledWith('/v1/settings/calendar-feed', null, { params: { reset: true } });
+
+    fireEvent.click(screen.getByRole('button', { name: 'Turn off' }));
+    fireEvent.click(screen.getAllByRole('button', { name: 'Turn off' })[0]);
+    expect(await screen.findByRole('button', { name: 'Create subscription link' })).toBeInTheDocument();
+    expect(api.delete).toHaveBeenCalledWith('/v1/settings/calendar-feed');
+});

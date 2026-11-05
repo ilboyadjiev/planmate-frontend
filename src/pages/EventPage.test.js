@@ -40,6 +40,7 @@ test('a shared public event shows everything, also without an account', async ()
     expect(screen.getByText(/Live jazz\./)).toBeInTheDocument();
     expect(screen.getByRole('link', { name: 'Show more #jazz events' })).toHaveAttribute('href', '/dashboard?tag=%23jazz');
     expect(screen.getByRole('button', { name: 'Share' })).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: 'Add to calendar' })).toBeInTheDocument();
     // Joining needs an account, and logging in comes back here
     expect(screen.getByRole('link', { name: 'Log in to join' })).toHaveAttribute('href', '/login?next=%2Fevents%2Fabc');
     await waitFor(() => expect(document.title).toBe('Jazz night · PlanMate'));

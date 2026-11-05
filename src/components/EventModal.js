@@ -12,6 +12,7 @@ import { usePreferences } from '../services/preferences';
 import { useNavigate } from 'react-router-dom';
 import { tagFeedPath } from './feed/feedText';
 import ShareButton from './share/ShareButton';
+import AddToCalendar from './calendarExport/AddToCalendar';
 import { eventUrl } from '../services/shareLinks';
 import useFriendships from '../hooks/useFriendships';
 
@@ -435,7 +436,12 @@ const EventModal = ({ show, onHide, initialData, onSave, isNewEvent, readOnly = 
                     )}
                 </Modal.Body>
                 <Modal.Footer>
-                    {formData.id && <ShareButton url={eventUrl(formData.id)} title={formData.title} className="me-auto" />}
+                    {formData.id && (
+                        <div className="me-auto event-modal-export">
+                            {(user || formData.isPublic) && <AddToCalendar className="opens-up" event={formData} />}
+                            <ShareButton url={eventUrl(formData.id)} title={formData.title} />
+                        </div>
+                    )}
                     <Button variant="primary" onClick={onHide} className="btn-modern-primary">Close</Button>
                 </Modal.Footer>
             </Modal>
@@ -576,7 +582,12 @@ const EventModal = ({ show, onHide, initialData, onSave, isNewEvent, readOnly = 
                 {errors.form && <div className="field-error" role="alert" style={{ marginTop: '16px' }}>{errors.form}</div>}
             </Modal.Body>
             <Modal.Footer>
-                {!isNewEvent && formData.id && <ShareButton url={eventUrl(formData.id)} title={formData.title} className="me-auto" />}
+                {!isNewEvent && formData.id && (
+                    <div className="me-auto event-modal-export">
+                        {(user || formData.isPublic) && <AddToCalendar className="opens-up" event={formData} />}
+                        <ShareButton url={eventUrl(formData.id)} title={formData.title} />
+                    </div>
+                )}
                 <Button variant="secondary" onClick={onHide} style={{ background: 'transparent', border: 'none', color: 'var(--text-muted)' }}>Cancel</Button>
                 <Button variant="primary" onClick={handleSaveClick} className="btn-modern-primary" disabled={saving}>
                     {saving ? 'Saving...' : isNewEvent ? 'Create Event' : 'Save Changes'}

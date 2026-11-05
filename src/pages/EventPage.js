@@ -7,6 +7,7 @@ import GlassPanel from '../components/GlassPanel';
 import CalendarLoader from '../components/CalendarLoader';
 import Avatar from '../components/Avatar';
 import ShareButton from '../components/share/ShareButton';
+import AddToCalendar from '../components/calendarExport/AddToCalendar';
 import { CardAction, ClockIcon, PinIcon } from '../components/feed/FeedEventCard';
 import useEventCardActions from '../components/feed/useEventCardActions';
 import { formatPlace, socialProof, tagFeedPath } from '../components/feed/feedText';
@@ -152,7 +153,15 @@ const EventPage = () => {
             <GlassPanel tall className="event-panel" aria-labelledby={titleId}>
                 <div className="event-topline">
                     {discover}
-                    <ShareButton url={eventUrl(event.id)} title={event.title} />
+                    <div className="event-topline-actions">
+                        {!ended && (user || event.isPublic !== false) && (
+                            <AddToCalendar className="opens-left" event={{
+                                id: event.id, title: event.title, description: event.description, start: event.startTime,
+                                end: event.endTime, location: event.location, isPublic: event.isPublic,
+                            }} />
+                        )}
+                        <ShareButton url={eventUrl(event.id)} title={event.title} />
+                    </div>
                 </div>
 
                 <header className="event-hero">
