@@ -1,6 +1,7 @@
 import React, { useState, useContext } from 'react';
 import { AuthContext } from '../context/AuthContext';
-import { Link, useNavigate } from 'react-router-dom';
+import { Link, useLocation, useNavigate } from 'react-router-dom';
+import { nextPathFrom } from '../services/shareLinks';
 import api from '../api/client';
 import GlassPanel from '../components/GlassPanel';
 
@@ -12,6 +13,7 @@ const Register = () => {
 
     const [error, setError] = useState(null);
     const navigate = useNavigate();
+    const location = useLocation();
     const { register } = useContext(AuthContext);
     
     // Status can be null, 'success', or 'error'
@@ -31,7 +33,7 @@ const Register = () => {
                     country: formData.country, mobile: formData.mobile
                 }
             });
-            navigate('/dashboard');
+            navigate(nextPathFrom(location.search));
         } catch (error) {
             setError(error.response?.data?.error || 'Registration failed. Please try again.');
         }
@@ -145,7 +147,7 @@ const Register = () => {
                         Create Account
                     </button>
                 </form>
-                <p className="auth-switch">Already have an account? <Link to="/login">Log in</Link></p>
+                <p className="auth-switch">Already have an account? <Link to={`/login${location.search}`}>Log in</Link></p>
             </GlassPanel>
         </div>
     );

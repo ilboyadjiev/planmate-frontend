@@ -9,6 +9,7 @@ import FriendGroups from './pages/FriendGroups';
 import PersonProfile from './pages/PersonProfile';
 import SearchEvents from './pages/SearchEvents';
 import Settings from './pages/Settings';
+import EventPage from './pages/EventPage';
 import 'bootstrap/dist/css/bootstrap.min.css';
 import { AuthProvider } from './context/AuthContext';
 import Navbar from './components/Navbar';
@@ -39,6 +40,8 @@ function App() {
             <Route path="/dashboard" element={<Dashboard view="discover" />} />
             <Route path="/calendar" element={<Dashboard view="calendar" />} />
             <Route path="/search" element={<SearchEvents />} />
+            {/* Shared event links: open to everyone; the page itself decides what each viewer may see */}
+            <Route path="/events/:id" element={<EventPage />} />
             <Route 
               path="/profile/edit" 
               element={

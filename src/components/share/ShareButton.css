@@ -1,0 +1,16 @@
+/* Share button (components/share/ShareButton.js): a frosted pill that turns green once the link is copied */
+.share { display: inline-flex; flex-direction: column; align-items: flex-end; gap: 6px; }
+
+.share-button { min-height: 40px; padding: 0 16px; }
+
+.share-button.is-copied {
+  background: rgba(16, 185, 129, 0.2);
+  border-color: rgba(110, 231, 183, 0.45);
+  color: #A7F3D0;
+}
+
+.share-manual input {
+  width: min(320px, 80vw);
+  font-size: 0.8rem !important;
+  padding: 6px 10px !important;
+}

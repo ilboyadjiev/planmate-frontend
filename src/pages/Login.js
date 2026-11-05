@@ -1,5 +1,6 @@
 import React, { useState, useContext } from 'react';
-import { Link, useNavigate } from 'react-router-dom';
+import { Link, useLocation, useNavigate } from 'react-router-dom';
+import { nextPathFrom } from '../services/shareLinks';
 import { AuthContext } from '../context/AuthContext';
 import { GoogleLogin } from '@react-oauth/google';
 import GlassPanel from '../components/GlassPanel';
@@ -9,6 +10,9 @@ const Login = () => {
   const [error, setError] = useState(null);
   const { login, googleLogin } = useContext(AuthContext);
   const navigate = useNavigate();
+  const location = useLocation();
+  // Back to where people came from, e.g. a shared event they want to see or join
+  const next = nextPathFrom(location.search);
 
   const handleChange = (e) => {
     setFormData({ ...formData, [e.target.name]: e.target.value });
@@ -19,7 +23,7 @@ const Login = () => {
     try {
       setError(null);
       await login(formData.email, formData.password);
-      navigate('/dashboard');
+      navigate(next);
     } catch (error) {
       console.error('Error:', error);
       setError(error.response?.data?.error || 'Login failed. Please check your credentials.');
@@ -30,7 +34,7 @@ const Login = () => {
     try {
         setError(null);
         await googleLogin(credentialResponse.credential);
-        navigate('/dashboard');
+        navigate(next);
     } catch (error) {
         console.error('Google Login Error:', error);
         setError('Google login failed. Please try again.');
@@ -74,7 +78,7 @@ const Login = () => {
           Note: Planmate has absolutely no interest in your personal data. We just need your email, first and last name.
         </p>
 
-        <p className="auth-switch">New to PlanMate? <Link to="/register">Create an account</Link></p>
+        <p className="auth-switch">New to PlanMate? <Link to={`/register${location.search}`}>Create an account</Link></p>
       </GlassPanel>
     </div>
   );

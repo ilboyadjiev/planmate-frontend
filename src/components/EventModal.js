@@ -11,6 +11,8 @@ import PersonPill from './PersonPill';
 import { usePreferences } from '../services/preferences';
 import { useNavigate } from 'react-router-dom';
 import { tagFeedPath } from './feed/feedText';
+import ShareButton from './share/ShareButton';
+import { eventUrl } from '../services/shareLinks';
 import useFriendships from '../hooks/useFriendships';
 
 const labelStyle = { fontWeight: '600', color: 'var(--text-main)' };
@@ -433,6 +435,7 @@ const EventModal = ({ show, onHide, initialData, onSave, isNewEvent, readOnly = 
                     )}
                 </Modal.Body>
                 <Modal.Footer>
+                    {formData.id && <ShareButton url={eventUrl(formData.id)} title={formData.title} className="me-auto" />}
                     <Button variant="primary" onClick={onHide} className="btn-modern-primary">Close</Button>
                 </Modal.Footer>
             </Modal>
@@ -573,6 +576,7 @@ const EventModal = ({ show, onHide, initialData, onSave, isNewEvent, readOnly = 
                 {errors.form && <div className="field-error" role="alert" style={{ marginTop: '16px' }}>{errors.form}</div>}
             </Modal.Body>
             <Modal.Footer>
+                {!isNewEvent && formData.id && <ShareButton url={eventUrl(formData.id)} title={formData.title} className="me-auto" />}
                 <Button variant="secondary" onClick={onHide} style={{ background: 'transparent', border: 'none', color: 'var(--text-muted)' }}>Cancel</Button>
                 <Button variant="primary" onClick={handleSaveClick} className="btn-modern-primary" disabled={saving}>
                     {saving ? 'Saving...' : isNewEvent ? 'Create Event' : 'Save Changes'}

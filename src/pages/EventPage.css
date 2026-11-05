@@ -1,0 +1,159 @@
+/* One event on its own page (pages/EventPage.js): a glass panel like Discover's cards, but roomier */
+
+.event-page {
+  max-width: 760px;
+  margin: 0 auto;
+  padding: 32px 20px 48px;
+}
+
+.event-panel { padding: 28px 32px 32px; }
+
+.event-topline {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  margin-bottom: 24px;
+}
+
+.event-hero {
+  display: flex;
+  align-items: flex-start;
+  gap: 20px;
+}
+
+.event-date {
+  flex: 0 0 auto;
+  width: 72px;
+  height: 80px;
+  border-radius: 18px;
+}
+.event-date .feed-date-month { font-size: 0.85rem; }
+.event-date .feed-date-day { font-size: 2rem; }
+
+.event-heading { min-width: 0; flex: 1; }
+
+.event-title {
+  margin: 0 0 10px;
+  font-size: clamp(1.6rem, 4vw, 2.2rem);
+  font-weight: 800;
+  line-height: 1.15;
+  overflow-wrap: anywhere;
+}
+
+.event-meta {
+  display: flex;
+  align-items: flex-start;
+  gap: 8px;
+  margin-top: 6px;
+  color: var(--text-main);
+  font-size: 0.95rem;
+}
+.event-meta svg { flex: 0 0 auto; margin-top: 3px; color: var(--glass-muted); }
+
+.event-address { display: block; color: var(--glass-muted); font-size: 0.85rem; }
+
+.event-maps {
+  display: inline-block;
+  margin-top: 4px;
+  font-size: 0.85rem;
+  font-weight: 600;
+  color: var(--chip-text);
+  text-decoration: none;
+}
+.event-maps:hover { text-decoration: underline; }
+
+.event-badges { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 18px; }
+.event-badges:empty { display: none; }
+
+.event-host {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 10px;
+  margin-top: 22px;
+  padding: 12px 14px;
+  border-radius: 14px;
+  background: var(--glass-soft);
+  border: 1px solid var(--glass-soft-line);
+  font-size: 0.95rem;
+}
+.event-host .event-host-avatar { width: 36px; height: 36px; font-size: 0.85rem; border: none; }
+.event-host-link { color: inherit; text-decoration: none; }
+.event-host-link:hover strong { text-decoration: underline; }
+
+.event-description {
+  margin: 22px 0 0;
+  font-size: 1rem;
+  line-height: 1.6;
+  color: var(--text-main);
+  white-space: pre-line;
+  overflow-wrap: anywhere;
+}
+
+.event-tags {
+  list-style: none;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin: 20px 0 0;
+  padding: 0;
+}
+.event-tag { text-decoration: none; }
+
+.event-footer {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 16px;
+  margin-top: 28px;
+  padding-top: 20px;
+  border-top: 1px solid var(--glass-soft-line);
+}
+
+.event-actions {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 10px;
+}
+.event-actions .feed-action { min-width: 180px; }
+.event-actions .pm-glass-button { min-height: 44px; padding: 0 20px; }
+
+.event-notice { margin: 16px 0 0; }
+
+/* Private, not available or not loaded */
+.event-missing { text-align: center; }
+.event-missing .event-topline { justify-content: flex-start; }
+.event-missing-icon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 64px;
+  height: 64px;
+  margin: 8px auto 16px;
+  border-radius: 50%;
+  background: var(--glass-soft);
+  border: 1px solid var(--glass-soft-line);
+  box-shadow: var(--glass-highlight);
+  color: var(--glass-muted);
+}
+.event-missing-icon.is-locked { color: var(--chip-text); background: var(--chip-faint-bg); border-color: var(--chip-faint-border); }
+.event-missing .event-muted { max-width: 440px; margin: 0 auto; }
+.event-missing .event-missing-actions { justify-content: center; }
+.event-missing h1 { margin: 0 0 8px; font-size: 1.5rem; font-weight: 800; }
+.event-muted { color: var(--glass-muted); margin: 0; }
+.event-missing-actions { display: flex; flex-wrap: wrap; gap: 10px; margin-top: 24px; }
+.event-missing-actions .pm-glass-button { min-height: 44px; padding: 0 20px; text-decoration: none; }
+.event-inline-action { display: inline-flex; align-items: center; justify-content: center; min-height: 44px; padding: 0 24px; width: auto; text-decoration: none; }
+
+@media (max-width: 600px) {
+  .event-page { padding: 16px 12px 32px; }
+  .event-panel { padding: 20px 18px 24px; }
+  .event-hero { gap: 14px; }
+  .event-date { width: 58px; height: 66px; border-radius: 14px; }
+  .event-date .feed-date-day { font-size: 1.6rem; }
+  .event-actions, .event-actions .feed-action, .event-actions .feed-rsvp { width: 100%; }
+  .event-actions .pm-glass-button { width: 100%; }
+}

@@ -8,13 +8,13 @@ import { usePreferences } from '../../services/preferences';
 
 const MAX_AVATARS = 3;
 
-const ClockIcon = () => (
+export const ClockIcon = () => (
     <svg aria-hidden="true" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
         <circle cx="12" cy="12" r="9" /><path d="M12 7v5l3 2" />
     </svg>
 );
 
-const PinIcon = () => (
+export const PinIcon = () => (
     <svg aria-hidden="true" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
         <path d="M12 21s-7-6.2-7-11.5A7 7 0 0 1 19 9.5C19 14.8 12 21 12 21z" /><circle cx="12" cy="9.5" r="2.5" />
     </svg>
@@ -27,23 +27,13 @@ const CheckIcon = () => (
 );
 
 /**
- * One event on the Discover feed (see the card design canvas): date, title, time and place, host,
- * description, tags, and who is going above the action.
+ * What you can do with an event: answer an invitation, see that you host it, log in, or join / leave it.
+ * Shared by the feed cards and the event page. loginPath: where "Log in to join" goes (back to this page after).
  */
-const FeedEventCard = ({ event, loggedIn, pending, onToggleGoing, onRespond, onOpen, opening }) => {
-    const { timeFormat } = usePreferences();
-    const start = moment(event.startTime);
-    const host = event.host || {};
-    const friends = event.friendsGoing || [];
-    const place = formatPlace(event.location);
-    const { headline, detail } = socialProof(event, loggedIn);
-    const titleId = `feed-event-${event.id}`;
-    const [hostFirst, hostLast] = (host.name || '').split(' ');
-
-    let action;
+export const CardAction = ({ event, loggedIn, pending, onToggleGoing, onRespond, titleId, loginPath = '/login' }) => {
     if (event.invited && !event.hosting && onRespond) {
         // Invitations are answered right here: Going / Maybe / Can't go
-        action = (
+        return (
             <div className="feed-rsvp">
                 {event.myResponse === 'pending' && (
                     <span className="feed-rsvp-prompt" id={`${titleId}-prompt`}>You're invited. Will you be there?</span>
@@ -60,11 +50,11 @@ const FeedEventCard = ({ event, loggedIn, pending, onToggleGoing, onRespond, onO
             </div>
         );
     } else if (event.hosting) {
-        action = <span className="pm-chip feed-hosting">You're hosting</span>;
+        return <span className="pm-chip feed-hosting">You're hosting</span>;
     } else if (!loggedIn) {
-        action = <Link to="/login" className="feed-action feed-action-login">Log in to join</Link>;
+        return <Link to={loginPath} className="feed-action feed-action-login">Log in to join</Link>;
     } else if (event.going) {
-        action = (
+        return (
             <button type="button" className="feed-action feed-action-going" aria-pressed="true"
                 aria-describedby={titleId} disabled={pending} onClick={() => onToggleGoing(event)}>
                 <CheckIcon /> {pending ? 'Leaving…' : 'Going'}
@@ -72,13 +62,34 @@ const FeedEventCard = ({ event, loggedIn, pending, onToggleGoing, onRespond, onO
             </button>
         );
     } else {
-        action = (
+        return (
             <button type="button" className="feed-action feed-action-join" aria-pressed="false"
                 aria-describedby={titleId} disabled={pending} onClick={() => onToggleGoing(event)}>
                 {pending ? 'Joining…' : "I'm going"}
             </button>
         );
     }
+
+};
+
+/**
+ * One event on the Discover feed (see the card design canvas): date, title, time and place, host,
+ * description, tags, and who is going above the action.
+ */
+const FeedEventCard = ({ event, loggedIn, pending, onToggleGoing, onRespond, onOpen, opening }) => {
+    const { timeFormat } = usePreferences();
+    const start = moment(event.startTime);
+    const host = event.host || {};
+    const friends = event.friendsGoing || [];
+    const place = formatPlace(event.location);
+    const { headline, detail } = socialProof(event, loggedIn);
+    const titleId = `feed-event-${event.id}`;
+    const [hostFirst, hostLast] = (host.name || '').split(' ');
+
+    const action = (
+        <CardAction event={event} loggedIn={loggedIn} pending={pending} onToggleGoing={onToggleGoing}
+            onRespond={onRespond} titleId={titleId} />
+    );
 
     return (
         <article className={`feed-card${event.going ? ' is-going' : ''}${event.hosting ? ' is-hosting' : ''}${event.myResponse === 'pending' ? ' is-unanswered' : ''}`} aria-labelledby={titleId}>
