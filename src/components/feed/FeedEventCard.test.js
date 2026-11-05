@@ -90,3 +90,26 @@ test('own events have no button, and guests are sent to log in', () => {
     renderCard({ loggedIn: false, event: { ...boardGames, friendsGoing: [] } });
     expect(screen.getByRole('link', { name: 'Log in to join' })).toHaveAttribute('href', '/login');
 });
+
+test('a cancelled event says so instead of offering to join', () => {
+    render(
+        <MemoryRouter>
+            <FeedEventCard event={{ ...boardGames, cancelled: true }} loggedIn onToggleGoing={jest.fn()} />
+        </MemoryRouter>
+    );
+    expect(screen.getByText('Cancelled')).toBeInTheDocument();
+    expect(screen.queryByRole('button', { name: "I'm going" })).toBeNull();
+});
+
+describe('source link', () => {
+    test('a discovered event links to its source page', () => {
+        renderCard({ event: { ...boardGames, sourceUrl: 'https://www.ticketmaster.de/event/9' } });
+        expect(screen.getByText(/Read more here:/)).toBeInTheDocument();
+        expect(screen.getByRole('link', { name: 'ticketmaster.de' })).toHaveAttribute('href', 'https://www.ticketmaster.de/event/9');
+    });
+
+    test('other events show no source link', () => {
+        renderCard();
+        expect(screen.queryByText(/Read more here/)).not.toBeInTheDocument();
+    });
+});

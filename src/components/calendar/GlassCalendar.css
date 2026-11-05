@@ -593,3 +593,7 @@
   .cal-agenda-event .cal-panel-text { grid-area: text; }
   .cal-agenda-event .cal-pill { grid-area: pill; align-self: center; }
 }
+
+/* Cancelled events stay in the calendar of the people who joined them, struck through */
+.is-cancelled { text-decoration: line-through; text-decoration-thickness: 1px; opacity: 0.75; }
+.cal-cancelled-label { text-decoration: none; display: inline; font-weight: 700; }

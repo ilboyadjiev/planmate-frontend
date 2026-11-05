@@ -12,6 +12,7 @@ import { usePreferences } from '../services/preferences';
 import { useNavigate } from 'react-router-dom';
 import { tagFeedPath } from './feed/feedText';
 import ShareButton from './share/ShareButton';
+import SourceLink from './SourceLink';
 import AddToCalendar from './calendarExport/AddToCalendar';
 import { eventUrl } from '../services/shareLinks';
 import useFriendships from '../hooks/useFriendships';
@@ -374,10 +375,13 @@ const EventModal = ({ show, onHide, initialData, onSave, isNewEvent, readOnly = 
                     <Modal.Title id="event-modal-title" style={{ color: 'var(--text-main)' }}>{formData.title || 'Event'}</Modal.Title>
                 </Modal.Header>
                 <Modal.Body>
+                    {formData.cancelled && (
+                        <p className="pm-chip feed-cancelled pm-chip-banner" role="status">This event was cancelled</p>
+                    )}
                     <div className="pm-chip pm-chip-banner">
                         {{ going: "You're going", invited: "You're invited" }[formData.viewerRole] || 'Public event'} · only the organizer can make changes
                     </div>
-                    {onRespond && (
+                    {onRespond && !formData.cancelled && (
                         <div className="rsvp-block">
                             <div id="rsvp-label" className="rsvp-question">Will you be there?</div>
                             <div className="rsvp-buttons" role="group" aria-labelledby="rsvp-label">
@@ -401,8 +405,11 @@ const EventModal = ({ show, onHide, initialData, onSave, isNewEvent, readOnly = 
                     <Section label="When">{formatRange(formData.start, formData.end, timeFormat)}</Section>
                     <Section label="Organizer">{organizerName()}</Section>
                     {formData.location && <Section label="Location">{formatLocation(formData.location)}</Section>}
-                    {formData.description && (
-                        <Section label="Description"><span style={{ whiteSpace: 'pre-wrap' }}>{formData.description}</span></Section>
+                    {(formData.description || formData.sourceUrl) && (
+                        <Section label="Description">
+                            {formData.description && <span style={{ whiteSpace: 'pre-wrap' }}>{formData.description}</span>}
+                            <SourceLink url={formData.sourceUrl} />
+                        </Section>
                     )}
                     {friendsCount > 0 && (
                         <Collapsible id="invited-friends" title="Friends" count={friendsCount} defaultOpen>

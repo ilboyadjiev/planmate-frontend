@@ -444,3 +444,6 @@
 /* "Try again" after a failed load: the theme's orange, not Bootstrap's blue link */
 .feed-status .btn-link { color: var(--chip-text); font-weight: 600; }
 .feed-status .btn-link:hover { color: var(--chip-text-hover); }
+
+/* A cancelled event: a quiet red badge where the action would be */
+.feed-card.is-cancelled .feed-card-title { text-decoration: line-through; text-decoration-thickness: 1px; }

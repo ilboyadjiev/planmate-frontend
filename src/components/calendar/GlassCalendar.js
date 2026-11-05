@@ -26,7 +26,14 @@ const PlusIcon = ({ size = 16 }) => (
 );
 
 const placeOf = (event) => formatPlace(event.location) || '';
-const describe = (event, time) => [event.title, time, STATUS_NAMES[eventStatus(event)]].filter(Boolean).join(', ');
+const describe = (event, time) => [event.cancelled ? `Cancelled: ${event.title}` : event.title, time,
+    STATUS_NAMES[eventStatus(event)]].filter(Boolean).join(', ');
+/** Cancelled events keep their place in the calendar, struck through and labelled. */
+const EventTitle = ({ event, className }) => (
+    <span className={`${className}${event.cancelled ? ' is-cancelled' : ''}`}>
+        {event.cancelled && <span className="cal-cancelled-label">Cancelled · </span>}{event.title}
+    </span>
+);
 
 /** The status label as a small pill, in the event's own colours. */
 const StatusPill = ({ event }) => {
@@ -128,7 +135,7 @@ const MonthView = ({ date, events, now, selectedDay, onSelectDay, onSelectEvent,
                                     aria-label={describe(event, time)}>
                                     <span className="cal-panel-time"><strong>{from}</strong>{to && <span>{to}</span>}</span>
                                     <span className="cal-panel-text">
-                                        <span className={`cal-event-name event-status-${eventStatus(event)}`}>{event.title}</span>
+                                        <EventTitle event={event} className={`cal-event-name event-status-${eventStatus(event)}`} />
                                         {placeOf(event) && <span className="cal-muted-small">{placeOf(event)}</span>}
                                         <StatusPill event={event} />
                                     </span>
@@ -212,7 +219,7 @@ const TimeGrid = ({ days, events, now, onSelectEvent, onSelectSlot, onOpenDay, c
                                                 width: `calc(${100 / segment.lanes}% - 4px)`,
                                             }}
                                             onClick={() => onSelectEvent(event)} aria-label={describe(event, time)} title={describe(event, time)}>
-                                            <span className="cal-event-title">{event.title}</span>
+                                            <EventTitle event={event} className="cal-event-title" />
                                             <span className="cal-event-time">{time}</span>
                                             {days.length === 1 && placeOf(event) && <span className="cal-event-time">{placeOf(event)}</span>}
                                         </button>
@@ -254,7 +261,7 @@ const AgendaView = ({ date, events, now, onSelectEvent }) => {
                                         <span className="cal-agenda-time">{time}</span>
                                         <span className={`cal-marker event-status-${eventStatus(event)}`} aria-hidden="true" />
                                         <span className="cal-panel-text">
-                                            <span className={`cal-event-name event-status-${eventStatus(event)}`}>{event.title}</span>
+                                            <EventTitle event={event} className={`cal-event-name event-status-${eventStatus(event)}`} />
                                             {placeOf(event) && <span className="cal-muted-small">{placeOf(event)}</span>}
                                         </span>
                                         <StatusPill event={event} />

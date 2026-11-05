@@ -613,6 +613,9 @@ button.btn-primary:hover,
 
 .pm-chip-banner { margin-bottom: 20px; }
 
+/* A cancelled event's badge (cards, event page, details) */
+.pm-chip.feed-cancelled { color: #FCA5A5; background: rgba(239, 68, 68, 0.12); border-color: rgba(239, 68, 68, 0.35); }
+
 /* Compact bubbles, e.g. on feed cards */
 .pm-chip-sm {
   padding: 2px 10px;
@@ -942,3 +945,23 @@ button.btn-primary:hover,
   overflow: hidden;
   text-overflow: ellipsis;
 }
+
+/* "Read more here: ticketmaster.de" under the description of discovered events */
+.source-link {
+  margin: 6px 0 0;
+  font-size: 13px;
+  line-height: 1.4;
+  color: var(--text-muted);
+  overflow-wrap: anywhere;
+}
+.source-link a {
+  color: var(--chip-text);
+  font-weight: 600;
+  text-decoration: none;
+}
+.source-link a:hover,
+.source-link a:focus-visible {
+  color: var(--chip-text-hover);
+  text-decoration: underline;
+}
+.event-source-link { margin-top: 10px; font-size: 14px; }

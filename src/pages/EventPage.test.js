@@ -38,12 +38,21 @@ test('a shared public event shows everything, also without an account', async ()
     expect(screen.getByText(/Einsteinstraße 42, Munich/)).toBeInTheDocument();
     expect(screen.getByRole('link', { name: /Open in Maps/ })).toHaveAttribute('href', expect.stringContaining('google.com/maps'));
     expect(screen.getByText(/Live jazz\./)).toBeInTheDocument();
+    expect(screen.queryByText(/Read more here/)).not.toBeInTheDocument();
     expect(screen.getByRole('link', { name: 'Show more #jazz events' })).toHaveAttribute('href', '/dashboard?tag=%23jazz');
     expect(screen.getByRole('button', { name: 'Share' })).toBeInTheDocument();
     expect(screen.getByRole('button', { name: 'Add to calendar' })).toBeInTheDocument();
     // Joining needs an account, and logging in comes back here
     expect(screen.getByRole('link', { name: 'Log in to join' })).toHaveAttribute('href', '/login?next=%2Fevents%2Fabc');
     await waitFor(() => expect(document.title).toBe('Jazz night · PlanMate'));
+});
+
+test('a discovered event links to its source page so people can keep reading', async () => {
+    api.get.mockResolvedValue({ data: card({ sourceUrl: 'https://www.ticketmaster.de/event/123' }) });
+    renderPage();
+
+    expect(await screen.findByText(/Read more here:/)).toBeInTheDocument();
+    expect(screen.getByRole('link', { name: 'ticketmaster.de' })).toHaveAttribute('href', 'https://www.ticketmaster.de/event/123');
 });
 
 test('logged in, people join right from the page', async () => {
@@ -98,4 +107,13 @@ test('an event that is over says so and offers no joining', async () => {
 test('the full date, with times in the chosen format', () => {
     expect(longWhen('2030-11-06T19:00:00', '2030-11-06T22:00:00')).toBe('Wednesday, 6 November 2030 · 19:00 – 22:00');
     expect(longWhen('2030-11-06T19:00:00', '2030-11-06T22:00:00', '12h')).toBe('Wednesday, 6 November 2030 · 7:00 PM – 10:00 PM');
+});
+
+test('a cancelled event says so and offers no joining or adding to calendars', async () => {
+    api.get.mockResolvedValue({ data: card({ cancelled: true }) });
+    renderPage({ id: 1, email: 'alice@example.com' });
+    expect(await screen.findByText('This event was cancelled')).toBeInTheDocument();
+    expect(screen.queryByRole('button', { name: "I'm going" })).toBeNull();
+    expect(screen.queryByRole('button', { name: 'Add to calendar' })).toBeNull();
+    expect(screen.getByRole('button', { name: 'Share' })).toBeInTheDocument();
 });

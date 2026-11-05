@@ -6,6 +6,7 @@ import { AuthContext } from '../context/AuthContext';
 import GlassPanel from '../components/GlassPanel';
 import CalendarLoader from '../components/CalendarLoader';
 import Avatar from '../components/Avatar';
+import SourceLink from '../components/SourceLink';
 import ShareButton from '../components/share/ShareButton';
 import AddToCalendar from '../components/calendarExport/AddToCalendar';
 import { CardAction, ClockIcon, PinIcon } from '../components/feed/FeedEventCard';
@@ -154,7 +155,7 @@ const EventPage = () => {
                 <div className="event-topline">
                     {discover}
                     <div className="event-topline-actions">
-                        {!ended && (user || event.isPublic !== false) && (
+                        {!ended && !event.cancelled && (user || event.isPublic !== false) && (
                             <AddToCalendar className="opens-left" event={{
                                 id: event.id, title: event.title, description: event.description, start: event.startTime,
                                 end: event.endTime, location: event.location, isPublic: event.isPublic,
@@ -188,7 +189,8 @@ const EventPage = () => {
                 </header>
 
                 <div className="event-badges">
-                    {ended && <span className="pm-chip pm-chip-sm event-ended">This event has ended</span>}
+                    {event.cancelled && <span className="pm-chip feed-cancelled">This event was cancelled</span>}
+                    {ended && !event.cancelled && <span className="pm-chip pm-chip-sm event-ended">This event has ended</span>}
                     {event.isPublic === false && (
                         <span className="pm-chip pm-chip-sm event-private">Private · only people invited can open this link</span>
                     )}
@@ -207,6 +209,7 @@ const EventPage = () => {
                 </div>
 
                 {event.description && <p className="event-description">{event.description}</p>}
+                <SourceLink url={event.sourceUrl} className="event-source-link" />
 
                 {(event.tags || []).length > 0 && (
                     <ul className="event-tags" aria-label="Tags">

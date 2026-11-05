@@ -3,6 +3,7 @@ import { Link } from 'react-router-dom';
 import moment from 'moment';
 import { initials, socialProof, formatWhen, formatPlace } from './feedText';
 import Avatar from '../Avatar';
+import SourceLink from '../SourceLink';
 import { RESPONSES } from '../calendarStatus';
 import { usePreferences } from '../../services/preferences';
 
@@ -31,6 +32,9 @@ const CheckIcon = () => (
  * Shared by the feed cards and the event page. loginPath: where "Log in to join" goes (back to this page after).
  */
 export const CardAction = ({ event, loggedIn, pending, onToggleGoing, onRespond, titleId, loginPath = '/login' }) => {
+    if (event.cancelled) {
+        return <span className="pm-chip feed-cancelled">Cancelled</span>;
+    }
     if (event.invited && !event.hosting && onRespond) {
         // Invitations are answered right here: Going / Maybe / Can't go
         return (
@@ -92,7 +96,7 @@ const FeedEventCard = ({ event, loggedIn, pending, onToggleGoing, onRespond, onO
     );
 
     return (
-        <article className={`feed-card${event.going ? ' is-going' : ''}${event.hosting ? ' is-hosting' : ''}${event.myResponse === 'pending' ? ' is-unanswered' : ''}`} aria-labelledby={titleId}>
+        <article className={`feed-card${event.cancelled ? ' is-cancelled' : ''}${event.going ? ' is-going' : ''}${event.hosting ? ' is-hosting' : ''}${event.myResponse === 'pending' ? ' is-unanswered' : ''}`} aria-labelledby={titleId}>
             <div className="feed-card-top">
                 <div className="feed-date" aria-hidden="true">
                     <span className="feed-date-month">{start.format('MMM').toUpperCase()}</span>
@@ -124,6 +128,7 @@ const FeedEventCard = ({ event, loggedIn, pending, onToggleGoing, onRespond, onO
             </div>
 
             {event.description && <p className="feed-description">{event.description}</p>}
+            <SourceLink url={event.sourceUrl} />
 
             {(event.tags || []).length > 0 && (
                 <ul className="feed-tags" aria-label="Tags">
