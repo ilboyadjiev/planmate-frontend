@@ -475,7 +475,7 @@ const EventModal = ({ show, onHide, initialData, onSave, isNewEvent, readOnly = 
                             <ShareButton url={eventUrl(formData.id)} title={formData.title} />
                         </div>
                     )}
-                    <Button variant="primary" onClick={onHide} className="btn-modern-primary">Close</Button>
+                    <button type="button" onClick={onHide} className="pm-glass-button pm-glass-button-primary">Close</button>
                 </Modal.Footer>
             </Modal>
         );

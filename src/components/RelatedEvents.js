@@ -53,8 +53,10 @@ export const RelatedEventsList = ({ related, onNavigate, headingLevel = 3 }) => 
     const { timeFormat } = usePreferences();
     const Heading = `h${headingLevel}`;
     const uid = useId();
-    const [datesShown, setDatesShown] = useState(DATES_SHOWN);
-    useEffect(() => setDatesShown(DATES_SHOWN), [related]); // another event: start short again
+    // How many dates are open, for this list only: another event's list starts short again
+    const [opened, setOpened] = useState({ list: related, shown: DATES_SHOWN });
+    const datesShown = opened.list === related ? opened.shown : DATES_SHOWN;
+    const showMore = () => setOpened({ list: related, shown: datesShown + DATES_STEP });
     if (!hasRelated(related)) return null;
     const hiddenDates = related.moreDates.length - datesShown;
     return (
@@ -81,7 +83,7 @@ export const RelatedEventsList = ({ related, onNavigate, headingLevel = 3 }) => 
                     </ul>
                     {hiddenDates > 0 && (
                         <button type="button" className="pm-glass-button related-show-more"
-                            onClick={() => setDatesShown(n => n + DATES_STEP)}>
+                            onClick={showMore}>
                             Show more
                         </button>
                     )}

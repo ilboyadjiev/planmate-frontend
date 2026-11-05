@@ -133,6 +133,17 @@
 .pm-glass-button:hover:not(:disabled) { background: rgba(255, 255, 255, 0.12); }
 .pm-glass-button:disabled { cursor: wait; opacity: 0.7; }
 
+/* The same glass pill in PlanMate orange, for the main action next to plain glass buttons (e.g. Close) */
+.pm-glass-button.pm-glass-button-primary {
+  background: linear-gradient(180deg, var(--primary), var(--primary-hover));
+  border-color: rgba(253, 186, 116, 0.45);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.30), 0 4px 14px rgba(240, 106, 37, 0.30);
+  color: #fff;
+}
+.pm-glass-button.pm-glass-button-primary:hover:not(:disabled) {
+  background: var(--primary-hover);
+}
+
 .pm-glass-button:focus-visible {
   outline: 2px solid #FDBA74;
   outline-offset: 2px;
