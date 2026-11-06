@@ -196,10 +196,12 @@ describe('opening a card', () => {
         fireEvent.click(await screen.findByRole('button', { name: 'Event a' }));
 
         const dialog = await screen.findByRole('dialog');
-        expect(dialog).toHaveTextContent('Public event · only the organizer can make changes');
+        expect(dialog).toHaveTextContent('Only the organizer can make changes');
+        // Not answered yet: Going, Maybe and Can't go are right there, none chosen
+        expect(within(dialog).getByRole('button', { name: 'Maybe' })).toHaveAttribute('aria-pressed', 'false');
         expect(within(dialog).getByText('Bring snacks')).toBeInTheDocument();
         expect(within(dialog).getByText('Maya')).toBeInTheDocument();
-        expect(screen.queryByRole('button', { name: /save changes/i })).not.toBeInTheDocument();
+        expect(screen.queryByRole('button', { name: 'Save' })).not.toBeInTheDocument();
     });
 
     test('your own events open for editing', async () => {
@@ -208,7 +210,7 @@ describe('opening a card', () => {
 
         fireEvent.click(await screen.findByRole('button', { name: 'Event a' }));
 
-        expect(await screen.findByRole('button', { name: /save changes/i })).toBeInTheDocument();
+        expect(await screen.findByRole('button', { name: 'Save' })).toBeInTheDocument();
         expect(screen.getByDisplayValue('Event a')).toBeInTheDocument();
     });
 

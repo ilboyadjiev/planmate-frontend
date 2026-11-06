@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useContext, useMemo } from 'react';
-import { Modal, Button, Form } from 'react-bootstrap';
+import { Modal, Form } from 'react-bootstrap';
 import api from '../api/client';
 import { AuthContext } from '../context/AuthContext';
 import DateTimePicker from './DateTimePicker/index';
@@ -16,9 +16,9 @@ import SourceLink from './SourceLink';
 import RelatedEvents from './RelatedEvents';
 import AddToCalendar from './calendarExport/AddToCalendar';
 import { eventUrl } from '../services/shareLinks';
+import { attendanceOf, attendanceRole } from '../services/eventService';
 import useFriendships from '../hooks/useFriendships';
-
-const labelStyle = { fontWeight: '600', color: 'var(--text-main)' };
+import './EventModal.css';
 
 const formatRange = (start, end, timeFormat = '24h') => {
     if (isAllDay(start, end)) {
@@ -58,10 +58,16 @@ const ERROR_KEY_FOR_FIELD = { title: 'title', start: 'time', end: 'time', partic
 const FieldError = ({ id, message }) => (message ? <div id={id} className="field-error" role="alert">{message}</div> : null);
 
 const Section = ({ label, children }) => (
-    <div style={{ marginBottom: '16px' }}>
-        <div style={{ ...labelStyle, fontSize: '0.85rem', color: 'var(--text-muted)', marginBottom: '4px' }}>{label}</div>
-        <div style={{ color: 'var(--text-main)' }}>{children}</div>
+    <div className="event-modal-section">
+        <div className="event-modal-label">{label}</div>
+        <div>{children}</div>
     </div>
+);
+
+const CloseIcon = () => (
+    <svg aria-hidden="true" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round">
+        <path d="M6 6l12 12M18 6L6 18" />
+    </svg>
 );
 
 const ANSWER_ORDER = ['accepted', 'maybe', 'declined', 'pending'];
@@ -118,10 +124,12 @@ const Collapsible = ({ id, title, count, defaultOpen = false, children }) => {
  * Create/edit form for the event creator, or a read-only details view (readOnly) for invited participants.
  * onSave may return a promise; if it rejects, the error is shown in the modal and the form stays open.
  * onRespond(response), given for invitees, records their answer (accepted, maybe, declined) and may reject.
+ * onAttend(response), for public events the viewer does not host and was not invited to: Going (accepted), Maybe or
+ * Can't go (declined). May reject.
  * availabilityCheck(start, end) -> { youFree, theyFree }, when planning with a friend (availabilityName):
  * the form then says whether you are both free at the chosen time.
  */
-const EventModal = ({ show, onHide, initialData, onSave, isNewEvent, readOnly = false, onRespond, onJoin,
+const EventModal = ({ show, onHide, initialData, onSave, isNewEvent, readOnly = false, onRespond, onAttend,
     availabilityCheck, availabilityName }) => {
     const { user } = useContext(AuthContext);
     const { timeFormat } = usePreferences();
@@ -238,17 +246,32 @@ const EventModal = ({ show, onHide, initialData, onSave, isNewEvent, readOnly = 
         }
     };
 
+    // Going, Maybe or Can't go, for public events the viewer was not invited to
+    const handleAttend = async (response) => {
+        if (attendanceOf(formData) === response) return;
+        setResponding(true);
+        setRespondError('');
+        try {
+            await onAttend(response);
+            setFormData(prev => ({ ...prev, viewerRole: attendanceRole(response), attendance: response }));
+        } catch (err) {
+            setRespondError('Your answer could not be saved. Please try again.');
+        } finally {
+            setResponding(false);
+        }
+    };
+
     // Exporting an event means planning to be there: it goes into the PlanMate calendar too, as going.
-    // Invitations are accepted; public events are joined (onJoin). Own, cancelled and past events stay as they are.
+    // Invitations are accepted; public events answered Going. Own, cancelled and past events stay as they are.
     const markGoingOnExport = async () => {
         const over = formData.end && new Date(formData.end) < new Date();
         if (!user || formData.isOwn || formData.cancelled || over) return;
         try {
             if (formData.viewerRole === 'invited') {
                 if (onRespond && formData.myResponse !== 'accepted') await handleRespond('accepted');
-            } else if (onJoin && formData.viewerRole !== 'going' && formData.isPublic) {
-                await onJoin();
-                setFormData(prev => ({ ...prev, viewerRole: 'going' }));
+            } else if (onAttend && formData.viewerRole !== 'going' && formData.isPublic) {
+                await onAttend('accepted');
+                setFormData(prev => ({ ...prev, viewerRole: 'going', attendance: 'accepted' }));
             }
         } catch (err) {
             // The export worked; joining failed and can be done from the event's card
@@ -354,6 +377,28 @@ const EventModal = ({ show, onHide, initialData, onSave, isNewEvent, readOnly = 
 
     if (!formData) return null;
 
+    // On top of the window: export and share (saved events), Save (editing), and close
+    const saved = !isNewEvent && formData.id;
+    const toolbar = (
+        <div className="event-modal-toolbar" role="group" aria-label="Event actions">
+            {saved && (user || formData.isPublic) && (
+                <AddToCalendar event={formData} label="Export to calendar" onExport={markGoingOnExport} />
+            )}
+            {saved && <ShareButton url={eventUrl(formData.id)} title={formData.title} />}
+            <div className="event-modal-toolbar-end">
+                {!readOnly && (
+                    <button type="button" className="pm-glass-button pm-glass-button-primary event-modal-save"
+                        onClick={handleSaveClick} disabled={saving}>
+                        {saving ? 'Saving…' : 'Save'}
+                    </button>
+                )}
+                <button type="button" className="pm-glass-button event-modal-close" aria-label="Close" onClick={onHide}>
+                    <CloseIcon />
+                </button>
+            </div>
+        </div>
+    );
+
     if (readOnly) {
         // Everyone invited except you. Each person appears once:
         // 1. inside an invited group you are in (the server only sends those; first group alphabetically),
@@ -395,33 +440,39 @@ const EventModal = ({ show, onHide, initialData, onSave, isNewEvent, readOnly = 
                 <AddFriendButton person={personData(person)} friendships={friendships} />
             </li>
         );
+        // Your answer, for events you don't host: Going / Maybe / Can't go, for invitations and public events alike
+        const answer = !formData.cancelled && user ? (onRespond ? 'invite' : onAttend && formData.isPublic ? 'attend' : null) : null;
+        const chosen = answer === 'invite' ? formData.myResponse : attendanceOf(formData);
+        const role = { going: "You're going", invited: "You're invited" }[formData.viewerRole] || 'Public event';
         return (
-            <Modal show={show} onHide={onHide} contentClassName="modern-modal" centered aria-labelledby="event-modal-title">
-                <Modal.Header closeButton>
-                    <Modal.Title id="event-modal-title" style={{ color: 'var(--text-main)' }}>{formData.title || 'Event'}</Modal.Title>
-                </Modal.Header>
+            <Modal show={show} onHide={onHide} contentClassName="modern-modal pm-glass-modal event-modal" centered
+                aria-labelledby="event-modal-title">
+                {toolbar}
                 <Modal.Body>
                     {formData.cancelled && (
                         <p className="pm-chip feed-cancelled pm-chip-banner" role="status">This event was cancelled</p>
                     )}
-                    <div className="pm-chip pm-chip-banner">
-                        {{ going: "You're going", invited: "You're invited" }[formData.viewerRole] || 'Public event'} · only the organizer can make changes
-                    </div>
-                    {onRespond && !formData.cancelled && (
-                        <div className="rsvp-block">
-                            <div id="rsvp-label" className="rsvp-question">Will you be there?</div>
+                    {answer && (
+                        <section className="event-modal-rsvp" aria-labelledby="rsvp-label">
+                            <div id="rsvp-label" className="event-modal-label">
+                                {answer === 'invite' && formData.myResponse === 'pending' ? "You're invited. Will you be there?" : 'Your answer'}
+                            </div>
                             <div className="rsvp-buttons" role="group" aria-labelledby="rsvp-label">
                                 {RESPONSES.map(({ value, label }) => (
                                     <button key={value} type="button" className={`rsvp-button rsvp-${value}`}
-                                        aria-pressed={formData.myResponse === value} disabled={responding}
-                                        onClick={() => handleRespond(value)}>
+                                        aria-pressed={chosen === value} disabled={responding}
+                                        onClick={() => (answer === 'invite' ? handleRespond(value) : handleAttend(value))}>
                                         {label}
                                     </button>
                                 ))}
                             </div>
                             <FieldError id="rsvp-error" message={respondError} />
-                        </div>
+                        </section>
                     )}
+                    <h2 id="event-modal-title" className="event-modal-title">{formData.title || 'Event'}</h2>
+                    <p className="event-modal-note">
+                        {answer ? 'Only the organizer can make changes' : `${role} · only the organizer can make changes`}
+                    </p>
                     {formData.responses && (formData.participants || []).length > 0 && (
                         <AnswersSummary
                             people={(formData.participants || []).map(p => ({ id: p.id, name: participantName(p) }))}
@@ -473,32 +524,19 @@ const EventModal = ({ show, onHide, initialData, onSave, isNewEvent, readOnly = 
                         </div>
                     )}
                 </Modal.Body>
-                <Modal.Footer>
-                    {formData.id && (
-                        <div className="me-auto event-modal-export">
-                            {(user || formData.isPublic) && (
-                                <AddToCalendar className="opens-up" event={formData} label="Export to calendar"
-                                    onExport={markGoingOnExport} />
-                            )}
-                            <ShareButton url={eventUrl(formData.id)} title={formData.title} />
-                        </div>
-                    )}
-                    <button type="button" onClick={onHide} className="pm-glass-button pm-glass-button-primary">Close</button>
-                </Modal.Footer>
             </Modal>
         );
     }
 
     return (
-        <Modal show={show} onHide={onHide} contentClassName="modern-modal" centered aria-labelledby="event-modal-title">
-            <Modal.Header closeButton>
-                <Modal.Title id="event-modal-title" style={{ color: 'var(--text-main)' }}>{isNewEvent ? 'Create New Event' : 'Edit Event'}</Modal.Title>
-            </Modal.Header>
+        <Modal show={show} onHide={onHide} contentClassName="modern-modal pm-glass-modal event-modal" centered
+            aria-label={isNewEvent ? 'New event' : `Edit ${formData.title || 'event'}`}>
+            {toolbar}
             <Modal.Body>
                 {answersSummary}
                 <Form onSubmit={e => e.preventDefault()}>
-                    <Form.Group controlId="formTitle" style={{ marginBottom: '16px' }}>
-                        <Form.Label style={labelStyle}>Event Title</Form.Label>
+                    <Form.Group controlId="formTitle" className="event-modal-field">
+                        <Form.Label className="event-modal-label">Title</Form.Label>
                         <Form.Control
                             type="text"
                             value={formData.title}
@@ -511,13 +549,14 @@ const EventModal = ({ show, onHide, initialData, onSave, isNewEvent, readOnly = 
                         <FieldError id="title-error" message={errors.title} />
                     </Form.Group>
 
-                    <Form.Group controlId="formIsPublic" style={{ marginBottom: '24px' }}>
-                        <Form.Label style={{ ...labelStyle, display: 'block' }}>Event Visibility</Form.Label>
+                    <div className="event-modal-field">
+                        <div id="visibility-label" className="event-modal-label">Visibility</div>
                         <VisibilityToggle
+                            labelledBy="visibility-label"
                             isPublic={formData.isPublic}
                             onChange={(val) => handleChange('isPublic', val)}
                         />
-                    </Form.Group>
+                    </div>
 
                     <DateTimePicker
                         start={formData.start}
@@ -538,13 +577,13 @@ const EventModal = ({ show, onHide, initialData, onSave, isNewEvent, readOnly = 
                         </p>
                     )}
 
-                    <Form.Group controlId="formDescription" style={{ marginBottom: '24px' }}>
-                        <Form.Label style={labelStyle}>Description</Form.Label>
+                    <Form.Group controlId="formDescription" className="event-modal-field">
+                        <Form.Label className="event-modal-label">Description</Form.Label>
                         <Form.Control as="textarea" rows={3} value={formData.description || ''} onChange={e => handleChange('description', e.target.value)} />
                     </Form.Group>
 
-                    <Form.Group controlId="formLocation" style={{ marginBottom: '16px' }}>
-                        <Form.Label style={labelStyle}>Location</Form.Label>
+                    <Form.Group controlId="formLocation" className="event-modal-field">
+                        <Form.Label className="event-modal-label">Location</Form.Label>
                         <LocationSearch
                             initialQuery={initialData.location?.name}
                             onSelectLocation={(loc) => handleChange('location', loc)}
@@ -553,8 +592,8 @@ const EventModal = ({ show, onHide, initialData, onSave, isNewEvent, readOnly = 
                     </Form.Group>
 
                     {user && (
-                        <Form.Group controlId="formParticipants" style={{ position: 'relative', marginBottom: '16px' }}>
-                            <Form.Label style={labelStyle}>Participants</Form.Label>
+                        <Form.Group controlId="formParticipants" className="event-modal-field" style={{ position: 'relative' }}>
+                            <Form.Label className="event-modal-label">Participants</Form.Label>
                             {availableGroups.length > 0 && (
                                 <Collapsible id="invite-groups" title="Invite a group" count={availableGroups.length}>
                                     <div className="invite-groups" role="group" aria-label="Invite a friend group">
@@ -606,8 +645,8 @@ const EventModal = ({ show, onHide, initialData, onSave, isNewEvent, readOnly = 
                         </Form.Group>
                     )}
 
-                    <Form.Group controlId="formTags">
-                        <Form.Label style={labelStyle}>Tags</Form.Label>
+                    <Form.Group controlId="formTags" className="event-modal-field">
+                        <Form.Label className="event-modal-label">Tags</Form.Label>
                         <div style={{ display: 'flex', flexWrap: 'wrap', gap: '8px', marginBottom: '8px' }}>
                             {(formData.tags || []).map(tag => (
                                 <div key={tag} className="pm-chip">
@@ -622,18 +661,6 @@ const EventModal = ({ show, onHide, initialData, onSave, isNewEvent, readOnly = 
 
                 {errors.form && <div className="field-error" role="alert" style={{ marginTop: '16px' }}>{errors.form}</div>}
             </Modal.Body>
-            <Modal.Footer>
-                {!isNewEvent && formData.id && (
-                    <div className="me-auto event-modal-export">
-                        {(user || formData.isPublic) && <AddToCalendar className="opens-up" event={formData} label="Export to calendar" />}
-                        <ShareButton url={eventUrl(formData.id)} title={formData.title} />
-                    </div>
-                )}
-                <Button variant="secondary" onClick={onHide} style={{ background: 'transparent', border: 'none', color: 'var(--text-muted)' }}>Cancel</Button>
-                <Button variant="primary" onClick={handleSaveClick} className="btn-modern-primary" disabled={saving}>
-                    {saving ? 'Saving...' : isNewEvent ? 'Create Event' : 'Save Changes'}
-                </Button>
-            </Modal.Footer>
         </Modal>
     );
 };

@@ -81,12 +81,12 @@ test('planning with a friend: pick a shared free time, then create the event wit
     fireEvent.click(within(planner).getByRole('button', { name: 'Tomorrow, evening: 18:00 to 19:00' }));
 
     // Step 2: the usual form, with Dave invited and the time filled in
-    const form = await screen.findByRole('dialog', { name: /create new event/i });
+    const form = await screen.findByRole('dialog', { name: 'New event' });
     expect(within(form).getByText('Dave')).toBeInTheDocument(); // his pill: first name and @dave
     expect(within(form).getByText('@dave')).toBeInTheDocument();
     expect(await within(form).findByText('✓ You and Dave are both free then')).toBeInTheDocument();
     fireEvent.change(within(form).getByPlaceholderText(/weekend hike/i), { target: { value: 'Coffee' } });
-    fireEvent.click(within(form).getByRole('button', { name: /create event/i }));
+    fireEvent.click(within(form).getByRole('button', { name: 'Save' }));
 
     await waitFor(() => expect(api.post).toHaveBeenCalledWith('/v2/events', expect.objectContaining({
         title: 'Coffee', participantIds: ['4'], startTime: at(tomorrow, '18:00'), endTime: at(tomorrow, '19:00'),
@@ -115,7 +115,7 @@ test('the form warns when the friend is busy at the chosen time', async () => {
 
     fireEvent.click(within(planner).getByRole('button', { name: 'Choose a time myself' }));
 
-    const form = await screen.findByRole('dialog', { name: /create new event/i });
+    const form = await screen.findByRole('dialog', { name: 'New event' });
     expect(await within(form).findByText('Dave has something else then')).toBeInTheDocument();
 });
 

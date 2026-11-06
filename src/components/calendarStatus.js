@@ -2,7 +2,8 @@
  * How an event looks in the calendar, from the viewer's point of view:
  * - own: events you created (solid indigo)
  * - accepted: invitations you accepted and public events you joined from the feed (green)
- * - maybe / pending: invitations you answered with maybe or not at all (dashed blue; pending adds a dot)
+ * - maybe / pending: invitations (and public events) you answered with maybe, or invitations not answered at all
+ *   (dashed blue; pending adds a dot)
  * - declined: invitations you declined (subtle red, struck through so it does not rely on colour alone)
  */
 export const RESPONSES = [
@@ -24,6 +25,7 @@ export const myResponse = (event, userId) => {
 export const eventStatus = (event) => {
     if (event.isOwn) return 'own';
     if (event.viewerRole === 'going') return 'accepted';
+    if (event.viewerRole === 'maybe') return 'maybe'; // a public event answered Maybe
     return event.myResponse || 'pending';
 };
 

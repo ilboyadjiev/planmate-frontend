@@ -1,0 +1,137 @@
+/*
+ * The date and time pickers in liquid glass. Their pop-ups open outside the event window (in a portal), so these
+ * rules are not scoped to it; they only reach elements with the pm-picker / pm-time classes.
+ */
+
+/* ---------- The calendar that opens from a date field ---------- */
+
+.pm-picker-paper.MuiPaper-root {
+  margin-top: 8px;
+  border-radius: 20px;
+  background-color: rgba(22, 27, 43, 0.82);
+  background-image: none;
+  -webkit-backdrop-filter: blur(30px) saturate(170%);
+  backdrop-filter: blur(30px) saturate(170%);
+  border: 1px solid var(--glass-line);
+  box-shadow: var(--glass-highlight), 0 18px 40px rgba(0, 0, 0, 0.45);
+  color: var(--text-main);
+}
+
+.pm-picker-paper .MuiPickersLayout-root,
+.pm-picker-paper .MuiDateCalendar-root { background: transparent; }
+
+.pm-picker-paper .MuiPickersCalendarHeader-label { font-weight: 700; }
+
+.pm-picker-paper .MuiDayCalendar-weekDayLabel {
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--glass-muted);
+}
+
+.pm-picker-paper .MuiPickerDay-root {
+  border-radius: 999px;
+  font-weight: 600;
+  color: var(--text-main);
+  transition: background 0.2s;
+}
+
+.pm-picker-paper .MuiPickerDay-root:hover { background: rgba(255, 255, 255, 0.10); }
+
+.pm-picker-paper .MuiPickerDay-root.MuiPickerDay-today:not(.Mui-selected) {
+  border: 1px solid rgba(253, 186, 116, 0.6);
+  background: transparent;
+}
+
+.pm-picker-paper .MuiPickerDay-root.Mui-selected,
+.pm-picker-paper .MuiYearCalendar-button.Mui-selected,
+.pm-picker-paper .MuiMonthCalendar-button.Mui-selected {
+  background: var(--glass-active-bg);
+  color: var(--glass-active-text);
+  box-shadow: var(--glass-active-shadow);
+}
+
+.pm-picker-paper .MuiPickerDay-root.Mui-selected:hover,
+.pm-picker-paper .MuiPickerDay-root.Mui-selected:focus { background: rgba(240, 106, 37, 0.38); }
+
+.pm-picker-paper .MuiPickerDay-root.Mui-disabled { color: rgba(255, 255, 255, 0.25); }
+
+.pm-picker-paper .MuiYearCalendar-button,
+.pm-picker-paper .MuiMonthCalendar-button { border-radius: 999px; font-weight: 600; }
+
+.pm-picker-paper .MuiIconButton-root { color: var(--glass-muted); }
+.pm-picker-paper .MuiIconButton-root:hover { color: var(--text-main); background: rgba(255, 255, 255, 0.08); }
+
+/* Phones: the dialog's OK / Cancel as glass pills */
+.pm-picker-paper .MuiDialogActions-root .MuiButton-root {
+  min-height: 36px;
+  padding: 0 16px;
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.07);
+  border: 1px solid rgba(255, 255, 255, 0.16);
+  color: var(--text-main);
+  font-weight: 700;
+  text-transform: none;
+}
+
+/* ---------- The time window (SlidingTimePicker) ---------- */
+
+.pm-time-modal .pm-time-body { padding: 20px; }
+
+.pm-time-title {
+  margin: 0 0 16px;
+  text-align: center;
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--glass-muted);
+}
+
+.pm-time-clock {
+  display: flex;
+  justify-content: center;
+  padding: 6px;
+  border-radius: 18px;
+  background: var(--glass-soft);
+  border: 1px solid var(--glass-soft-line);
+  box-shadow: var(--glass-highlight);
+}
+
+.pm-time-clock .MuiMultiSectionDigitalClock-root { border: none; }
+
+.pm-time-clock .MuiMultiSectionDigitalClockSection-root {
+  border-left: none;
+  padding: 0 4px;
+}
+
+.pm-time-clock .MuiMultiSectionDigitalClockSection-item {
+  margin: 3px 0;
+  border-radius: 999px;
+  font-weight: 600;
+  color: var(--text-main);
+  transition: background 0.2s;
+}
+
+.pm-time-clock .MuiMultiSectionDigitalClockSection-item:hover { background: rgba(255, 255, 255, 0.10); }
+
+.pm-time-clock .MuiMultiSectionDigitalClockSection-item.Mui-selected {
+  background: var(--glass-active-bg);
+  color: var(--glass-active-text);
+  box-shadow: var(--glass-active-shadow);
+}
+
+.pm-time-clock .MuiMultiSectionDigitalClockSection-item.Mui-selected:hover,
+.pm-time-clock .MuiMultiSectionDigitalClockSection-item.Mui-selected:focus-visible { background: rgba(240, 106, 37, 0.38); }
+
+.pm-time-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 8px;
+  margin-top: 20px;
+}
+
+@media (prefers-reduced-transparency: reduce) {
+  .pm-picker-paper.MuiPaper-root { background-color: var(--surface); -webkit-backdrop-filter: none; backdrop-filter: none; }
+}

@@ -9,7 +9,7 @@ import GamePlan from './GamePlan';
 import GlassCalendar from './calendar/GlassCalendar';
 import useIsMobile from '../hooks/useIsMobile';
 import { usePreferences } from '../services/preferences';
-import { toCalendarEvent, updateEvent, respondToInvite } from '../services/eventService';
+import { toCalendarEvent, updateEvent, respondToInvite, answerPublicEvent, attendanceRole } from '../services/eventService';
 import { STATUS_STYLES, STATUS_LEGEND } from './calendarStatus';
 
 moment.updateLocale('en', { week: { dow: 1, doy: 1 } });
@@ -72,6 +72,15 @@ const PlanMateCalendar = ({ userEmail, refreshKey, onSlotSelect, onCreateEvent, 
         setInternalRefresh(prev => prev + 1);
     };
 
+    // Public events you joined (from the feed): Going, Maybe or Can't go. Can't go takes it out of the calendar behind.
+    const handleAttendance = async (event, response) => {
+        await answerPublicEvent(event.id, response);
+        setSelectedEvent({ ...event, viewerRole: attendanceRole(response), attendance: response });
+        setInternalRefresh(prev => prev + 1);
+    };
+
+    const attends = selectedEvent && user && !selectedEvent.isOwn && selectedEvent.viewerRole !== 'invited';
+
     return (
         <div className="calendar-container">
             {/* AI Game plan: generated only on request, and not at all when turned off in Settings */}
@@ -123,6 +132,7 @@ const PlanMateCalendar = ({ userEmail, refreshKey, onSlotSelect, onCreateEvent, 
                     isNewEvent={false} 
                     readOnly={!selectedEvent.isOwn}
                     onRespond={selectedEvent.viewerRole === 'invited' ? (response) => handleRespond(selectedEvent, response) : undefined}
+                    onAttend={attends ? (response) => handleAttendance(selectedEvent, response) : undefined}
                 />
             )}
         </div>

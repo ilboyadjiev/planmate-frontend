@@ -3,6 +3,7 @@ import ThemeWrapper from './ThemeWrapper';
 import StyledDatePicker from './StyledDatePicker';
 import SlidingTimePicker from './SlidingTimePicker';
 import { describeDuration } from './duration';
+import './pickers.css';
 
 import { formatTime, usePreferences } from '../../services/preferences';
 
@@ -40,8 +41,7 @@ const DateTimePicker = ({ start, end, onChange, error }) => {
     return (
         <ThemeWrapper>
             <div
-                className={error ? 'field-invalid' : undefined}
-                style={{ background: 'var(--surface)', padding: '16px', borderRadius: '12px', border: '1px solid var(--border)', marginBottom: '24px' }}
+                className={`dtp${error ? ' field-invalid' : ''}`}
             >
                 
                 {/* Start Date & Time */}
@@ -53,25 +53,15 @@ const DateTimePicker = ({ start, end, onChange, error }) => {
                     />
 
                     <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
-                        <label style={{ fontWeight: '600', fontSize: '0.9rem', color: 'transparent', userSelect: 'none' }}>Time</label>
-                        <div 
-                            onClick={() => setActiveClock('start')}
-                            style={{ 
-                                padding: '8.5px 12px', border: '1px solid var(--border)', borderRadius: '8px', 
-                                background: 'rgba(255, 255, 255, 0.05)', cursor: 'pointer', textAlign: 'center', 
-                                fontWeight: '600', color: '#818cf8', userSelect: 'none', height: '40px',
-                                display: 'flex', alignItems: 'center', justifyContent: 'center',
-                                transition: 'border 0.2s'
-                            }}
-                            onMouseOver={(e) => e.target.style.borderColor = 'rgba(255, 255, 255, 0.2)'}
-                            onMouseOut={(e) => e.target.style.borderColor = 'var(--border)'}
-                        >
+                        <span className="dtp-label" aria-hidden="true">&nbsp;</span>
+                        <button type="button" className="dtp-time" onClick={() => setActiveClock('start')}
+                            aria-label={`Start time, ${formatTime(start, timeFormat)}`}>
                             {formatTime(start, timeFormat)}
-                        </div>
+                        </button>
                     </div>
                 </div>
 
-                <hr style={{ borderColor: 'var(--border)', margin: '16px 0', opacity: 0.5 }} />
+                <hr className="dtp-divider" />
                 
                 {/* End Date & Time */}
                 <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '16px' }}>
@@ -82,29 +72,17 @@ const DateTimePicker = ({ start, end, onChange, error }) => {
                     />
 
                     <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
-                        <label style={{ fontWeight: '600', fontSize: '0.9rem', color: 'transparent', userSelect: 'none' }}>Time</label>
-                        <div 
-                            onClick={() => setActiveClock('end')}
-                            style={{ 
-                                padding: '8.5px 12px', border: '1px solid var(--border)', borderRadius: '8px', 
-                                background: 'rgba(255, 255, 255, 0.05)', cursor: 'pointer', textAlign: 'center', 
-                                fontWeight: '600', color: '#818cf8', userSelect: 'none', height: '40px',
-                                display: 'flex', alignItems: 'center', justifyContent: 'center',
-                                transition: 'border 0.2s'
-                            }}
-                            onMouseOver={(e) => e.target.style.borderColor = 'rgba(255, 255, 255, 0.2)'}
-                            onMouseOut={(e) => e.target.style.borderColor = 'var(--border)'}
-                        >
+                        <span className="dtp-label" aria-hidden="true">&nbsp;</span>
+                        <button type="button" className="dtp-time" onClick={() => setActiveClock('end')}
+                            aria-label={`End time, ${formatTime(end, timeFormat)}`}>
                             {formatTime(end, timeFormat)}
-                        </div>
+                        </button>
                     </div>
                 </div>
 
                 {describeDuration(start, end) && (
                     <div
-                        aria-live="polite"
-                        style={{ marginTop: '14px', paddingTop: '12px', borderTop: '1px dashed var(--border)', textAlign: 'center', color: 'var(--text-muted)', fontSize: '0.9rem', fontWeight: '500' }}
-                    >
+                        aria-live="polite" className="dtp-duration">
                         ⏱️ {describeDuration(start, end)}
                     </div>
                 )}

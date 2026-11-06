@@ -10,6 +10,7 @@ test("the viewer's answer decides how an invitation looks", () => {
 
     expect(eventStatus({ isOwn: true })).toBe('own');
     expect(eventStatus({ viewerRole: 'going' })).toBe('accepted'); // joined from the feed
+    expect(eventStatus({ viewerRole: 'maybe' })).toBe('maybe'); // a public event answered Maybe
     expect(eventStatus({ viewerRole: 'invited', myResponse: 'maybe' })).toBe('maybe');
     expect(eventStatus({ viewerRole: 'invited', myResponse: 'declined' })).toBe('declined');
     expect(eventStatus({ viewerRole: 'invited' })).toBe('pending');

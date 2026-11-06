@@ -132,7 +132,7 @@ describe('more social groups', () => {
         const dialog = await screen.findByRole('dialog');
         expect(await within(dialog).findByText('2 invited')).toBeInTheDocument();
         fireEvent.change(within(dialog).getByPlaceholderText(/weekend hike/i), { target: { value: 'Football' } });
-        fireEvent.click(within(dialog).getByRole('button', { name: /create event/i }));
+        fireEvent.click(within(dialog).getByRole('button', { name: 'Save' }));
 
         await waitFor(() => expect(api.post).toHaveBeenCalledWith('/v2/events', expect.objectContaining({ title: 'Football', groupIds: ['10'] })));
         expect(await screen.findByText(/"Football" is planned and Sports team invited/)).toBeInTheDocument();

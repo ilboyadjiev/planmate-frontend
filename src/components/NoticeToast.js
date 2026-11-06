@@ -2,9 +2,10 @@ import React from 'react';
 import { Toast, ToastContainer } from 'react-bootstrap';
 
 /** The message after joining or leaving a public event from a card. */
-export const attendanceNotice = (event) => ({
+export const attendanceNotice = (event, response) => ({
     type: 'success',
-    text: event.going ? `You're going to "${event.title}". It's in your calendar now.` : `You left "${event.title}".`,
+    text: response === 'maybe' ? `You answered maybe to "${event.title}". It's in your calendar now.`
+        : event.going ? `You're going to "${event.title}". It's in your calendar now.` : `You left "${event.title}".`,
 });
 
 /** The message after answering an invitation from a card. */

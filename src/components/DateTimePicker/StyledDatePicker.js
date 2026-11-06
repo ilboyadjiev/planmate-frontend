@@ -5,7 +5,7 @@ import dayjs from 'dayjs';
 const StyledDatePicker = ({ label, value, onChange }) => {
     return (
         <div style={{ display: 'flex', flexDirection: 'column', gap: '8px', width: '100%' }}>
-            <label style={{ fontWeight: '600', fontSize: '0.9rem', color: 'var(--text-muted)' }}>{label}</label>
+            <label className="dtp-label">{label}</label>
             <DatePicker
                 value={dayjs(value)}
                 onChange={(newValue) => {
@@ -13,17 +13,24 @@ const StyledDatePicker = ({ label, value, onChange }) => {
                 }}
                 sx={{ width: '100%' }}
                 slotProps={{
+                    // The calendar that opens: glass, like the rest (see pickers.css)
+                    desktopPaper: { className: 'pm-picker-paper' },
+                    mobilePaper: { className: 'pm-picker-paper' },
                     textField: {
                         variant: 'outlined',
                         size: 'small',
                         sx: {
                             '& .MuiOutlinedInput-root': {
-                                backgroundColor: 'rgba(255, 255, 255, 0.05)',
+                                // A frosted pill, like the window's buttons
+                                backgroundColor: 'rgba(255, 255, 255, 0.07)',
                                 color: 'var(--text-main)',
-                                borderRadius: '8px',
-                                '& fieldset': { borderColor: 'rgba(255, 255, 255, 0.1)' },
-                                '&:hover fieldset': { borderColor: 'rgba(255, 255, 255, 0.2)' },
-                                '&.Mui-focused fieldset': { borderColor: '#F06A25', borderWidth: '1px' },
+                                borderRadius: '999px',
+                                minHeight: '40px',
+                                paddingLeft: '4px',
+                                boxShadow: 'inset 0 1px 0 rgba(255, 255, 255, 0.12)',
+                                '& fieldset': { borderColor: 'rgba(255, 255, 255, 0.16)' },
+                                '&:hover fieldset': { borderColor: 'rgba(255, 255, 255, 0.26)' },
+                                '&.Mui-focused fieldset': { borderColor: 'rgba(253, 186, 116, 0.7)', borderWidth: '1px' },
                             },
                             '& .MuiSvgIcon-root': { color: 'var(--text-muted)' }
                         }

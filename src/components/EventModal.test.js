@@ -75,7 +75,7 @@ test('a rejected participant list is reported below the participants field and k
     const onSave = jest.fn().mockRejectedValue({ response: { status: 400 } });
     renderAs(alice, <EventModal show isNewEvent initialData={ownEvent} onSave={onSave} onHide={jest.fn()} />);
 
-    fireEvent.click(screen.getByRole('button', { name: /create event/i }));
+    fireEvent.click(screen.getByRole('button', { name: 'Save' }));
 
     const error = await screen.findByRole('alert');
     expect(error).toHaveTextContent(/can no longer be invited/i);
@@ -87,7 +87,7 @@ test('a missing title is shown below the title field and clears when typing', ()
     const onSave = jest.fn();
     renderAs(alice, <EventModal show isNewEvent initialData={{ ...ownEvent, title: '' }} onSave={onSave} onHide={jest.fn()} />);
 
-    fireEvent.click(screen.getByRole('button', { name: /create event/i }));
+    fireEvent.click(screen.getByRole('button', { name: 'Save' }));
 
     const titleInput = screen.getByPlaceholderText(/weekend hike/i);
     const error = screen.getByRole('alert');
@@ -105,7 +105,7 @@ test('all invalid fields are reported at once, each below its own field', () => 
     const backwards = { ...ownEvent, title: ' ', start: new Date('2026-11-15T12:00:00Z'), end: new Date('2026-11-15T10:00:00Z') };
     renderAs(alice, <EventModal show isNewEvent initialData={backwards} onSave={jest.fn()} onHide={jest.fn()} />);
 
-    fireEvent.click(screen.getByRole('button', { name: /create event/i }));
+    fireEvent.click(screen.getByRole('button', { name: 'Save' }));
 
     const messages = screen.getAllByRole('alert').map(a => a.id);
     expect(messages).toEqual(['title-error', 'datetime-error']);
@@ -163,7 +163,7 @@ describe('inviting friend groups', () => {
         expect(screen.getByText('Carol')).toBeInTheDocument(); // named via the group, though not a friend
         expect(screen.queryByRole('button', { name: /\+ Board games/ })).not.toBeInTheDocument();
 
-        fireEvent.click(screen.getByRole('button', { name: /create event/i }));
+        fireEvent.click(screen.getByRole('button', { name: 'Save' }));
         expect(onSave).toHaveBeenCalledWith(expect.objectContaining({ groups: [{ id: 7 }] }));
     });
 
@@ -174,7 +174,7 @@ describe('inviting friend groups', () => {
         renderAs(alice, <EventModal show initialData={saved} onSave={onSave} onHide={jest.fn()} />);
 
         fireEvent.click(await screen.findByRole('button', { name: 'Remove group Board games' }));
-        fireEvent.click(screen.getByRole('button', { name: /save changes/i }));
+        fireEvent.click(screen.getByRole('button', { name: 'Save' }));
 
         expect(onSave).toHaveBeenCalledWith(expect.objectContaining({ groups: [], participants: [{ id: '4' }] }));
     });
@@ -306,12 +306,12 @@ describe('Export to calendar', () => {
     };
 
     test('exporting a public event also joins it, so it is in the PlanMate calendar as going', async () => {
-        const onJoin = jest.fn().mockResolvedValue({});
-        renderAs(bob, <EventModal show initialData={concert} onSave={jest.fn()} onHide={jest.fn()} readOnly onJoin={onJoin} />);
+        const onAttend = jest.fn().mockResolvedValue({});
+        renderAs(bob, <EventModal show initialData={concert} onSave={jest.fn()} onHide={jest.fn()} readOnly onAttend={onAttend} />);
 
         await exportTo('Google Calendar');
-        expect(onJoin).toHaveBeenCalledTimes(1);
-        expect(await screen.findByText(/You're going/)).toBeInTheDocument();
+        expect(onAttend).toHaveBeenCalledWith('accepted');
+        expect(await screen.findByRole('button', { name: 'Going', pressed: true })).toBeInTheDocument();
     });
 
     test('exporting an invitation accepts it', async () => {
@@ -324,18 +324,90 @@ describe('Export to calendar', () => {
     });
 
     test('people already going, guests and past events are left as they are', async () => {
-        const onJoin = jest.fn().mockResolvedValue({});
-        const { unmount } = renderAs(bob, <EventModal show initialData={{ ...concert, viewerRole: 'going' }} onSave={jest.fn()} onHide={jest.fn()} readOnly onJoin={onJoin} />);
+        const onAttend = jest.fn().mockResolvedValue({});
+        const { unmount } = renderAs(bob, <EventModal show initialData={{ ...concert, viewerRole: 'going' }} onSave={jest.fn()} onHide={jest.fn()} readOnly onAttend={onAttend} />);
         await exportTo('Google Calendar');
         unmount();
 
         const past = { ...concert, start: new Date('2020-01-01T19:00:00Z'), end: new Date('2020-01-01T22:00:00Z') };
-        const view = renderAs(bob, <EventModal show initialData={past} onSave={jest.fn()} onHide={jest.fn()} readOnly onJoin={onJoin} />);
+        const view = renderAs(bob, <EventModal show initialData={past} onSave={jest.fn()} onHide={jest.fn()} readOnly onAttend={onAttend} />);
         await exportTo('Google Calendar');
         view.unmount();
 
-        renderAs(null, <EventModal show initialData={concert} onSave={jest.fn()} onHide={jest.fn()} readOnly onJoin={onJoin} />);
+        renderAs(null, <EventModal show initialData={concert} onSave={jest.fn()} onHide={jest.fn()} readOnly onAttend={onAttend} />);
         await exportTo('Google Calendar');
-        expect(onJoin).not.toHaveBeenCalled();
+        expect(onAttend).not.toHaveBeenCalled();
+    });
+});
+
+describe('the toolbar and your answer', () => {
+    const own = { ...invitedEvent, creatorId: bob.email, isOwn: true, viewerRole: 'host' };
+    const concert = {
+        id: 'tm-2', title: 'Jazz night', creatorId: 'events@planmate.org', hostName: 'PlanMate Picks',
+        start: new Date('2030-11-15T19:00:00Z'), end: new Date('2030-11-15T22:00:00Z'),
+        participants: [], tags: [], isPublic: true, viewerRole: 'going', isOwn: false,
+    };
+
+    test('editing puts Export, Share, Save and close in the toolbar, without a heading', () => {
+        const onSave = jest.fn().mockResolvedValue();
+        const onHide = jest.fn();
+        renderAs(bob, <EventModal show initialData={own} onSave={onSave} onHide={onHide} />);
+        const toolbar = screen.getByRole('group', { name: 'Event actions' });
+        expect(within(toolbar).getAllByRole('button').map(b => b.textContent.trim() || b.getAttribute('aria-label')))
+            .toEqual(['Export to calendar', 'Share', 'Save', 'Close']);
+        expect(screen.queryByText(/edit event|create new event/i)).not.toBeInTheDocument();
+
+        fireEvent.click(within(toolbar).getByRole('button', { name: 'Save' }));
+        expect(onSave).toHaveBeenCalled();
+        fireEvent.click(within(toolbar).getByRole('button', { name: 'Close' }));
+        expect(onHide).toHaveBeenCalled();
+    });
+
+    test('new events only have Save and close', () => {
+        renderAs(bob, <EventModal show isNewEvent initialData={{ ...own, id: null }} onSave={jest.fn()} onHide={jest.fn()} />);
+        expect(screen.getByRole('dialog', { name: 'New event' })).toBeInTheDocument();
+        expect(screen.queryByRole('button', { name: 'Share' })).not.toBeInTheDocument();
+        expect(screen.getByRole('button', { name: 'Save' })).toBeInTheDocument();
+    });
+
+    test('a public event you joined can be answered Going, Maybe or Can\'t go from the details', async () => {
+        const onAttend = jest.fn().mockResolvedValue({});
+        renderAs(bob, <EventModal show initialData={concert} onSave={jest.fn()} onHide={jest.fn()} readOnly onAttend={onAttend} />);
+
+        const answer = screen.getByRole('region', { name: 'Your answer' });
+        expect(within(answer).getAllByRole('button').map(b => b.textContent)).toEqual(['Going', 'Maybe', "Can't go"]);
+        expect(within(answer).getByRole('button', { name: 'Going' })).toHaveAttribute('aria-pressed', 'true');
+
+        fireEvent.click(within(answer).getByRole('button', { name: 'Maybe' }));
+        expect(onAttend).toHaveBeenCalledWith('maybe');
+        expect(await within(answer).findByRole('button', { name: 'Maybe', pressed: true })).toBeInTheDocument();
+
+        fireEvent.click(within(answer).getByRole('button', { name: "Can't go" }));
+        expect(onAttend).toHaveBeenLastCalledWith('declined');
+        expect(await within(answer).findByRole('button', { name: "Can't go", pressed: true })).toBeInTheDocument();
+    });
+
+    test('a public event you have not answered has nothing chosen yet, and a Maybe shows as Maybe', () => {
+        const { unmount } = renderAs(bob, <EventModal show initialData={{ ...concert, viewerRole: null }} onSave={jest.fn()} onHide={jest.fn()} readOnly onAttend={jest.fn()} />);
+        expect(screen.queryByRole('button', { pressed: true })).not.toBeInTheDocument();
+        unmount();
+        renderAs(bob, <EventModal show initialData={{ ...concert, viewerRole: 'maybe' }} onSave={jest.fn()} onHide={jest.fn()} readOnly onAttend={jest.fn()} />);
+        expect(screen.getByRole('button', { name: 'Maybe' })).toHaveAttribute('aria-pressed', 'true');
+    });
+
+    test('a failed answer is reported and keeps the old one', async () => {
+        const onAttend = jest.fn().mockRejectedValue(new Error('offline'));
+        renderAs(bob, <EventModal show initialData={concert} onSave={jest.fn()} onHide={jest.fn()} readOnly onAttend={onAttend} />);
+        fireEvent.click(screen.getByRole('button', { name: "Can't go" }));
+        expect(await screen.findByText(/could not be saved/i)).toHaveAttribute('id', 'rsvp-error');
+        expect(screen.getByRole('button', { name: 'Going' })).toHaveAttribute('aria-pressed', 'true');
+    });
+
+    test('guests and cancelled events have no answer section', () => {
+        const { unmount } = renderAs(null, <EventModal show initialData={concert} onSave={jest.fn()} onHide={jest.fn()} readOnly onAttend={jest.fn()} />);
+        expect(screen.queryByRole('region', { name: 'Your answer' })).not.toBeInTheDocument();
+        unmount();
+        renderAs(bob, <EventModal show initialData={{ ...concert, cancelled: true }} onSave={jest.fn()} onHide={jest.fn()} readOnly onAttend={jest.fn()} />);
+        expect(screen.queryByRole('region', { name: 'Your answer' })).not.toBeInTheDocument();
     });
 });

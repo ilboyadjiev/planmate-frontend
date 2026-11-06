@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import api from '../../api/client';
 import EventModal from '../EventModal';
-import { fetchEvent, updateEvent, respondToInvite } from '../../services/eventService';
+import { fetchEvent, updateEvent, respondToInvite, answerPublicEvent, attendanceRole } from '../../services/eventService';
 import { getGuestId } from '../../services/guestService';
 
 /** The card after the viewer answered an invitation, without waiting for a reload. */
@@ -23,7 +23,7 @@ export const withResponse = (event, response) => {
  *
  * events / setEvents: the listed cards, kept up to date after each action.
  * reload(): called after the creator edited an event from its details window.
- * onAttendanceChange(card), onRespond(card, response), onEventChanged(), onError(message): optional callbacks.
+ * onAttendanceChange(card, response?), onRespond(card, response), onEventChanged(), onError(message): optional callbacks.
  *
  * Returns the handlers for FeedEventCard and detailsModal, to render once next to the list.
  */
@@ -94,13 +94,13 @@ const useEventCardActions = ({ user, events, setEvents, reload, onAttendanceChan
         if (onRespond) onRespond(updatedCard || { id: details.id, title: details.title }, response);
     };
 
-    // Exported from the details window: joined, so the card (and the calendar) say going
-    const joinInDetails = async () => {
-        const res = await api.post(`/v2/events/${details.id}/attendance`);
-        replaceCard(res.data);
-        setDetails(prev => ({ ...prev, viewerRole: 'going' }));
-        if (onAttendanceChange) onAttendanceChange(res.data);
-        return res.data;
+    // Going, Maybe or Can't go in the details window (or exported, which answers Going): the card follows
+    const attendInDetails = async (response) => {
+        const card = await answerPublicEvent(details.id, response);
+        replaceCard(card);
+        setDetails(prev => ({ ...prev, viewerRole: attendanceRole(response), attendance: response }));
+        if (onAttendanceChange) onAttendanceChange(card, response);
+        return card;
     };
 
     const detailsModal = details ? (
@@ -112,7 +112,7 @@ const useEventCardActions = ({ user, events, setEvents, reload, onAttendanceChan
             isNewEvent={false}
             readOnly={!details.isOwn}
             onRespond={details.viewerRole === 'invited' ? respondInDetails : undefined}
-            onJoin={joinInDetails}
+            onAttend={details.viewerRole !== 'invited' ? attendInDetails : undefined}
         />
     ) : null;
 

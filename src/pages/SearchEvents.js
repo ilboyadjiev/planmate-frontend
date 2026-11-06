@@ -133,7 +133,7 @@ const SearchEvents = () => {
 
     const { pendingId, openingId, toggleGoing, respond, openDetails, detailsModal } = useEventCardActions({
         user, events, setEvents, reload: () => loadPage(0),
-        onAttendanceChange: event => setNotice(attendanceNotice(event)),
+        onAttendanceChange: (event, response) => setNotice(attendanceNotice(event, response)),
         onRespond: (event, response) => setNotice(responseNotice(event, response)),
         onError: text => setNotice({ type: 'error', text }),
     });

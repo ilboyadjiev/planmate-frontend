@@ -42,7 +42,8 @@ export { withResponse } from './feed/useEventCardActions';
  * - tags: public events with that tag
  * Public events can be joined; invitations (e.g. a group's events) are answered right on the card.
  *
- * onAttendanceChange(event) is called after joining or leaving a public event.
+ * onAttendanceChange(event, response?) is called after joining or leaving a public event, or answering it Maybe
+ * (response, from the details window: accepted, maybe or declined).
  * onRespond(event, response) is called after answering an invitation.
  * onEventChanged() is called after the creator edited an event from the feed.
  * onError(message) is called when joining, leaving, answering or opening an event fails.

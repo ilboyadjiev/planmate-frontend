@@ -53,4 +53,3 @@
 .add-to-calendar.opens-up .add-to-calendar-menu { top: auto; bottom: calc(100% + 8px); }
 
 /* The export buttons in the event details pop-up's footer */
-.event-modal-export { display: flex; align-items: flex-start; flex-wrap: wrap; gap: 8px; }

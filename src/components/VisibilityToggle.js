@@ -1,56 +1,22 @@
 import React from 'react';
+import { LockIcon } from './feed/FeedEventCard';
 
-const VisibilityToggle = ({ isPublic, onChange }) => {
-    return (
-        <div style={{ 
-            display: 'flex', 
-            position: 'relative',
-            background: 'var(--bg-color)', 
-            padding: '4px', 
-            borderRadius: '12px', 
-            border: '1px solid var(--border)',
-            width: '100%',
-            userSelect: 'none'
-        }}>
-            <div style={{
-                position: 'absolute',
-                top: '4px',
-                bottom: '4px',
-                left: isPublic ? '4px' : '50%',
-                width: 'calc(50% - 4px)',
-                background: 'rgba(255, 255, 255, 0.08)',
-                border: '1px solid rgba(255, 255, 255, 0.1)',
-                borderRadius: '8px',
-                transition: 'left 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
-                zIndex: 1,
-                boxShadow: 'var(--shadow-sm)'
-            }} />
+const GlobeIcon = () => (
+    <svg aria-hidden="true" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+        <circle cx="12" cy="12" r="9" /><path d="M3 12h18M12 3a14 14 0 0 1 0 18M12 3a14 14 0 0 0 0 18" />
+    </svg>
+);
 
-            <div 
-                onClick={() => onChange(true)}
-                style={{ 
-                    flex: 1, textAlign: 'center', padding: '10px 0',
-                    fontWeight: '600', fontSize: '0.95rem',
-                    color: isPublic ? 'var(--primary)' : 'var(--text-muted)',
-                    cursor: 'pointer', zIndex: 2, transition: 'color 0.3s'
-                }}
-            >
-                🌍 Show In Feed
-            </div>
-            
-            <div 
-                onClick={() => onChange(false)}
-                style={{ 
-                    flex: 1, textAlign: 'center', padding: '10px 0',
-                    fontWeight: '600', fontSize: '0.95rem',
-                    color: !isPublic ? '#818cf8' : 'var(--text-muted)',
-                    cursor: 'pointer', zIndex: 2, transition: 'color 0.3s'
-                }}
-            >
-                🔒 Invites Only
-            </div>
-        </div>
-    );
-};
+/** Who can see an event: everyone (it shows in the feed) or only the people invited. A glass switch of two pills. */
+const VisibilityToggle = ({ isPublic, onChange, labelledBy }) => (
+    <div className="pm-segmented" role="group" aria-labelledby={labelledBy}>
+        <button type="button" aria-pressed={!!isPublic} onClick={() => onChange(true)}>
+            <GlobeIcon /> Show in feed
+        </button>
+        <button type="button" aria-pressed={!isPublic} onClick={() => onChange(false)}>
+            <LockIcon /> Invites only
+        </button>
+    </div>
+);
 
 export default VisibilityToggle;

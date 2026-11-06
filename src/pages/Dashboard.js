@@ -47,8 +47,8 @@ const Dashboard = ({ view = 'discover' }) => {
     };
 
     // Joined events show in the calendar read-only, so refresh it after joining or leaving
-    const handleAttendanceChange = (event) => {
-        setNotice(attendanceNotice(event));
+    const handleAttendanceChange = (event, response) => {
+        setNotice(attendanceNotice(event, response));
         setRefreshKey(prev => prev + 1);
     };
 

@@ -64,6 +64,22 @@ export const respondToInvite = async (eventId, response) => {
  * An event from the server in the shape the calendar and EventModal use. Events the viewer created are editable
  * (isOwn); invitations and other people's public events open read-only.
  */
+/**
+ * Answers a public event you were not invited to: accepted (going), maybe, or declined (it leaves your calendar).
+ * Returns the event's feed card.
+ */
+export const answerPublicEvent = async (eventId, response) => {
+    const res = await api.put(`/v2/events/${eventId}/attendance`, { response });
+    return res.data;
+};
+
+/** The viewerRole a public event has after that answer: going, maybe, or none. */
+export const attendanceRole = (response) => ({ accepted: 'going', maybe: 'maybe' }[response] || null);
+
+/** Your answer to a public event: what you just chose, else what the calendar knows (going or maybe). */
+export const attendanceOf = (event) =>
+    event.attendance || { going: 'accepted', maybe: 'maybe' }[event.viewerRole] || null;
+
 export const toCalendarEvent = (event, user) => {
     const myOwnerId = user ? user.email : getGuestId();
     // The organizer and invitees get everyone's name from the server, also for people who are not their friends

@@ -1,0 +1,240 @@
+/*
+ * The event window (EventModal) in liquid glass, like the calendar and the feed: a frosted toolbar on top with
+ * Export, Share, Save and close, and every field a frosted pill matching those buttons.
+ */
+
+/* Clips to the rounded corners without becoming a scroll box, so the toolbar can stay on top while scrolling */
+.modern-modal.event-modal { overflow: hidden; overflow: clip; }
+
+.event-modal .modal-body { padding: 20px 24px 24px; }
+
+/* ---------- Toolbar ---------- */
+
+.event-modal-toolbar {
+  position: sticky;
+  top: 0;
+  z-index: 5; /* the export menu opens over the fields */
+  display: flex;
+  align-items: flex-start;
+  flex-wrap: wrap;
+  gap: 8px;
+  padding: 14px 16px;
+  border-radius: 24px 24px 0 0;
+  background: rgba(22, 27, 43, 0.85);
+  -webkit-backdrop-filter: blur(20px) saturate(160%);
+  backdrop-filter: blur(20px) saturate(160%);
+  border-bottom: 1px solid var(--glass-soft-line);
+}
+
+.event-modal-toolbar .pm-glass-button { min-height: 40px; }
+
+.event-modal-toolbar-end {
+  margin-left: auto;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.event-modal-save { padding: 0 20px; }
+
+.event-modal-close {
+  width: 40px;
+  padding: 0;
+  color: var(--glass-muted);
+}
+
+.event-modal-close:hover:not(:disabled) { color: var(--text-main); }
+
+/* ---------- Labels, headings, read-only details ---------- */
+
+.event-modal .event-modal-label {
+  display: block;
+  margin-bottom: 8px;
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--glass-muted);
+}
+
+.event-modal-field { margin-bottom: 20px; }
+.event-modal-section { margin-bottom: 16px; color: var(--text-main); }
+.event-modal-section .event-modal-label { margin-bottom: 4px; }
+
+.event-modal-title {
+  margin: 0 0 4px;
+  font-size: 1.35rem;
+  font-weight: 700;
+  line-height: 1.3;
+  color: var(--text-main);
+  overflow-wrap: anywhere;
+}
+
+.event-modal-note {
+  margin: 0 0 20px;
+  font-size: 0.85rem;
+  color: var(--glass-muted);
+}
+
+/* ---------- Your answer ---------- */
+
+.event-modal-rsvp {
+  margin-bottom: 20px;
+  padding: 14px;
+  border-radius: 18px;
+  background: var(--glass-soft);
+  border: 1px solid var(--glass-soft-line);
+  box-shadow: var(--glass-highlight);
+}
+
+.event-modal .rsvp-button {
+  min-height: 40px;
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.07);
+  border: 1px solid rgba(255, 255, 255, 0.16);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.20), 0 4px 14px rgba(0, 0, 0, 0.25);
+  font-size: 13px;
+  font-weight: 700;
+}
+
+.event-modal .rsvp-button:hover:not(:disabled) { background: rgba(255, 255, 255, 0.12); }
+
+.event-modal .rsvp-button.rsvp-accepted[aria-pressed="true"] {
+  background: rgba(16, 185, 129, 0.28);
+  border-color: rgba(110, 231, 183, 0.55);
+  color: #A7F3D0;
+}
+
+.event-modal .rsvp-button.rsvp-maybe[aria-pressed="true"] {
+  background: rgba(79, 70, 229, 0.28);
+  border: 1px dashed #818cf8;
+  color: #E0E7FF;
+}
+
+.event-modal .rsvp-button.rsvp-declined[aria-pressed="true"] {
+  background: rgba(239, 68, 68, 0.2);
+  border-color: rgba(252, 165, 165, 0.5);
+  color: #FCA5A5;
+}
+
+/* ---------- Fields: frosted pills like the toolbar's buttons ---------- */
+
+.event-modal input.form-control,
+.event-modal textarea.form-control {
+  min-height: 40px;
+  border-radius: 999px;
+  padding: 8px 16px;
+  font-size: 14px;
+  background-color: rgba(255, 255, 255, 0.07) !important;
+  border: 1px solid rgba(255, 255, 255, 0.16) !important;
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.12) !important;
+}
+
+.event-modal textarea.form-control { border-radius: 18px; padding: 10px 16px; }
+
+.event-modal input.form-control:hover,
+.event-modal textarea.form-control:hover { border-color: rgba(255, 255, 255, 0.26) !important; }
+
+.event-modal input.form-control:focus,
+.event-modal textarea.form-control:focus {
+  background-color: rgba(255, 255, 255, 0.10) !important;
+  border-color: rgba(253, 186, 116, 0.7) !important;
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.12), 0 0 0 3px rgba(240, 106, 37, 0.2) !important;
+  outline: none;
+}
+
+.event-modal input.form-control.field-invalid,
+.event-modal .dtp.field-invalid {
+  border-color: #EF4444 !important;
+  box-shadow: 0 0 0 3px rgba(239, 68, 68, 0.2) !important;
+}
+
+/* Visibility: two pills in a glass track, like the calendar's views */
+.pm-segmented {
+  display: flex;
+  gap: 2px;
+  padding: 4px;
+  border-radius: 999px;
+  background: var(--glass-soft);
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.10);
+}
+
+.pm-segmented button {
+  flex: 1;
+  min-height: 34px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  border: none;
+  border-radius: 999px;
+  background: transparent;
+  color: var(--glass-muted);
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: color 0.2s, background 0.2s;
+}
+
+.pm-segmented button:hover { color: var(--text-main); }
+
+.pm-segmented button[aria-pressed="true"] {
+  background: var(--glass-active-bg);
+  color: var(--glass-active-text);
+  box-shadow: var(--glass-active-shadow);
+}
+
+.pm-segmented button:focus-visible { outline: 2px solid #FDBA74; outline-offset: 2px; }
+
+/* When: start and end on a soft glass card */
+.dtp {
+  margin-bottom: 20px;
+  padding: 16px;
+  border-radius: 18px;
+  background: var(--glass-soft);
+  border: 1px solid var(--glass-soft-line);
+  box-shadow: var(--glass-highlight);
+}
+
+.dtp .dtp-label {
+  display: block;
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--glass-muted);
+}
+
+.dtp-time {
+  width: 100%;
+  min-height: 40px;
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.07);
+  border: 1px solid rgba(255, 255, 255, 0.16);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.12);
+  color: #C7D2FE;
+  font-weight: 700;
+  cursor: pointer;
+  transition: background 0.2s, border-color 0.2s;
+}
+
+.dtp-time:hover { background: rgba(255, 255, 255, 0.12); border-color: rgba(255, 255, 255, 0.26); }
+.dtp-time:focus-visible { outline: 2px solid #FDBA74; outline-offset: 2px; }
+
+.dtp-divider { margin: 16px 0; border-color: var(--glass-soft-line); opacity: 1; }
+
+.dtp-duration {
+  margin-top: 14px;
+  padding-top: 12px;
+  border-top: 1px dashed var(--glass-soft-line);
+  text-align: center;
+  font-size: 0.85rem;
+  font-weight: 500;
+  color: var(--glass-muted);
+}
+
+@media (max-width: 480px) {
+  .event-modal .modal-body { padding: 16px; }
+  .event-modal-toolbar { padding: 12px; }
+}
