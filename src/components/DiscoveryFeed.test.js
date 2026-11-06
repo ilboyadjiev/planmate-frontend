@@ -1,4 +1,4 @@
-import { render, screen, fireEvent, waitFor, within } from '@testing-library/react';
+import { render, screen, fireEvent, waitFor, within, act } from '@testing-library/react';
 import { MemoryRouter, Route, Routes, useLocation } from 'react-router-dom';
 import DiscoveryFeed, { topicChips } from './DiscoveryFeed';
 import { AuthContext } from '../context/AuthContext';
@@ -53,6 +53,65 @@ test('starts on "For you" and loads more cards on demand', async () => {
     expect(await screen.findByText('Event c')).toBeInTheDocument();
     expect(screen.getAllByText('Event b')).toHaveLength(1); // no duplicates when the ranking shifts
     expect(screen.queryByRole('button', { name: 'Show more' })).not.toBeInTheDocument();
+});
+
+describe('infinite scrolling', () => {
+    // jsdom has no IntersectionObserver: this one lets a test say "the end of the list came into view"
+    let observers;
+    beforeEach(() => {
+        observers = [];
+        window.IntersectionObserver = jest.fn(function observe(callback) {
+            const self = { callback, elements: [], observe: el => self.elements.push(el), disconnect: () => { self.gone = true; } };
+            observers.push(self);
+            return self;
+        });
+    });
+    afterEach(() => { delete window.IntersectionObserver; });
+    const watching = () => observers.filter(o => !o.gone && o.elements.length > 0);
+    // Waits until the feed watches the end of the list (its effect may run a moment after the cards show), then
+    // reports it in view
+    const endComesIntoView = async () => {
+        await waitFor(() => expect(watching()).not.toHaveLength(0));
+        await act(async () => {
+            watching().forEach(o => o.callback([{ isIntersecting: true, target: o.elements[0] }]));
+        });
+    };
+
+    test('the next page loads by itself when the end of the list comes near', async () => {
+        feedResponses = [
+            { data: { events: [card('a'), card('b')], hasMore: true } },
+            { data: { events: [card('c')], hasMore: false } },
+        ];
+        renderFeed();
+        expect(await screen.findByText('Event a')).toBeInTheDocument();
+
+        await endComesIntoView();
+
+        expect(await screen.findByText('Event c')).toBeInTheDocument();
+        expect(feedCalls()[1]).toEqual(['/v2/events/feed', { params: { page: 1, size: 5 } }]);
+        expect(screen.queryByRole('button', { name: 'Show more' })).not.toBeInTheDocument(); // the end
+    });
+
+    test('after 60 cards it stops, so the footer stays reachable, and Show more loads the rest', async () => {
+        const many = Array.from({ length: 60 }, (_, i) => card(`n${i}`));
+        feedResponses = [{ data: { events: many, hasMore: true } }];
+        renderFeed();
+        expect(await screen.findByText('Event n59')).toBeInTheDocument();
+
+        expect(watching()).toHaveLength(0); // nothing loads by itself any more
+        expect(feedCalls()).toHaveLength(1);
+        expect(screen.getByRole('button', { name: 'Show more' })).toBeInTheDocument();
+    });
+
+    test('a failed page is not retried by itself', async () => {
+        feedResponses = [{ data: { events: [card('a')], hasMore: true } }, new Error('offline')];
+        renderFeed();
+        expect(await screen.findByText('Event a')).toBeInTheDocument();
+        await endComesIntoView();
+        expect(await screen.findByRole('alert')).toHaveTextContent("Couldn't load events.");
+        expect(watching()).toHaveLength(0); // no retry by itself
+        expect(feedCalls()).toHaveLength(2);
+    });
 });
 
 test('nobody gets topic chips they did not choose', async () => {

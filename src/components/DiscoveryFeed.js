@@ -4,12 +4,14 @@ import api from '../api/client';
 import { usePreferences } from '../services/preferences';
 import { AuthContext } from '../context/AuthContext';
 import FeedEventCard from './feed/FeedEventCard';
+import useLoadMoreOnScroll from '../hooks/useLoadMoreOnScroll';
 import useEventCardActions from './feed/useEventCardActions';
 import GlassPanel from './GlassPanel';
 import './feed/DiscoveryFeed.css';
 import CalendarLoader from './CalendarLoader';
 
 const PAGE_SIZE = 5;
+const AUTO_LOAD_LIMIT = 60;
 /**
  * Tag chips: only the topics you chose in Settings (nothing is pushed on anyone), plus the tag you are looking at
  * right now, e.g. one picked from an event's details.
@@ -131,6 +133,11 @@ const DiscoveryFeed = ({ onAttendanceChange, onRespond, onEventChanged, onError 
         loadPage(0);
     }, [loadPage, userKey]);
 
+    // Infinite scrolling: the next page loads as the end of the list comes near. After AUTO_LOAD_LIMIT cards it
+    // stops, so the footer (Impressum, privacy) stays reachable; "Show more" then loads the rest.
+    const autoLoad = hasMore && !loading && !loadError && events.length > 0 && events.length < AUTO_LOAD_LIMIT;
+    const moreRef = useLoadMoreOnScroll(() => loadPage(page + 1), autoLoad);
+
     const { pendingId, openingId, toggleGoing, respond, openDetails, detailsModal } = useEventCardActions({
         user, events, setEvents, reload: () => loadPage(0), onAttendanceChange, onRespond, onEventChanged, onError,
     });
@@ -196,10 +203,15 @@ const DiscoveryFeed = ({ onAttendanceChange, onRespond, onEventChanged, onError 
             </div>
 
             {hasMore && events.length > 0 && (
-                <button type="button" className="feed-more pm-glass-button" disabled={loading} onClick={() => loadPage(page + 1)}>
-                    {loading ? 'Loading…' : 'Show more'}
-                </button>
+                <div ref={moreRef} className="feed-more-place">
+                    <button type="button" className="feed-more pm-glass-button" disabled={loading} onClick={() => loadPage(page + 1)}>
+                        {loading ? 'Loading…' : 'Show more'}
+                    </button>
+                </div>
             )}
+            <span className="visually-hidden" role="status" aria-live="polite">
+                {loading && events.length > 0 ? 'Loading more events…' : ''}
+            </span>
             {detailsModal}
         </GlassPanel>
     );

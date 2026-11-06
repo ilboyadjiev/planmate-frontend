@@ -282,7 +282,13 @@
 .feed-action-login:hover { color: #FED7AA; background: rgba(240, 106, 37, 0.08); }
 
 
-/* Show more: a .pm-glass-button (index.css), centred under the list */
+/* Show more: a .pm-glass-button (index.css), centred under the list. Its place loads the next page by itself as it
+   comes near the screen (infinite scrolling); the button stays for keyboards and after the auto-load limit. */
+.feed-more-place {
+  display: flex;
+  justify-content: center;
+}
+
 .feed-more {
   align-self: center;
   min-height: 44px;
