@@ -121,6 +121,8 @@ test('an event that is over says so and offers no joining', async () => {
 test('the full date, with times in the chosen format', () => {
     expect(longWhen('2030-11-06T19:00:00', '2030-11-06T22:00:00')).toBe('Wednesday, 6 November 2030 · 19:00 – 22:00');
     expect(longWhen('2030-11-06T19:00:00', '2030-11-06T22:00:00', '12h')).toBe('Wednesday, 6 November 2030 · 7:00 PM – 10:00 PM');
+    expect(longWhen('2030-11-22T00:00:00', '2030-11-23T00:00:00')).toBe('Friday, 22 November 2030 · All day');
+    expect(longWhen('2030-11-22T00:00:00', '2030-11-29T00:00:00')).toBe('Fri 22 Nov – Thu 28 Nov 2030');
 });
 
 test('a cancelled event says so and offers no joining or adding to calendars', async () => {

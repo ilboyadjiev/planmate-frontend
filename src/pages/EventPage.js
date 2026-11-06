@@ -12,7 +12,7 @@ import ShareButton from '../components/share/ShareButton';
 import AddToCalendar from '../components/calendarExport/AddToCalendar';
 import { CardAction, ClockIcon, PinIcon } from '../components/feed/FeedEventCard';
 import useEventCardActions from '../components/feed/useEventCardActions';
-import { formatPlace, socialProof, tagFeedPath } from '../components/feed/feedText';
+import { formatPlace, isAllDay, socialProof, tagFeedPath } from '../components/feed/feedText';
 import { eventUrl, loginPathTo } from '../services/shareLinks';
 import { usePreferences } from '../services/preferences';
 import '../components/feed/DiscoveryFeed.css';
@@ -37,13 +37,21 @@ const CalendarOffIcon = () => (
     </svg>
 );
 
-/** "Friday, 6 November · 19:00 – 22:00", or both dates for events that run past midnight. */
+/**
+ * "Friday, 6 November · 19:00 – 22:00", or both dates for events that run past midnight; "Friday, 20 November ·
+ * All day" for a whole day (a film's release), "Fri 20 Nov – Thu 26 Nov" for several.
+ */
 export const longWhen = (start, end, timeFormat = '24h') => {
     const s = moment(start);
     const e = moment(end);
     const t = timeFormat === '12h' ? 'h:mm A' : 'HH:mm';
     const year = s.year() !== moment().year() ? ' YYYY' : '';
     if (!e.isValid()) return s.format(`dddd, D MMMM${year} · ${t}`);
+    if (isAllDay(start, end)) {
+        const last = moment(end).subtract(1, 'day');
+        return s.isSame(last, 'day') ? `${s.format(`dddd, D MMMM${year}`)} · All day`
+            : `${s.format('ddd D MMM')} – ${last.format(`ddd D MMM${last.year() !== moment().year() ? ' YYYY' : ''}`)}`;
+    }
     if (s.isSame(e, 'day')) return `${s.format(`dddd, D MMMM${year}`)} · ${s.format(t)} – ${e.format(t)}`;
     return `${s.format(`ddd D MMM, ${t}`)} – ${e.format(`ddd D MMM${year}, ${t}`)}`;
 };

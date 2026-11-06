@@ -10,7 +10,7 @@ import AddFriendButton from './AddFriendButton';
 import PersonPill from './PersonPill';
 import { usePreferences } from '../services/preferences';
 import { useNavigate } from 'react-router-dom';
-import { tagFeedPath } from './feed/feedText';
+import { isAllDay, tagFeedPath } from './feed/feedText';
 import ShareButton from './share/ShareButton';
 import SourceLink from './SourceLink';
 import RelatedEvents from './RelatedEvents';
@@ -21,6 +21,14 @@ import useFriendships from '../hooks/useFriendships';
 const labelStyle = { fontWeight: '600', color: 'var(--text-main)' };
 
 const formatRange = (start, end, timeFormat = '24h') => {
+    if (isAllDay(start, end)) {
+        const day = { weekday: 'short', day: 'numeric', month: 'short' };
+        const first = new Date(start);
+        const last = new Date(new Date(end).getTime() - 1);
+        return first.toDateString() === last.toDateString()
+            ? `${first.toLocaleDateString([], day)}, all day`
+            : `${first.toLocaleDateString([], day)} – ${last.toLocaleDateString([], day)}`;
+    }
     const opts = { weekday: 'short', day: 'numeric', month: 'short', hour: 'numeric', minute: '2-digit',
         hour12: timeFormat === '12h' };
     return `${new Date(start).toLocaleString([], opts)} – ${new Date(end).toLocaleString([], opts)}`;

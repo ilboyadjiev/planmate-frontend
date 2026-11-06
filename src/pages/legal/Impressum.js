@@ -26,6 +26,13 @@ const Impressum = () => {
                 The European Commission provides a platform for online dispute resolution (OS): <a href="https://ec.europa.eu/consumers/odr" target="_blank" rel="noreferrer" style={{ color: 'var(--primary)' }}>https://ec.europa.eu/consumers/odr</a>.<br />
                 We are not willing or obliged to participate in dispute resolution proceedings before a consumer arbitration board.
             </p>
+
+            <h3 style={{ fontSize: '1.2rem', margin: '24px 0 8px' }}>Event Sources</h3>
+            <p style={{ color: 'var(--text-muted)', lineHeight: '1.6' }}>
+                Events found by PlanMate name their source and link to it. Cinema release dates come from{' '}
+                <a href="https://www.themoviedb.org" target="_blank" rel="noreferrer" style={{ color: 'var(--primary)' }}>The Movie Database (TMDB)</a>.
+                This product uses the TMDB API but is not endorsed or certified by TMDB.
+            </p>
         </div>
     );
 };
