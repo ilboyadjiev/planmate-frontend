@@ -18,7 +18,7 @@ const PlusIcon = () => (
 
 /**
  * Discover feed and calendar.
- * - Large screens: side by side, on both /dashboard and /calendar.
+ * - Large screens: /dashboard shows the feed with the calendar beside it, /calendar the calendar on its own (month).
  * - Phones: one page per tab of the bottom bar: /dashboard shows Discover, /calendar the calendar (day view).
  *   A floating "+" button creates an event on both.
  */
@@ -62,21 +62,18 @@ const Dashboard = ({ view = 'discover' }) => {
     if (isMobile && view === 'discover' && searchParams.get('calendar') === 'open') {
         return <Navigate to="/calendar" replace />;
     }
-    // On large screens the calendar is always next to the feed
-    if (!isMobile && view === 'calendar') {
-        return <Navigate to="/dashboard" replace />;
-    }
-
-    const showFeed = !isMobile || view === 'discover';
-    const showCalendar = !isMobile || view === 'calendar';
+    // Discover: the feed, with the calendar beside it on large screens. Calendar: the calendar on its own.
+    const showFeed = view === 'discover';
+    const showCalendar = view === 'calendar' || !isMobile;
+    const single = isMobile || view === 'calendar';
 
     return (
         <div className="dashboard-page">
-            <h1 className={isMobile && view === 'calendar' ? 'dashboard-page-title' : 'visually-hidden'}>
-                {isMobile && view === 'calendar' ? 'My Calendar' : 'Dashboard'}
+            <h1 className={view === 'calendar' ? 'dashboard-page-title' : 'visually-hidden'}>
+                {view === 'calendar' ? 'My Calendar' : 'Dashboard'}
             </h1>
 
-            <div className={isMobile ? 'dashboard-single' : 'dashboard-layout'}>
+            <div className={single ? 'dashboard-single' : 'dashboard-layout'}>
                 {showFeed && (
                     <div className="dashboard-feed">
                         <DiscoveryFeed onAttendanceChange={handleAttendanceChange} onRespond={handleFeedResponse}

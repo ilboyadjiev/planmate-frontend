@@ -38,11 +38,12 @@ describe('large screens', () => {
         expect(screen.queryByRole('button', { name: 'New event' })).not.toBeInTheDocument();
     });
 
-    test('/calendar goes to the dashboard, where the calendar always is', () => {
+    test('/calendar shows the calendar on its own, in the month view', () => {
         renderAt('/calendar');
 
-        expect(screen.getByText('Discover feed')).toBeInTheDocument();
+        expect(screen.getByRole('heading', { name: 'My Calendar' })).toBeInTheDocument();
         expect(screen.getByText('Calendar in month view')).toBeInTheDocument();
+        expect(screen.queryByText('Discover feed')).not.toBeInTheDocument();
     });
 });
 

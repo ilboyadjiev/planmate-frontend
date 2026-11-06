@@ -51,17 +51,57 @@ test('the Calendar tab is its own page and is marked active there', async () => 
     expect(within(tabBar()).getByRole('link', { name: 'Discover' })).not.toHaveAttribute('aria-current');
 });
 
-test('Search sits between Calendar and Friends on phones, and after Discover in the top bar', async () => {
+test('the order is Friends, Search, Discover, Calendar, You on phones and in the top bar', async () => {
     renderNavbar(alice, '/search');
     await waitFor(() => expect(api.get).toHaveBeenCalled());
 
     const tabs = within(tabBar()).getAllByRole('link').map(link => link.textContent.trim());
-    expect(tabs.slice(0, 4)).toEqual(['Discover', 'Calendar', 'Search', 'Friends']);
+    expect(tabs).toEqual(['Friends', 'Search', 'Discover', 'Calendar', 'You']);
     expect(within(tabBar()).getByRole('link', { name: 'Search' })).toHaveAttribute('aria-current', 'page');
 
     const topBar = screen.getAllByRole('navigation', { name: 'Main' })[0];
-    expect(within(topBar).getAllByRole('link').map(link => link.textContent.trim()).slice(0, 3))
-        .toEqual(['Discover', 'Search', 'Friends']);
+    expect(within(topBar).getAllByRole('link').map(link => link.textContent.trim()))
+        .toEqual(['Friends', 'Search', 'Discover', 'Calendar']);
+    expect(within(topBar).getByRole('link', { name: 'Calendar' })).toHaveAttribute('href', '/calendar');
+    expect(within(screen.getByRole('banner')).getByRole('link', { name: /You$/ })).toHaveAttribute('href', '/people/1');
+});
+
+test('Friends stays marked on the groups page, which it shares', async () => {
+    renderNavbar(alice, '/profile/groups');
+    await waitFor(() => expect(api.get).toHaveBeenCalled());
+    expect(within(tabBar()).getByRole('link', { name: 'Friends' })).toHaveClass('active');
+});
+
+describe('the top bar while scrolling', () => {
+    const topBar = () => screen.getByRole('banner');
+    const scrollTo = async (y) => {
+        await act(async () => {
+            window.scrollY = y;
+            window.dispatchEvent(new Event('scroll'));
+            await new Promise(resolve => window.requestAnimationFrame(resolve));
+        });
+    };
+    afterEach(() => { window.scrollY = 0; });
+
+    test('slides away while scrolling down and comes back on scrolling up', async () => {
+        renderNavbar(alice);
+        await waitFor(() => expect(api.get).toHaveBeenCalled());
+        expect(topBar()).not.toHaveClass('is-hidden');
+
+        await scrollTo(400);
+        expect(topBar()).toHaveClass('is-hidden');
+        await scrollTo(404); // a jitter changes nothing
+        expect(topBar()).toHaveClass('is-hidden');
+        await scrollTo(300);
+        expect(topBar()).not.toHaveClass('is-hidden');
+    });
+
+    test('always shows near the top of the page', async () => {
+        renderNavbar(alice);
+        await waitFor(() => expect(api.get).toHaveBeenCalled());
+        await scrollTo(40);
+        expect(topBar()).not.toHaveClass('is-hidden');
+    });
 });
 
 test('tapping Search again on the search page focuses the field instead of reloading the page', async () => {
@@ -95,9 +135,10 @@ test('"You" and your picture open your profile, and "You" stays active in settin
     expect(you).toHaveAttribute('href', '/people/1');
     expect(you).toHaveClass('active');
 
-    const picture = screen.getByRole('link', { name: 'Your profile' });
+    const picture = within(screen.getByRole('banner')).getByRole('link', { name: /You$/ });
     expect(picture).toHaveAttribute('href', '/people/1');
     expect(picture).toHaveTextContent('AM');
+    expect(picture).toHaveClass('active');
     expect(screen.queryByRole('button', { name: /account menu/i })).not.toBeInTheDocument();
 
     fireEvent.click(picture);
