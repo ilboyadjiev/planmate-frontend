@@ -1,4 +1,5 @@
 import api from '../api/client';
+import { notifyInvitesChanged } from './inviteEvents';
 import { getGuestId } from './guestService';
 import { myResponse } from '../components/calendarStatus';
 
@@ -57,6 +58,7 @@ export const updateEvent = async (formData, guestId = null) => {
 /** An invitee's answer: 'accepted', 'maybe' or 'declined'. Returns the updated event. */
 export const respondToInvite = async (eventId, response) => {
     const res = await api.put(`/v2/events/${eventId}/response`, { response });
+    notifyInvitesChanged(); // the navbar's badge counts the unanswered ones
     return res.data;
 };
 

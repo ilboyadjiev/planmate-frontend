@@ -53,7 +53,7 @@ const useEventCardActions = ({ user, events, setEvents, reload, onAttendanceChan
         if (event.myResponse === response) return;
         setPendingId(event.id);
         try {
-            await api.put(`/v2/events/${event.id}/response`, { response });
+            await respondToInvite(event.id, response);
             const updated = withResponse(event, response);
             replaceCard(updated);
             if (onRespond) onRespond(updated, response);

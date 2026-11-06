@@ -136,6 +136,22 @@
   white-space: nowrap;
 }
 
+/* "Not answered": the orange dot of the legend and the navbar's badge, so it is clear what to answer */
+.cal-pill.event-status-pending {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+}
+
+.cal-pill.event-status-pending::before {
+  content: '';
+  flex: 0 0 auto;
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: var(--primary);
+}
+
 .cal-event-name {
   font-size: 0.9rem;
   font-weight: 600;

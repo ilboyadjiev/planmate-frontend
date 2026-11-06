@@ -4,6 +4,7 @@ import { AuthContext } from '../context/AuthContext';
 import Avatar from './Avatar';
 import api from '../api/client';
 import { FRIENDS_CHANGED, countIncomingRequests } from '../services/friendEvents';
+import { INVITES_CHANGED, countUnansweredInvites } from '../services/inviteEvents';
 import { requestSearchFocus } from '../services/searchFocus';
 import planmateIcon from '../assets/planmate-icon.png';
 import useHideOnScroll from '../hooks/useHideOnScroll';
@@ -28,6 +29,8 @@ const SparkIcon = () => <Icon><path d="M12 3v4M12 17v4M3 12h4M17 12h4M6 6l2.5 2.
 // const WarningIcon = ({ size = 16 }) => (
 //     <Icon size={size}><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z" /><path d="M12 9v4M12 17h.01" /></Icon>
 // );
+
+const INVITE_POLL_MS = 3 * 60 * 1000;
 
 const initialsOf = (user) => {
     const letters = [user?.firstName, user?.lastName].filter(Boolean).map(p => p.trim()[0]).join('');
@@ -56,6 +59,7 @@ const Navbar = () => {
     // Disabled: Local Mode warning (its privacy message now lives on the register page)
     // const [showOfflineInfo, setShowOfflineInfo] = useState(false);
     const [incomingRequests, setIncomingRequests] = useState(0);
+    const [unansweredInvites, setUnansweredInvites] = useState(0);
     const location = useLocation();
     const [topBarHidden, setTopBarHidden] = useHideOnScroll();
     // const navigate = useNavigate();
@@ -84,6 +88,30 @@ const Navbar = () => {
         };
     }, [loggedIn, userId, location.pathname]);
 
+    // Invitations waiting for your answer, for the badge on Calendar: on login, on every page change, when one is
+    // answered, when you come back to the tab, and every few minutes (someone may invite you while you're here)
+    useEffect(() => {
+        if (!loggedIn || !userId) {
+            setUnansweredInvites(0);
+            return undefined;
+        }
+        let cancelled = false;
+        const refresh = () => countUnansweredInvites()
+            .then(count => { if (!cancelled) setUnansweredInvites(count); })
+            .catch(() => {});
+        const onVisible = () => { if (document.visibilityState === 'visible') refresh(); };
+        refresh();
+        window.addEventListener(INVITES_CHANGED, refresh);
+        document.addEventListener('visibilitychange', onVisible);
+        const timer = window.setInterval(onVisible, INVITE_POLL_MS);
+        return () => {
+            cancelled = true;
+            window.removeEventListener(INVITES_CHANGED, refresh);
+            document.removeEventListener('visibilitychange', onVisible);
+            window.clearInterval(timer);
+        };
+    }, [loggedIn, userId, location.pathname]);
+
     // Search tapped again while on the search page: keep the results and put the cursor in the field instead
     const onSearchClick = (e) => {
         if (location.pathname === '/search') {
@@ -101,6 +129,7 @@ const Navbar = () => {
     const youClass = (base) => ({ isActive }) => `${base}${isActive || onSettings ? ' active' : ''}`;
 
     const requestLabel = `new friend request${incomingRequests === 1 ? '' : 's'}`;
+    const inviteLabel = `invitation${unansweredInvites === 1 ? '' : 's'} to answer`;
 
     return (
         <>
@@ -126,6 +155,7 @@ const Navbar = () => {
                         </NavLink>
                         <NavLink to="/calendar" className="pm-topnav-link">
                             <CalendarIcon /> Calendar
+                            <Badge count={unansweredInvites} label={inviteLabel} />
                         </NavLink>
                     </nav>
 
@@ -170,7 +200,8 @@ const Navbar = () => {
                     <CompassIcon /><span className="pm-tab-label">Discover</span>
                 </NavLink>
                 <NavLink to="/calendar" className="pm-tab">
-                    <CalendarIcon /><span className="pm-tab-label">Calendar</span>
+                    <span className="pm-tab-icon"><CalendarIcon /><Badge count={unansweredInvites} label={inviteLabel} /></span>
+                    <span className="pm-tab-label">Calendar</span>
                 </NavLink>
                 {loggedIn ? (
                     <NavLink to={profilePath} className={youClass('pm-tab')}>

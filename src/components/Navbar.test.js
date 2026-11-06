@@ -4,6 +4,7 @@ import Navbar from './Navbar';
 import { AuthContext } from '../context/AuthContext';
 import api from '../api/client';
 import { countIncomingRequests, notifyFriendsChanged } from '../services/friendEvents';
+import { notifyInvitesChanged } from '../services/inviteEvents';
 
 jest.mock('../api/client', () => ({ __esModule: true, default: { get: jest.fn() } }));
 
@@ -152,4 +153,22 @@ test('guests see log in and sign up, no friends and no local mode warning', () =
     expect(within(tabBar()).getByRole('link', { name: 'Sign up' })).toHaveAttribute('href', '/register');
     expect(screen.queryByRole('link', { name: /friends/i })).not.toBeInTheDocument();
     expect(api.get).not.toHaveBeenCalled();
+});
+
+test('unanswered invitations show as a badge on Calendar, and it refreshes when one is answered', async () => {
+    let unanswered = 2;
+    api.get.mockImplementation(url => Promise.resolve({
+        data: url === '/v2/events/invitations/count' ? { count: unanswered } : [],
+    }));
+    renderNavbar(alice);
+
+    const calendarTab = within(tabBar()).getByRole('link', { name: /^Calendar/ });
+    expect(await within(calendarTab).findByText('2')).toBeInTheDocument();
+    expect(calendarTab).toHaveTextContent('invitations to answer');
+    const topBar = screen.getAllByRole('navigation', { name: 'Main' })[0];
+    expect(within(topBar).getByRole('link', { name: /^Calendar/ })).toHaveTextContent('2');
+
+    unanswered = 0;
+    await act(async () => { notifyInvitesChanged(); });
+    expect(within(calendarTab).queryByText('2')).not.toBeInTheDocument();
 });
