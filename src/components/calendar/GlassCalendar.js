@@ -2,6 +2,7 @@ import React, { useEffect, useLayoutEffect, useRef, useState } from 'react';
 import moment from 'moment';
 import { eventStatus, STATUS_STYLES, STATUS_LEGEND } from '../calendarStatus';
 import { formatPlace } from '../feed/feedText';
+import { LockIcon } from '../feed/FeedEventCard';
 import {
     VIEWS, NAV_UNITS, AGENDA_DAYS, monthDays, weekDays, shiftDate, periodTitle, sameDay, segmentsOn, eventsOn,
     layoutLanes, segmentTime, agendaDays, newEventSlot,
@@ -25,9 +26,14 @@ const PlusIcon = ({ size = 16 }) => (
     </svg>
 );
 
+/** A small lock in the top right corner of private events (only the people invited can see them). */
+const PrivateLock = ({ event }) => (event.isPublic === false ? (
+    <span className="cal-lock" title="Private event"><LockIcon size={12} /></span>
+) : null);
+
 const placeOf = (event) => formatPlace(event.location) || '';
 const describe = (event, time) => [event.cancelled ? `Cancelled: ${event.title}` : event.title, time,
-    STATUS_NAMES[eventStatus(event)]].filter(Boolean).join(', ');
+    STATUS_NAMES[eventStatus(event)], event.isPublic === false && 'Private'].filter(Boolean).join(', ');
 /** Cancelled events keep their place in the calendar, struck through and labelled. */
 const EventTitle = ({ event, className }) => (
     <span className={`${className}${event.cancelled ? ' is-cancelled' : ''}`}>
@@ -133,6 +139,7 @@ const MonthView = ({ date, events, now, selectedDay, onSelectDay, onSelectEvent,
                             <li key={event.id}>
                                 <button type="button" className="cal-panel-event" onClick={() => onSelectEvent(event)}
                                     aria-label={describe(event, time)}>
+                                    <PrivateLock event={event} />
                                     <span className="cal-panel-time"><strong>{from}</strong>{to && <span>{to}</span>}</span>
                                     <span className="cal-panel-text">
                                         <EventTitle event={event} className={`cal-event-name event-status-${eventStatus(event)}`} />
@@ -219,6 +226,7 @@ const TimeGrid = ({ days, events, now, onSelectEvent, onSelectSlot, onOpenDay, c
                                                 width: `calc(${100 / segment.lanes}% - 4px)`,
                                             }}
                                             onClick={() => onSelectEvent(event)} aria-label={describe(event, time)} title={describe(event, time)}>
+                                            <PrivateLock event={event} />
                                             <EventTitle event={event} className="cal-event-title" />
                                             <span className="cal-event-time">{time}</span>
                                             {days.length === 1 && placeOf(event) && <span className="cal-event-time">{placeOf(event)}</span>}
@@ -258,6 +266,7 @@ const AgendaView = ({ date, events, now, onSelectEvent }) => {
                             return (
                                 <li key={event.id}>
                                     <button type="button" className="cal-agenda-event" onClick={() => onSelectEvent(event)} aria-label={describe(event, time)}>
+                                        <PrivateLock event={event} />
                                         <span className="cal-agenda-time">{time}</span>
                                         <span className={`cal-marker event-status-${eventStatus(event)}`} aria-hidden="true" />
                                         <span className="cal-panel-text">

@@ -96,3 +96,18 @@ test('New event is in the toolbar when the page offers it', () => {
     fireEvent.click(screen.getByRole('button', { name: 'New event' }));
     expect(onCreateEvent).toHaveBeenCalled();
 });
+
+test('private events get a lock, public ones do not', () => {
+    const events = [
+        { id: 'secret', title: 'Surprise party', start: at(2026, 11, 4, 18), end: at(2026, 11, 4, 20), isOwn: true, isPublic: false },
+        { id: 'open', title: 'Open mic', start: at(2026, 11, 4, 21), end: at(2026, 11, 4, 22), isOwn: true, isPublic: true },
+    ];
+    render(<GlassCalendar events={events} date={NOW} now={NOW} onNavigate={() => {}} onSelectEvent={() => {}} />);
+    const secret = within(panel()).getByRole('button', { name: 'Surprise party, 18:00 – 20:00, Mine, Private' });
+    expect(within(secret).getByTitle('Private event')).toBeInTheDocument();
+    const open = within(panel()).getByRole('button', { name: 'Open mic, 21:00 – 22:00, Mine' });
+    expect(within(open).queryByTitle('Private event')).not.toBeInTheDocument();
+
+    fireEvent.click(screen.getByRole('button', { name: 'Week' }));
+    expect(within(screen.getByRole('button', { name: /Surprise party/ })).getByTitle('Private event')).toBeInTheDocument();
+});

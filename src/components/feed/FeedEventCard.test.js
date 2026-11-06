@@ -131,3 +131,11 @@ describe('more dates', () => {
         expect(screen.queryByText(/more date/)).not.toBeInTheDocument();
     });
 });
+
+test('private events show a lock, public ones do not', () => {
+    const base = { id: 'p1', title: 'Dixit night', startTime: '2026-11-20T18:00:00Z', host: { name: 'Carol' }, tags: [] };
+    const { rerender } = render(<MemoryRouter><FeedEventCard event={{ ...base, isPublic: false }} loggedIn /></MemoryRouter>);
+    expect(screen.getByTitle('Private event')).toBeInTheDocument();
+    rerender(<MemoryRouter><FeedEventCard event={base} loggedIn /></MemoryRouter>);
+    expect(screen.queryByTitle('Private event')).not.toBeInTheDocument();
+});

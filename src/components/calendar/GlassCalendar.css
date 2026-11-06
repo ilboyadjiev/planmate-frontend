@@ -597,3 +597,22 @@
 /* Cancelled events stay in the calendar of the people who joined them, struck through */
 .is-cancelled { text-decoration: line-through; text-decoration-thickness: 1px; opacity: 0.75; }
 .cal-cancelled-label { text-decoration: none; display: inline; font-weight: 700; }
+
+/* Private events: a small lock in the top right corner */
+.cal-panel-event,
+.cal-agenda-event { position: relative; }
+
+.cal-lock {
+  position: absolute;
+  top: 6px;
+  right: 6px;
+  display: inline-flex;
+  color: var(--text-main);
+  opacity: 0.75;
+  pointer-events: none;
+}
+
+.cal-event .cal-lock { top: 4px; right: 4px; }
+.cal-event:has(.cal-lock) { padding-right: 18px; }
+.cal-panel-event:has(.cal-lock),
+.cal-agenda-event:has(.cal-lock) { padding-right: 24px; }

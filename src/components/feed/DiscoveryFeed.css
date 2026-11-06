@@ -454,3 +454,17 @@
   color: var(--chip-text);
   font-weight: 600;
 }
+
+/* Private events: a small lock in the top right corner, like in the calendar */
+.feed-lock {
+  position: absolute;
+  top: 12px;
+  right: 12px;
+  z-index: 2;
+  display: inline-flex;
+  color: var(--text-main);
+  opacity: 0.75;
+  pointer-events: none;
+}
+
+.feed-card.is-private .feed-card-heading { padding-right: 20px; }

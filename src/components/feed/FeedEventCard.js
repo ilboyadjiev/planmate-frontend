@@ -21,6 +21,13 @@ export const PinIcon = () => (
     </svg>
 );
 
+/** The lock on private events, here and in the calendar (only the people invited can see them). */
+export const LockIcon = ({ size = 14 }) => (
+    <svg aria-hidden="true" width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.4" strokeLinecap="round" strokeLinejoin="round">
+        <rect x="5" y="11" width="14" height="10" rx="2" /><path d="M8 11V7a4 4 0 0 1 8 0v4" />
+    </svg>
+);
+
 const CheckIcon = () => (
     <svg aria-hidden="true" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
         <path d="M5 12.5l4.5 4.5L19 7.5" />
@@ -96,7 +103,10 @@ const FeedEventCard = ({ event, loggedIn, pending, onToggleGoing, onRespond, onO
     );
 
     return (
-        <article className={`feed-card${event.cancelled ? ' is-cancelled' : ''}${event.going ? ' is-going' : ''}${event.hosting ? ' is-hosting' : ''}${event.myResponse === 'pending' ? ' is-unanswered' : ''}`} aria-labelledby={titleId}>
+        <article className={`feed-card${event.cancelled ? ' is-cancelled' : ''}${event.going ? ' is-going' : ''}${event.hosting ? ' is-hosting' : ''}${event.myResponse === 'pending' ? ' is-unanswered' : ''}${event.isPublic === false ? ' is-private' : ''}`} aria-labelledby={titleId}>
+            {event.isPublic === false && (
+                <span className="feed-lock" title="Private event"><LockIcon /><span className="visually-hidden">Private event</span></span>
+            )}
             <div className="feed-card-top">
                 <div className="feed-date" aria-hidden="true">
                     <span className="feed-date-month">{start.format('MMM').toUpperCase()}</span>
