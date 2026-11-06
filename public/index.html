@@ -10,6 +10,21 @@
       name="description"
       content="PlanMate: plan your week, discover events and see which friends are going."
     />
+    <!--
+      Link previews (Facebook, Messenger, Instagram, WhatsApp, iMessage, ...): absolute URLs, since the apps fetch
+      them from elsewhere. Event links (/events/{id}) get their own title, date and place from the backend instead
+      (nginx.conf sends link-preview crawlers to EventPreviewService).
+    -->
+    <meta property="og:site_name" content="PlanMate" />
+    <meta property="og:type" content="website" />
+    <meta property="og:url" content="https://www.planmate.org/" />
+    <meta property="og:title" content="PlanMate" />
+    <meta property="og:description" content="Plan your week, discover events and see which friends are going." />
+    <meta property="og:image" content="https://www.planmate.org/og-image.png" />
+    <meta property="og:image:width" content="1200" />
+    <meta property="og:image:height" content="630" />
+    <meta property="og:image:alt" content="PlanMate" />
+    <meta name="twitter:card" content="summary_large_image" />
     <!-- iOS home screen: an opaque 180px icon (iOS rounds the corners itself) -->
     <link rel="apple-touch-icon" sizes="180x180" href="%PUBLIC_URL%/apple-touch-icon.png" />
     <meta name="apple-mobile-web-app-title" content="PlanMate" />
