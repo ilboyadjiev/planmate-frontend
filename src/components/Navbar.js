@@ -125,7 +125,7 @@ const Navbar = () => {
     const onSettings = ['/profile/edit', '/settings'].includes(location.pathname);
     // Friends and Groups share an entry; the pages switch between each other
     const friendsClass = (base) => ({ isActive }) =>
-        `${base}${isActive || location.pathname === '/profile/groups' ? ' active' : ''}`;
+        `${base}${isActive || ['/profile/groups', '/profile/find'].includes(location.pathname) ? ' active' : ''}`;
     const youClass = (base) => ({ isActive }) => `${base}${isActive || onSettings ? ' active' : ''}`;
 
     const requestLabel = `new friend request${incomingRequests === 1 ? '' : 's'}`;

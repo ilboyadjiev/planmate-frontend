@@ -5,6 +5,7 @@ import Login from './pages/Login';
 import Dashboard from './pages/Dashboard';
 import EditProfile from './pages/EditProfile';
 import FriendsList from './pages/FriendsList';
+import FindPeople from './pages/FindPeople';
 import FriendGroups from './pages/FriendGroups';
 import PersonProfile from './pages/PersonProfile';
 import SearchEvents from './pages/SearchEvents';
@@ -81,6 +82,14 @@ function App() {
                   <FriendsList />
                 </ProtectedRoute>
               } 
+            />
+            <Route
+              path="/profile/find"
+              element={
+                <ProtectedRoute>
+                  <FindPeople />
+                </ProtectedRoute>
+              }
             />
           </Routes>
           <footer style={{ textAlign: 'center', padding: '32px 20px', borderTop: '1px solid var(--border)', marginTop: '60px' }}>

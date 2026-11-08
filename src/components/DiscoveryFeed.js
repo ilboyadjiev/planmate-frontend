@@ -155,9 +155,7 @@ const DiscoveryFeed = ({ onAttendanceChange, onRespond, onEventChanged, onError 
     else if (active.tag) emptyText = `No upcoming events for ${active.tag} yet.`;
 
     return (
-        <GlassPanel tall shellClassName="feed-glass" className="feed-panel" aria-labelledby="discover-heading">
-            <h3 id="discover-heading">Discover</h3>
-
+        <GlassPanel tall shellClassName="feed-glass" className="feed-panel" aria-label="Discover">
             <div className="feed-chips" role="group" aria-label="Filter events">
                 {chips.map(chip => (
                     <button key={chip.key} type="button" className={`feed-chip${chip.groupId ? ' feed-chip-group' : ''}`}

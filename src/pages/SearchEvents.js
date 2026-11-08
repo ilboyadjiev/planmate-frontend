@@ -170,9 +170,7 @@ const SearchEvents = () => {
 
     return (
         <main className="search-page">
-            <GlassPanel tall shellClassName="feed-glass" className="feed-panel" aria-labelledby="search-heading">
-                <h1 id="search-heading" className="search-title">Search events</h1>
-
+            <GlassPanel tall shellClassName="feed-glass" className="feed-panel" aria-label="Search events">
                 <div className={`search-box${query ? ' has-results' : ''}`}
                     onBlur={e => { if (!e.currentTarget.contains(e.relatedTarget)) setHistoryOpen(false); }}
                     onKeyDown={e => { if (e.key === 'Escape') setHistoryOpen(false); }}>

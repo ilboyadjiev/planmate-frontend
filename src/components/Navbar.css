@@ -232,27 +232,8 @@
 
 /* Same breakpoint as the dashboard layout (src/hooks/useIsMobile.js) */
 @media (max-width: 900px) {
-  /* A slim glass bar across the top with just PlanMate */
-  .pm-topbar { padding: 0; }
-
-  .pm-topbar-glass {
-    display: flex;
-    min-height: 0;
-    padding: 10px 16px;
-    padding-top: calc(10px + env(safe-area-inset-top, 0px));
-    border-radius: 0;
-    border-width: 0 0 1px;
-    border-bottom-color: rgba(255, 255, 255, 0.08);
-    background: rgba(11, 15, 25, 0.55);
-    box-shadow: none;
-  }
-
-  .pm-brand span { display: inline; }
-  .pm-brand img { width: 30px; height: 30px; }
-
-  /* The tab bar has these */
-  .pm-topnav,
-  .pm-topbar-actions { display: none; }
+  /* No top bar on small screens: the bottom tab bar is the whole navigation */
+  .pm-topbar { display: none; }
 
   .pm-local-long { display: none; }
   .pm-local-short { display: inline; }
@@ -336,8 +317,11 @@
     box-shadow: 0 0 0 2px #1B2133;
   }
 
-  /* Keep page content and fixed bottom elements clear of the tab bar */
-  body { padding-bottom: calc(76px + env(safe-area-inset-bottom, 0px)); }
+  /* With no top bar, keep content below the status bar / notch; and clear of the bottom tab bar */
+  body {
+    padding-top: env(safe-area-inset-top, 0px);
+    padding-bottom: calc(76px + env(safe-area-inset-bottom, 0px));
+  }
 }
 
 @media (prefers-reduced-motion: reduce) {

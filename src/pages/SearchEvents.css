@@ -7,12 +7,6 @@
   padding: 20px;
 }
 
-.search-title {
-  margin: 0;
-  font-size: 1.2rem;
-  font-weight: 700;
-  color: var(--text-main);
-}
 
 .search-form {
   display: flex;
