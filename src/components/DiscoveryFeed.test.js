@@ -5,6 +5,16 @@ import { AuthContext } from '../context/AuthContext';
 import api from '../api/client';
 import { resetPreferences, setPreferences } from '../services/preferences';
 
+// The date filter uses MUI's glass date pickers (its own test covers them); here a light stand-in exposes
+// From/To as plain inputs so these tests can check the params the feed sends.
+jest.mock('./feed/DateRangeFilter', () => ({ from, to, onChange }) => (
+    <div>
+        <input aria-label="From" value={from} onChange={(e) => onChange(e.target.value, to)} />
+        <input aria-label="To" value={to} onChange={(e) => onChange(from, e.target.value)} />
+        {(from || to) && <button type="button" onClick={() => onChange('', '')}>Clear dates</button>}
+    </div>
+));
+
 jest.mock('../api/client', () => ({ __esModule: true, default: { get: jest.fn(), post: jest.fn(), put: jest.fn(), delete: jest.fn() } }));
 
 const card = (id, extra = {}) => ({
@@ -316,4 +326,21 @@ test('a tag picked in an event\'s details opens that tag\'s feed, as a chip, and
     expect(screen.getByRole('button', { name: '#christmasmarket' })).toHaveAttribute('aria-pressed', 'true');
     expect(feedCalls().pop()).toEqual(['/v2/events/feed', { params: { tag: '#christmasmarket', page: 0, size: 5 } }]);
     expect(location.search).toBe('?calendar=open');
+});
+
+test('choosing a date filters the feed and reloads from the top, with the active chip', async () => {
+    feedResponses = [{ data: { events: [card('a')], hasMore: false } }];
+    renderFeed();
+    await screen.findByText('Event a');
+
+    fireEvent.change(screen.getByLabelText('From'), { target: { value: '2026-11-20' } });
+
+    await waitFor(() => expect(feedCalls().some(c => c[1].params.from)).toBe(true));
+    const filtered = feedCalls()[feedCalls().length - 1][1].params;
+    expect(filtered.from).toBe(new Date('2026-11-20T00:00:00').toISOString());
+    expect(filtered.page).toBe(0);
+
+    // Clearing removes the date params
+    fireEvent.click(screen.getByRole('button', { name: 'Clear dates' }));
+    await waitFor(() => expect(feedCalls()[feedCalls().length - 1][1].params.from).toBeUndefined());
 });

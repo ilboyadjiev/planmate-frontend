@@ -1,0 +1,203 @@
+/*
+ * Collapsible date filter (DateRangeFilter.js + RangeCalendar.js) for Discover and Search. Collapsed it is one
+ * line; open it expands a liquid-glass range calendar. Kept compact so it takes little room when not in use.
+ */
+/* No own margin: the feed panel is a flex column with a 16px gap, so spacing above and below stays even */
+
+/* --- Collapsed trigger (one line) --- */
+.feed-dates-bar { display: flex; gap: 8px; }
+
+.feed-dates-trigger {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  min-height: 44px;
+  padding: 0 14px;
+  border-radius: 999px;
+  border: 1px solid rgba(255, 255, 255, 0.16);
+  background: rgba(255, 255, 255, 0.06);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.12);
+  color: var(--glass-muted);
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+  text-align: left;
+  transition: background 0.2s, border-color 0.2s, color 0.2s;
+}
+
+.feed-dates-trigger:hover { background: rgba(255, 255, 255, 0.10); color: var(--text-main); }
+
+.feed-dates-trigger.has-range {
+  background: var(--glass-active-bg);
+  border-color: rgba(253, 186, 116, 0.5);
+  color: var(--glass-active-text);
+}
+
+.feed-dates-label { flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+
+.feed-dates-x {
+  flex: 0 0 auto;
+  width: 44px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 999px;
+  border: 1px solid rgba(255, 255, 255, 0.16);
+  background: rgba(255, 255, 255, 0.06);
+  color: var(--glass-muted);
+  cursor: pointer;
+  transition: background 0.2s, color 0.2s;
+}
+.feed-dates-x:hover { background: rgba(255, 255, 255, 0.10); color: var(--text-main); }
+
+.feed-dates-trigger:focus-visible,
+.feed-dates-x:focus-visible { outline: 2px solid #FDBA74; outline-offset: 2px; }
+
+/* --- Expanded panel --- */
+.feed-dates-panel {
+  margin: 8px auto 0; /* centered under the trigger when expanded */
+  padding: 14px;
+  border-radius: 18px;
+  background: rgba(22, 27, 43, 0.6);
+  -webkit-backdrop-filter: blur(24px) saturate(170%);
+  backdrop-filter: blur(24px) saturate(170%);
+  border: 1px solid rgba(255, 255, 255, 0.14);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.12), 0 18px 40px rgba(0, 0, 0, 0.4);
+  max-width: 340px;
+}
+
+.feed-dates-presets {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  margin-bottom: 14px;
+}
+
+.feed-dates-preset {
+  min-height: 34px;
+  padding: 0 14px;
+  border-radius: 999px;
+  border: 1px solid rgba(255, 255, 255, 0.16);
+  background: rgba(255, 255, 255, 0.06);
+  color: var(--text-main);
+  font-size: 12px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background 0.2s;
+}
+.feed-dates-preset:hover { background: rgba(255, 255, 255, 0.12); }
+.feed-dates-pick-hint { font-size: 12px; color: var(--glass-muted); }
+
+.feed-dates-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 8px;
+  margin-top: 14px;
+}
+
+.feed-dates-clear {
+  min-height: 38px;
+  padding: 0 16px;
+  border-radius: 999px;
+  border: 1px solid rgba(255, 255, 255, 0.16);
+  background: transparent;
+  color: var(--glass-muted);
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+}
+.feed-dates-clear:hover { background: rgba(255, 255, 255, 0.08); color: var(--text-main); }
+
+.feed-dates-done {
+  min-height: 38px;
+  padding: 0 20px;
+  border-radius: 999px;
+  border: 1px solid rgba(253, 186, 116, 0.45);
+  background: linear-gradient(180deg, var(--primary), var(--primary-hover));
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.30), 0 4px 14px rgba(240, 106, 37, 0.30);
+  color: #fff;
+  font-size: 13px;
+  font-weight: 700;
+  cursor: pointer;
+}
+.feed-dates-done:disabled { opacity: 0.5; cursor: default; box-shadow: none; }
+
+.feed-dates-preset:focus-visible,
+.feed-dates-clear:focus-visible,
+.feed-dates-done:focus-visible { outline: 2px solid #FDBA74; outline-offset: 2px; }
+
+/* --- The range calendar (RangeCalendar.js) --- */
+.rc-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 10px;
+}
+.rc-month { font-size: 15px; font-weight: 700; color: var(--text-main); }
+
+.rc-nav {
+  width: 34px;
+  height: 34px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 999px;
+  border: 1px solid rgba(255, 255, 255, 0.14);
+  background: rgba(255, 255, 255, 0.06);
+  color: var(--glass-muted);
+  cursor: pointer;
+}
+.rc-nav:hover:not(:disabled) { background: rgba(255, 255, 255, 0.12); color: var(--text-main); }
+.rc-nav:disabled { opacity: 0.35; cursor: default; }
+.rc-nav:focus-visible { outline: 2px solid #FDBA74; outline-offset: 2px; }
+
+.rc-weekdays,
+.rc-grid {
+  display: grid;
+  grid-template-columns: repeat(7, 1fr);
+  gap: 2px;
+}
+.rc-weekdays {
+  margin-bottom: 4px;
+}
+.rc-weekdays span {
+  text-align: center;
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  color: var(--glass-muted);
+}
+
+.rc-blank { height: 40px; }
+
+.rc-day {
+  height: 40px;
+  border: none;
+  border-radius: 999px;
+  background: transparent;
+  color: var(--text-main);
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background 0.15s;
+}
+.rc-day:hover:not(:disabled):not(.is-end):not(.is-between) { background: rgba(255, 255, 255, 0.10); }
+.rc-day:disabled { color: rgba(255, 255, 255, 0.22); cursor: default; }
+.rc-day:focus-visible { outline: 2px solid #FDBA74; outline-offset: -2px; }
+
+.rc-day.is-between {
+  background: rgba(240, 106, 37, 0.22);
+  color: #FFE4D2;
+  border-radius: 6px;
+}
+.rc-day.is-end {
+  background: linear-gradient(180deg, var(--primary), var(--primary-hover));
+  color: #fff;
+  font-weight: 700;
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.3);
+}
+.rc-day.is-end.is-start-edge { border-radius: 999px 6px 6px 999px; }
+.rc-day.is-end.is-end-edge { border-radius: 6px 999px 999px 6px; }

@@ -2,15 +2,18 @@ import React from 'react';
 import { DatePicker } from '@mui/x-date-pickers/DatePicker';
 import dayjs from 'dayjs';
 
-const StyledDatePicker = ({ label, value, onChange }) => {
+const StyledDatePicker = ({ label, value, onChange, minDate, maxDate, disablePast }) => {
     return (
         <div style={{ display: 'flex', flexDirection: 'column', gap: '8px', width: '100%' }}>
             <label className="dtp-label">{label}</label>
             <DatePicker
-                value={dayjs(value)}
+                value={value ? dayjs(value) : null}
                 onChange={(newValue) => {
                     if (newValue) onChange(newValue.toDate());
                 }}
+                minDate={minDate ? dayjs(minDate) : undefined}
+                maxDate={maxDate ? dayjs(maxDate) : undefined}
+                disablePast={disablePast}
                 sx={{ width: '100%' }}
                 slotProps={{
                     // The calendar that opens: glass, like the rest (see pickers.css)

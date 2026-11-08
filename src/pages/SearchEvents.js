@@ -11,6 +11,8 @@ import { FOCUS_SEARCH } from '../services/searchFocus';
 import '../components/feed/DiscoveryFeed.css';
 import './SearchEvents.css';
 import CalendarLoader from '../components/CalendarLoader';
+import DateRangeFilter from '../components/feed/DateRangeFilter';
+import { dateWindowParams } from '../services/dateFilter';
 
 const PAGE_SIZE = 10;
 const MIN_LENGTH = 2;
@@ -77,6 +79,8 @@ const SearchEvents = () => {
     const [loadError, setLoadError] = useState(false);
     const [notice, setNotice] = useState(null);
     const [historyOpen, setHistoryOpen] = useState(false);
+    const [dateFrom, setDateFrom] = useState('');
+    const [dateTo, setDateTo] = useState('');
     const latestRequest = useRef(0);
     const inputRef = useRef(null);
 
@@ -102,7 +106,7 @@ const SearchEvents = () => {
         setLoading(true);
         setLoadError(false);
         try {
-            const res = await api.get('/v2/events/search', { params: { q: query, page: pageToLoad, size: PAGE_SIZE } });
+            const res = await api.get('/v2/events/search', { params: { q: query, ...dateWindowParams(dateFrom, dateTo), page: pageToLoad, size: PAGE_SIZE } });
             if (requestId !== latestRequest.current) return; // a newer search won
             const incoming = res.data.events || [];
             setEvents(prev => {
@@ -118,7 +122,7 @@ const SearchEvents = () => {
         } finally {
             if (requestId === latestRequest.current) setLoading(false);
         }
-    }, [query]);
+    }, [query, dateFrom, dateTo]);
 
     // A new search, or logging in or out (private events and friends depend on it), starts from the top
     useEffect(() => {
@@ -171,6 +175,8 @@ const SearchEvents = () => {
     return (
         <main className="search-page">
             <GlassPanel tall shellClassName="feed-glass" className="feed-panel" aria-label="Search events">
+                <DateRangeFilter from={dateFrom} to={dateTo} onChange={(f, t) => { setDateFrom(f); setDateTo(t); }} />
+
                 <div className={`search-box${query ? ' has-results' : ''}`}
                     onBlur={e => { if (!e.currentTarget.contains(e.relatedTarget)) setHistoryOpen(false); }}
                     onKeyDown={e => { if (e.key === 'Escape') setHistoryOpen(false); }}>

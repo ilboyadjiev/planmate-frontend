@@ -5,6 +5,8 @@ import { usePreferences } from '../services/preferences';
 import { AuthContext } from '../context/AuthContext';
 import FeedEventCard from './feed/FeedEventCard';
 import useLoadMoreOnScroll from '../hooks/useLoadMoreOnScroll';
+import DateRangeFilter from './feed/DateRangeFilter';
+import { dateWindowParams } from '../services/dateFilter';
 import useEventCardActions from './feed/useEventCardActions';
 import GlassPanel from './GlassPanel';
 import './feed/DiscoveryFeed.css';
@@ -58,6 +60,8 @@ const DiscoveryFeed = ({ onAttendanceChange, onRespond, onEventChanged, onError 
     const { likedTags, hiddenTags } = usePreferences();
     const [groups, setGroups] = useState([]);
     const [active, setActive] = useState(FOR_YOU); // { key, label, tag?, groupId? }
+    const [dateFrom, setDateFrom] = useState('');
+    const [dateTo, setDateTo] = useState('');
     const [events, setEvents] = useState([]);
     const [page, setPage] = useState(0);
     const [hasMore, setHasMore] = useState(false);
@@ -108,7 +112,7 @@ const DiscoveryFeed = ({ onAttendanceChange, onRespond, onEventChanged, onError 
         else if (active.nearby) filter = { nearby: true };
         else if (active.tag) filter = { tag: active.tag };
         try {
-            const res = await api.get('/v2/events/feed', { params: { ...filter, page: pageToLoad, size: PAGE_SIZE } });
+            const res = await api.get('/v2/events/feed', { params: { ...filter, ...dateWindowParams(dateFrom, dateTo), page: pageToLoad, size: PAGE_SIZE } });
             if (requestId !== latestRequest.current) return; // a newer chip or login change won
             const incoming = res.data.events || [];
             setEvents(prev => {
@@ -125,7 +129,7 @@ const DiscoveryFeed = ({ onAttendanceChange, onRespond, onEventChanged, onError 
         } finally {
             if (requestId === latestRequest.current) setLoading(false);
         }
-    }, [active]);
+    }, [active, dateFrom, dateTo]);
 
     // Reload from the top when the chip changes or someone logs in or out (friends and answers depend on it)
     useEffect(() => {
@@ -156,6 +160,8 @@ const DiscoveryFeed = ({ onAttendanceChange, onRespond, onEventChanged, onError 
 
     return (
         <GlassPanel tall shellClassName="feed-glass" className="feed-panel" aria-label="Discover">
+            <DateRangeFilter from={dateFrom} to={dateTo} onChange={(f, t) => { setDateFrom(f); setDateTo(t); }} />
+
             <div className="feed-chips" role="group" aria-label="Filter events">
                 {chips.map(chip => (
                     <button key={chip.key} type="button" className={`feed-chip${chip.groupId ? ' feed-chip-group' : ''}`}

@@ -6,6 +6,16 @@ import api from '../api/client';
 import { historyKey } from '../hooks/useSearchHistory';
 import { requestSearchFocus } from '../services/searchFocus';
 
+// The date filter uses MUI's glass date pickers (its own test covers them); here a light stand-in exposes
+// From/To as plain inputs so these tests can check the params the feed sends.
+jest.mock('../components/feed/DateRangeFilter', () => ({ from, to, onChange }) => (
+    <div>
+        <input aria-label="From" value={from} onChange={(e) => onChange(e.target.value, to)} />
+        <input aria-label="To" value={to} onChange={(e) => onChange(from, e.target.value)} />
+        {(from || to) && <button type="button" onClick={() => onChange('', '')}>Clear dates</button>}
+    </div>
+));
+
 jest.mock('../api/client', () => ({ __esModule: true, default: { get: jest.fn(), post: jest.fn(), put: jest.fn(), delete: jest.fn() } }));
 
 const card = (id, extra = {}) => ({
@@ -188,4 +198,20 @@ test('the navbar can put the cursor in the field', () => {
     expect(field()).not.toHaveFocus();
     act(() => requestSearchFocus());
     expect(field()).toHaveFocus();
+});
+
+test('a date range refines the search and reruns it from the top', async () => {
+    api.get.mockResolvedValue({ data: { events: [], hasMore: false, total: 0 } });
+    renderPage('/search?q=jazz');
+    await waitFor(() => expect(searchCalls().length).toBeGreaterThan(0));
+
+    fireEvent.change(screen.getByLabelText('From'), { target: { value: '2026-11-20' } });
+    fireEvent.change(screen.getByLabelText('To'), { target: { value: '2026-11-22' } });
+
+    await waitFor(() => expect(searchCalls().some(c => c[1].params.to)).toBe(true));
+    const params = searchCalls()[searchCalls().length - 1][1].params;
+    expect(params.q).toBe('jazz');
+    expect(params.from).toBe(new Date('2026-11-20T00:00:00').toISOString());
+    expect(params.to).toBe(new Date('2026-11-22T23:59:59.999').toISOString());
+    expect(params.page).toBe(0);
 });
