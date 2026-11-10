@@ -52,25 +52,25 @@ test('the Calendar tab is its own page and is marked active there', async () => 
     expect(within(tabBar()).getByRole('link', { name: 'Discover' })).not.toHaveAttribute('aria-current');
 });
 
-test('the order is Friends, Search, Discover, Calendar, You on phones and in the top bar', async () => {
+test('the order is Social, Search, Discover, Calendar, You on phones and in the top bar', async () => {
     renderNavbar(alice, '/search');
     await waitFor(() => expect(api.get).toHaveBeenCalled());
 
     const tabs = within(tabBar()).getAllByRole('link').map(link => link.textContent.trim());
-    expect(tabs).toEqual(['Friends', 'Search', 'Discover', 'Calendar', 'You']);
+    expect(tabs).toEqual(['Social', 'Search', 'Discover', 'Calendar', 'You']);
     expect(within(tabBar()).getByRole('link', { name: 'Search' })).toHaveAttribute('aria-current', 'page');
 
     const topBar = screen.getAllByRole('navigation', { name: 'Main' })[0];
     expect(within(topBar).getAllByRole('link').map(link => link.textContent.trim()))
-        .toEqual(['Friends', 'Search', 'Discover', 'Calendar']);
+        .toEqual(['Social', 'Search', 'Discover', 'Calendar']);
     expect(within(topBar).getByRole('link', { name: 'Calendar' })).toHaveAttribute('href', '/calendar');
     expect(within(screen.getByRole('banner')).getByRole('link', { name: /You$/ })).toHaveAttribute('href', '/people/1');
 });
 
-test('Friends stays marked on the groups page, which it shares', async () => {
+test('Social stays marked on the groups page, which it shares', async () => {
     renderNavbar(alice, '/profile/groups');
     await waitFor(() => expect(api.get).toHaveBeenCalled());
-    expect(within(tabBar()).getByRole('link', { name: 'Friends' })).toHaveClass('active');
+    expect(within(tabBar()).getByRole('link', { name: 'Social' })).toHaveClass('active');
 });
 
 describe('the top bar while scrolling', () => {

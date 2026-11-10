@@ -45,8 +45,8 @@ const Badge = ({ count, label }) => (count > 0 ? (
 ) : null);
 
 /**
- * App navigation, in liquid glass, in the same order everywhere: Friends, Search, Discover, Calendar, You.
- * - Large screens: a floating glass top bar: PlanMate on the left, Friends / Search / Discover / Calendar in a glass
+ * App navigation, in liquid glass, in the same order everywhere: Social, Search, Discover, Calendar, You.
+ * - Large screens: a floating glass top bar: PlanMate on the left, Social / Search / Discover / Calendar in a glass
  *   track in the middle, and "You" (your picture) on the right. Discover shows the feed with the calendar beside it;
  *   Calendar shows the calendar on its own.
  * - Small screens: a slim glass top bar with PlanMate, plus a glass tab bar at the bottom. Its tabs are icons; the
