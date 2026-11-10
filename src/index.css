@@ -459,14 +459,16 @@ button.btn-primary:hover,
 
 /* --- Dashboard: feed and calendar side by side; one page per tab on phones --- */
 .dashboard-page {
-  max-width: 1200px;
+  max-width: 1320px;
   margin: 0 auto;
   padding: 20px;
 }
 
 .dashboard-layout {
   display: grid;
-  grid-template-columns: 350px 1fr;
+  /* Desktop only (below 900px the feed and calendar are separate pages): a wider feed makes use of the larger
+     screen, the calendar takes the rest. */
+  grid-template-columns: 420px 1fr;
   gap: 24px;
   align-items: start;
 }

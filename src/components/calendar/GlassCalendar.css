@@ -156,12 +156,27 @@
   font-size: 0.9rem;
   font-weight: 600;
   color: var(--text-main);
+  /* Fill the card's width (the parent aligns its children to the start, so without this the title is sized to its
+     own text and a long one overflows the card instead of wrapping). */
+  align-self: stretch;
+  overflow-wrap: anywhere;
+  display: -webkit-box;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 2;
+  line-clamp: 2;
+  overflow: hidden;
+}
+
+.cal-event-name.event-status-declined { color: var(--cal-muted); text-decoration: line-through; }
+
+/* The venue line under the title: keep a long name inside the card too (same start-aligned flex column) */
+.cal-panel-text .cal-muted-small {
+  align-self: stretch;
+  overflow-wrap: anywhere;
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
 }
-
-.cal-event-name.event-status-declined { color: var(--cal-muted); text-decoration: line-through; }
 
 .cal-panel-text {
   flex: 1;

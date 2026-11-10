@@ -143,7 +143,7 @@ const Navbar = () => {
                     <nav className="pm-topnav" aria-label="Main">
                         {loggedIn && (
                             <NavLink to="/profile/friends" className={friendsClass('pm-topnav-link')}>
-                                <FriendsIcon /> Friends
+                                <FriendsIcon /> Social
                                 <Badge count={incomingRequests} label={requestLabel} />
                             </NavLink>
                         )}
@@ -190,7 +190,7 @@ const Navbar = () => {
                 {loggedIn && (
                     <NavLink to="/profile/friends" className={friendsClass('pm-tab')}>
                         <span className="pm-tab-icon"><FriendsIcon /><Badge count={incomingRequests} label={requestLabel} /></span>
-                        <span className="pm-tab-label">Friends</span>
+                        <span className="pm-tab-label">Social</span>
                     </NavLink>
                 )}
                 <NavLink to="/search" className="pm-tab" onClick={onSearchClick}>
