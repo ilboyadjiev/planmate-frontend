@@ -7,6 +7,7 @@ import { AuthContext } from '../context/AuthContext';
 import EventModal from './EventModal';
 import GamePlan from './GamePlan';
 import GlassCalendar from './calendar/GlassCalendar';
+import InvitationsPanel from './calendar/InvitationsPanel';
 import useIsMobile from '../hooks/useIsMobile';
 import { usePreferences } from '../services/preferences';
 import { toCalendarEvent, updateEvent, respondToInvite, answerPublicEvent, attendanceRole } from '../services/eventService';
@@ -19,7 +20,7 @@ moment.updateLocale('en', { week: { dow: 1, doy: 1 } });
  * and shows the AI Game plan above and the colour legend below. The look is GlassCalendar.
  */
 
-const PlanMateCalendar = ({ userEmail, refreshKey, onSlotSelect, onCreateEvent, defaultView = 'month' }) => {
+const PlanMateCalendar = ({ userEmail, refreshKey, onSlotSelect, onCreateEvent, defaultView = 'month', showInvitations = false }) => {
     const [events, setEvents] = useState([]);
     const [selectedEvent, setSelectedEvent] = useState(null);
     const [showModal, setShowModal] = useState(false);
@@ -83,6 +84,11 @@ const PlanMateCalendar = ({ userEmail, refreshKey, onSlotSelect, onCreateEvent, 
 
     return (
         <div className="calendar-container">
+            {showInvitations && (
+                <InvitationsPanel user={user} reloadKey={`${refreshKey}-${internalRefresh}`}
+                    onOpen={handleSelectEvent} onChanged={() => setInternalRefresh(prev => prev + 1)} />
+            )}
+
             {/* AI Game plan: generated only on request, and not at all when turned off in Settings */}
             {user ? (
                 aiGamePlan && <GamePlan user={user} calendarVersion={`${refreshKey}-${internalRefresh}`} />

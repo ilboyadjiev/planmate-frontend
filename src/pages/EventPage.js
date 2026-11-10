@@ -11,6 +11,7 @@ import { RelatedEventsList, hasRelated, useRelatedEvents } from '../components/R
 import ShareButton from '../components/share/ShareButton';
 import AddToCalendar from '../components/calendarExport/AddToCalendar';
 import { CardAction, ClockIcon, PinIcon } from '../components/feed/FeedEventCard';
+import EventPhoto from '../components/EventPhoto';
 import useEventCardActions from '../components/feed/useEventCardActions';
 import { formatPlace, isAllDay, socialProof, tagFeedPath } from '../components/feed/feedText';
 import { eventUrl, loginPathTo } from '../services/shareLinks';
@@ -190,6 +191,8 @@ const EventPage = () => {
                         <ShareButton url={eventUrl(event.id)} title={event.title} />
                     </div>
                 </div>
+
+                <EventPhoto src={event.imageUrl} />
 
                 <header className="event-hero">
                     <div className="feed-date event-date" aria-hidden="true">

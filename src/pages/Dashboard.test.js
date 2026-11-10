@@ -41,7 +41,7 @@ describe('large screens', () => {
     test('/calendar shows the calendar on its own, in the month view', () => {
         renderAt('/calendar');
 
-        expect(screen.getByRole('heading', { name: 'My Calendar' })).toBeInTheDocument();
+        expect(screen.getByRole('heading', { name: 'Calendar' })).toBeInTheDocument();
         expect(screen.getByText('Calendar in month view')).toBeInTheDocument();
         expect(screen.queryByText('Discover feed')).not.toBeInTheDocument();
     });
@@ -60,7 +60,7 @@ describe('phones', () => {
     test('the calendar is a page of its own and opens in the day view', () => {
         renderAt('/calendar');
 
-        expect(screen.getByRole('heading', { name: 'My Calendar' })).toBeInTheDocument();
+        expect(screen.getByRole('heading', { name: 'Calendar' })).toBeInTheDocument();
         expect(screen.getByText('Calendar in day view')).toBeInTheDocument();
         expect(screen.queryByText('Discover feed')).not.toBeInTheDocument();
     });

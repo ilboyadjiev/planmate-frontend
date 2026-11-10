@@ -8,6 +8,7 @@ import LocationSearch from './LocationSearch';
 import { RESPONSES } from './calendarStatus';
 import AddFriendButton from './AddFriendButton';
 import PersonPill from './PersonPill';
+import EventPhoto from './EventPhoto';
 import { usePreferences } from '../services/preferences';
 import { useNavigate } from 'react-router-dom';
 import { isAllDay, tagFeedPath } from './feed/feedText';
@@ -449,6 +450,7 @@ const EventModal = ({ show, onHide, initialData, onSave, isNewEvent, readOnly = 
                 aria-labelledby="event-modal-title">
                 {toolbar}
                 <Modal.Body>
+                    <EventPhoto src={formData.imageUrl} />
                     {formData.cancelled && (
                         <p className="pm-chip feed-cancelled pm-chip-banner" role="status">This event was cancelled</p>
                     )}

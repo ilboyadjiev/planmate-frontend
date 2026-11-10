@@ -69,9 +69,7 @@ const Dashboard = ({ view = 'discover' }) => {
 
     return (
         <div className="dashboard-page">
-            <h1 className={view === 'calendar' ? 'dashboard-page-title' : 'visually-hidden'}>
-                {view === 'calendar' ? 'My Calendar' : 'Dashboard'}
-            </h1>
+            <h1 className="visually-hidden">{view === 'calendar' ? 'Calendar' : 'Dashboard'}</h1>
 
             <div className={single ? 'dashboard-single' : 'dashboard-layout'}>
                 {showFeed && (
@@ -86,6 +84,7 @@ const Dashboard = ({ view = 'discover' }) => {
                     <div className="dashboard-calendar">
                         <PlanMateCalendar userEmail={user?.username || user?.email} refreshKey={refreshKey}
                             onSlotSelect={openNewEvent} onCreateEvent={openBlankEvent}
+                            showInvitations={view === 'calendar'}
                             defaultView={calendarView === 'auto' ? (isMobile ? 'day' : 'month') : calendarView} />
                     </div>
                 )}
