@@ -73,6 +73,23 @@
 .feed-card.is-going { border-color: rgba(52, 211, 153, 0.35); }
 .feed-card.is-hosting { border-color: rgba(129, 140, 248, 0.35); }
 
+/* The event picture, full-bleed to the card edges with the card's rounded top */
+.feed-card-image {
+  margin: -16px -16px 0;
+  border-radius: 16px 16px 0 0;
+  overflow: hidden;
+  aspect-ratio: 16 / 9;
+  background: var(--glass-soft-line);
+}
+.feed-card-image img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+}
+/* Keep the private-event lock above the picture */
+.feed-lock { z-index: 2; }
+
 .feed-card-top {
   display: flex;
   gap: 12px;

@@ -34,6 +34,20 @@ const CheckIcon = () => (
     </svg>
 );
 
+/** The event's picture at the top of the card (discovery events). Hides itself if there is none or it fails to load. */
+const CardImage = ({ src }) => {
+    const [failed, setFailed] = React.useState(false);
+    React.useEffect(() => setFailed(false), [src]);
+    if (!src || failed) {
+        return null;
+    }
+    return (
+        <div className="feed-card-image" aria-hidden="true">
+            <img src={src} alt="" loading="lazy" decoding="async" draggable="false" onError={() => setFailed(true)} />
+        </div>
+    );
+};
+
 /**
  * What you can do with an event: answer an invitation, see that you host it, log in, or join / leave it.
  * Shared by the feed cards and the event page. loginPath: where "Log in to join" goes (back to this page after).
@@ -107,6 +121,7 @@ const FeedEventCard = ({ event, loggedIn, pending, onToggleGoing, onRespond, onO
             {event.isPublic === false && (
                 <span className="feed-lock" title="Private event"><LockIcon /><span className="visually-hidden">Private event</span></span>
             )}
+            <CardImage src={event.imageUrl} />
             <div className="feed-card-top">
                 <div className="feed-date" aria-hidden="true">
                     <span className="feed-date-month">{start.format('MMM').toUpperCase()}</span>
