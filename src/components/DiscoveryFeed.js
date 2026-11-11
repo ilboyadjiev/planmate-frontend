@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useContext, useRef, useCallback } from 'react';
+import React, { useState, useEffect, useLayoutEffect, useContext, useRef, useCallback } from 'react';
 import { Link, useSearchParams } from 'react-router-dom';
 import api from '../api/client';
 import { usePreferences } from '../services/preferences';
@@ -69,6 +69,9 @@ const DiscoveryFeed = ({ onAttendanceChange, onRespond, onEventChanged, onError 
     const [loadError, setLoadError] = useState(false);
     const [nearbyCity, setNearbyCity] = useState(undefined); // "Around me": the profile city, or null when none is set
     const latestRequest = useRef(0);
+    // Page the window stays put while a new page is appended: the glass panel's backdrop-filter defeats the
+    // browser's own scroll anchoring, so without this the view jumps a little when the next events land.
+    const restoreScroll = useRef(null);
     const [searchParams, setSearchParams] = useSearchParams();
     const linkedTag = searchParams.get('tag');
 
@@ -115,6 +118,8 @@ const DiscoveryFeed = ({ onAttendanceChange, onRespond, onEventChanged, onError 
             const res = await api.get('/v2/events/feed', { params: { ...filter, ...dateWindowParams(dateFrom, dateTo), page: pageToLoad, size: PAGE_SIZE } });
             if (requestId !== latestRequest.current) return; // a newer chip or login change won
             const incoming = res.data.events || [];
+            // Appending below the fold: remember where we are so the layout effect can undo any jump
+            if (pageToLoad > 0) restoreScroll.current = window.scrollY;
             setEvents(prev => {
                 if (pageToLoad === 0) return incoming;
                 // Rankings can shift between pages (someone joins); never show a card twice
@@ -130,6 +135,15 @@ const DiscoveryFeed = ({ onAttendanceChange, onRespond, onEventChanged, onError 
             if (requestId === latestRequest.current) setLoading(false);
         }
     }, [active, dateFrom, dateTo]);
+
+    // After a page is appended, pin the window back where it was before the browser can paint the jump.
+    // (restoreScroll is 0/null on first load and chip changes, which scroll to the top on purpose.)
+    useLayoutEffect(() => {
+        if (restoreScroll.current) {
+            window.scrollTo(0, restoreScroll.current);
+            restoreScroll.current = null;
+        }
+    }, [events]);
 
     // Reload from the top when the chip changes or someone logs in or out (friends and answers depend on it)
     useEffect(() => {
