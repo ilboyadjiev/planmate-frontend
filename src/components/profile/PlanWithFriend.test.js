@@ -6,9 +6,9 @@ import { dayLabel } from './PlanTogether';
 import { AuthContext } from '../../context/AuthContext';
 import api from '../../api/client';
 
-jest.mock('../../api/client', () => ({
+vi.mock('../../api/client', () => ({
     __esModule: true,
-    default: { get: jest.fn(), post: jest.fn(), put: jest.fn(), delete: jest.fn() },
+    default: { get: vi.fn(), post: vi.fn(), put: vi.fn(), delete: vi.fn() },
 }));
 
 const alice = { id: 1, firstName: 'Alice', username: 'alice' };
@@ -23,7 +23,7 @@ let freeSlots;
 let availability;
 
 beforeEach(() => {
-    jest.resetAllMocks();
+    vi.resetAllMocks();
     freeSlots = {
         days: [
             { date: today, slots: [] },
@@ -33,7 +33,7 @@ beforeEach(() => {
     availability = { youFree: true, theyFree: true };
 });
 
-const renderProfile = (profile = profileOf(), onPlanned = jest.fn(), friendships = [{ id: 9, status: 'accepted', userA: alice, userB: dave }]) => {
+const renderProfile = (profile = profileOf(), onPlanned = vi.fn(), friendships = [{ id: 9, status: 'accepted', userA: alice, userB: dave }]) => {
     api.get.mockImplementation((url, config) => {
         if (url === '/v1/people/4') return Promise.resolve({ data: profile });
         if (url === '/v1/people/4/free-slots') return Promise.resolve({ data: freeSlots });
@@ -44,7 +44,7 @@ const renderProfile = (profile = profileOf(), onPlanned = jest.fn(), friendships
     render(
         <MemoryRouter>
             <AuthContext.Provider value={{ user: alice }}>
-                <ProfileModal personId={4} onHide={jest.fn()} onPlanned={onPlanned} />
+                <ProfileModal personId={4} onHide={vi.fn()} onPlanned={onPlanned} />
             </AuthContext.Provider>
         </MemoryRouter>
     );
@@ -58,14 +58,14 @@ test('days are labelled the way people talk about them', () => {
 });
 
 test('only friends can be planned with', async () => {
-    renderProfile(profileOf({ friend: false }), jest.fn(), []);
+    renderProfile(profileOf({ friend: false }), vi.fn(), []);
 
     expect(await screen.findByRole('heading', { name: 'Dave Fields' })).toBeInTheDocument();
     expect(screen.queryByRole('button', { name: /plan something with dave/i })).not.toBeInTheDocument();
 });
 
 test('planning with a friend: pick a shared free time, then create the event with them invited', async () => {
-    const onPlanned = jest.fn();
+    const onPlanned = vi.fn();
     renderProfile(profileOf(), onPlanned);
     api.post.mockResolvedValue({ data: { id: 'e1', title: 'Coffee' } });
 

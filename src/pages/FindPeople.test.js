@@ -5,9 +5,9 @@ import { suggestionReason } from './socialShared';
 import { AuthContext } from '../context/AuthContext';
 import api from '../api/client';
 
-jest.mock('../api/client', () => ({
+vi.mock('../api/client', () => ({
     __esModule: true,
-    default: { get: jest.fn(), post: jest.fn(), put: jest.fn(), delete: jest.fn() },
+    default: { get: vi.fn(), post: vi.fn(), put: vi.fn(), delete: vi.fn() },
 }));
 
 const alice = { id: 1, firstName: 'Alice', username: 'alice' };
@@ -19,7 +19,7 @@ let friendships;
 let suggestions;
 
 beforeEach(() => {
-    jest.resetAllMocks();
+    vi.resetAllMocks();
     friendships = [{ id: 11, status: 'accepted', userA: alice, userB: bob }];
     suggestions = [{ ...erin, mutualFriendCount: 1, mutualFriends: [bob], sharedGroups: ['Board games'] }];
     api.get.mockImplementation(url => Promise.resolve({

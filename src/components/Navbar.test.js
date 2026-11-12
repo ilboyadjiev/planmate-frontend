@@ -6,7 +6,7 @@ import api from '../api/client';
 import { countIncomingRequests, notifyFriendsChanged } from '../services/friendEvents';
 import { notifyInvitesChanged } from '../services/inviteEvents';
 
-jest.mock('../api/client', () => ({ __esModule: true, default: { get: jest.fn() } }));
+vi.mock('../api/client', () => ({ __esModule: true, default: { get: vi.fn() } }));
 
 const alice = { id: 1, firstName: 'Alice', lastName: 'Meier', username: 'alice', email: 'alice@example.com' };
 const bob = { id: 2 };
@@ -19,7 +19,7 @@ const LocationProbe = () => {
 
 const renderNavbar = (user, path = '/dashboard') => render(
     <MemoryRouter initialEntries={[path]}>
-        <AuthContext.Provider value={{ user, authToken: user ? 'token' : null, logout: jest.fn() }}>
+        <AuthContext.Provider value={{ user, authToken: user ? 'token' : null, logout: vi.fn() }}>
             <Navbar />
             <Routes><Route path="*" element={<LocationProbe />} /></Routes>
         </AuthContext.Provider>
@@ -29,7 +29,7 @@ const renderNavbar = (user, path = '/dashboard') => render(
 const tabBar = () => screen.getAllByRole('navigation', { name: 'Main' })[1];
 
 beforeEach(() => {
-    jest.resetAllMocks();
+    vi.resetAllMocks();
     api.get.mockResolvedValue({ data: [] });
 });
 
@@ -106,7 +106,7 @@ describe('the top bar while scrolling', () => {
 });
 
 test('tapping Search again on the search page focuses the field instead of reloading the page', async () => {
-    const focus = jest.fn();
+    const focus = vi.fn();
     window.addEventListener('planmate:focus-search', focus);
     renderNavbar(alice, '/search');
     await waitFor(() => expect(api.get).toHaveBeenCalled());

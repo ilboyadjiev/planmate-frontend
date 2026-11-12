@@ -4,7 +4,7 @@ import EventPage, { longWhen } from './EventPage';
 import { AuthContext } from '../context/AuthContext';
 import api from '../api/client';
 
-jest.mock('../api/client', () => ({ __esModule: true, default: { get: jest.fn(), post: jest.fn(), put: jest.fn(), delete: jest.fn() } }));
+vi.mock('../api/client', () => ({ __esModule: true, default: { get: vi.fn(), post: vi.fn(), put: vi.fn(), delete: vi.fn() } }));
 
 const card = (extra = {}) => ({
     id: 'abc', title: 'Jazz night', description: 'Live jazz.\nBring friends.',
@@ -27,7 +27,7 @@ const renderPage = (user = null) => render(
 
 const failWith = (status) => api.get.mockRejectedValue({ response: { status } });
 
-beforeEach(() => jest.resetAllMocks());
+beforeEach(() => vi.resetAllMocks());
 
 test('a shared public event shows everything, also without an account', async () => {
     api.get.mockResolvedValue({ data: card() });

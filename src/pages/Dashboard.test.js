@@ -4,15 +4,15 @@ import Dashboard from './Dashboard';
 import { AuthContext } from '../context/AuthContext';
 
 // The feed, calendar and event form have their own tests; here only the page layout matters
-jest.mock('../components/DiscoveryFeed', () => () => <div>Discover feed</div>);
-jest.mock('../components/PlanMateCalendar', () => ({ defaultView, onCreateEvent }) => (
+vi.mock('../components/DiscoveryFeed', () => ({ default: () => <div>Discover feed</div> }));
+vi.mock('../components/PlanMateCalendar', () => ({ default: ({ defaultView, onCreateEvent }) => (
     <div>Calendar in {defaultView} view</div>
-));
-jest.mock('../components/EventModal', () => ({ show }) => (show ? <div role="dialog">New event form</div> : null));
+) }));
+vi.mock('../components/EventModal', () => ({ default: ({ show }) => (show ? <div role="dialog">New event form</div> : null) }));
 
 const setScreen = (mobile) => {
-    window.matchMedia = jest.fn().mockImplementation(() => ({
-        matches: mobile, addEventListener: jest.fn(), removeEventListener: jest.fn(),
+    window.matchMedia = vi.fn().mockImplementation(() => ({
+        matches: mobile, addEventListener: vi.fn(), removeEventListener: vi.fn(),
     }));
 };
 

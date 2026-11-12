@@ -24,3 +24,6 @@ yarn-error.log*
 
 # Local environment (secrets)
 .env
+
+# Generated at Docker build time (commit stamp)
+/public/version.json

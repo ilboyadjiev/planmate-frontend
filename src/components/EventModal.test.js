@@ -5,7 +5,7 @@ import LocationSearch from './LocationSearch';
 import { AuthContext } from '../context/AuthContext';
 import api from '../api/client';
 
-jest.mock('../api/client', () => ({ __esModule: true, default: { get: jest.fn() } }));
+vi.mock('../api/client', () => ({ __esModule: true, default: { get: vi.fn() } }));
 
 const bob = { id: 2, email: 'bob@example.com', username: 'bob', firstName: 'Bob' };
 const alice = { id: 1, email: 'alice@example.com', username: 'alice', firstName: 'Alice' };
@@ -46,7 +46,7 @@ beforeEach(() => {
 });
 
 test('participants see invited events read-only, with the organizer and no way to save', async () => {
-    renderAs(bob, <EventModal show initialData={invitedEvent} onSave={jest.fn()} onHide={jest.fn()} readOnly />);
+    renderAs(bob, <EventModal show initialData={invitedEvent} onSave={vi.fn()} onHide={vi.fn()} readOnly />);
 
     expect(screen.getByText(/only the organizer can make changes/i)).toBeInTheDocument();
     expect(await screen.findByText('Alice @alice')).toBeInTheDocument();
@@ -58,7 +58,7 @@ test('participants see invited events read-only, with the organizer and no way t
 });
 
 test('free text typed into the location field is kept as the location', () => {
-    const onSelectLocation = jest.fn();
+    const onSelectLocation = vi.fn();
     renderAs(null, <LocationSearch onSelectLocation={onSelectLocation} enableSuggestions={false} />);
 
     fireEvent.change(screen.getByPlaceholderText(/type a location/i), { target: { value: '  Grandma\'s garden ' } });
@@ -72,8 +72,8 @@ test('free text typed into the location field is kept as the location', () => {
 const ownEvent = { ...invitedEvent, creatorId: alice.email };
 
 test('a rejected participant list is reported below the participants field and keeps the form open', async () => {
-    const onSave = jest.fn().mockRejectedValue({ response: { status: 400 } });
-    renderAs(alice, <EventModal show isNewEvent initialData={ownEvent} onSave={onSave} onHide={jest.fn()} />);
+    const onSave = vi.fn().mockRejectedValue({ response: { status: 400 } });
+    renderAs(alice, <EventModal show isNewEvent initialData={ownEvent} onSave={onSave} onHide={vi.fn()} />);
 
     fireEvent.click(screen.getByRole('button', { name: 'Save' }));
 
@@ -84,8 +84,8 @@ test('a rejected participant list is reported below the participants field and k
 });
 
 test('a missing title is shown below the title field and clears when typing', () => {
-    const onSave = jest.fn();
-    renderAs(alice, <EventModal show isNewEvent initialData={{ ...ownEvent, title: '' }} onSave={onSave} onHide={jest.fn()} />);
+    const onSave = vi.fn();
+    renderAs(alice, <EventModal show isNewEvent initialData={{ ...ownEvent, title: '' }} onSave={onSave} onHide={vi.fn()} />);
 
     fireEvent.click(screen.getByRole('button', { name: 'Save' }));
 
@@ -103,7 +103,7 @@ test('a missing title is shown below the title field and clears when typing', ()
 
 test('all invalid fields are reported at once, each below its own field', () => {
     const backwards = { ...ownEvent, title: ' ', start: new Date('2026-11-15T12:00:00Z'), end: new Date('2026-11-15T10:00:00Z') };
-    renderAs(alice, <EventModal show isNewEvent initialData={backwards} onSave={jest.fn()} onHide={jest.fn()} />);
+    renderAs(alice, <EventModal show isNewEvent initialData={backwards} onSave={vi.fn()} onHide={vi.fn()} />);
 
     fireEvent.click(screen.getByRole('button', { name: 'Save' }));
 
@@ -113,9 +113,9 @@ test('all invalid fields are reported at once, each below its own field', () => 
 });
 
 test('invitees answer from the details view and see everyone\'s answers', async () => {
-    const onRespond = jest.fn().mockResolvedValue();
+    const onRespond = vi.fn().mockResolvedValue();
     const answered = { ...invitedEvent, viewerRole: 'invited', myResponse: 'pending', participants: [{ id: '2' }, { id: '3' }], responses: { 3: 'declined' } };
-    renderAs(bob, <EventModal show initialData={answered} onSave={jest.fn()} onHide={jest.fn()} readOnly onRespond={onRespond} />);
+    renderAs(bob, <EventModal show initialData={answered} onSave={vi.fn()} onHide={vi.fn()} readOnly onRespond={onRespond} />);
 
     // Participant 3 is not Bob's friend: listed under "Other people invited", closed at first
     const others = await screen.findByRole('button', { name: /other people invited/i });
@@ -130,8 +130,8 @@ test('invitees answer from the details view and see everyone\'s answers', async 
 });
 
 test('a failed answer is reported below the answer buttons', async () => {
-    const onRespond = jest.fn().mockRejectedValue(new Error('offline'));
-    renderAs(bob, <EventModal show initialData={{ ...invitedEvent, viewerRole: 'invited', myResponse: 'maybe' }} onSave={jest.fn()} onHide={jest.fn()} readOnly onRespond={onRespond} />);
+    const onRespond = vi.fn().mockRejectedValue(new Error('offline'));
+    renderAs(bob, <EventModal show initialData={{ ...invitedEvent, viewerRole: 'invited', myResponse: 'maybe' }} onSave={vi.fn()} onHide={vi.fn()} readOnly onRespond={onRespond} />);
 
     expect(screen.getByRole('button', { name: 'Maybe' })).toHaveAttribute('aria-pressed', 'true');
     fireEvent.click(screen.getByRole('button', { name: "Can't go" }));
@@ -151,8 +151,8 @@ describe('inviting friend groups', () => {
     });
 
     test('one click invites the whole group, and the group is saved with the event', async () => {
-        const onSave = jest.fn().mockResolvedValue();
-        renderAs(alice, <EventModal show isNewEvent initialData={dixit} onSave={onSave} onHide={jest.fn()} />);
+        const onSave = vi.fn().mockResolvedValue();
+        renderAs(alice, <EventModal show isNewEvent initialData={dixit} onSave={onSave} onHide={vi.fn()} />);
 
         const inviteGroup = await screen.findByRole('button', { name: /invite a group/i });
         expect(inviteGroup).toHaveAttribute('aria-expanded', 'false'); // closed by default
@@ -168,10 +168,10 @@ describe('inviting friend groups', () => {
     });
 
     test('removing a group uninvites its members but keeps people invited on their own', async () => {
-        const onSave = jest.fn().mockResolvedValue();
+        const onSave = vi.fn().mockResolvedValue();
         // As loaded from the server: the group's members were added to the participants
         const saved = { ...dixit, id: 'e9', participants: [{ id: '2' }, { id: '3' }, { id: '4' }], groups: [{ id: '7' }], responses: {} };
-        renderAs(alice, <EventModal show initialData={saved} onSave={onSave} onHide={jest.fn()} />);
+        renderAs(alice, <EventModal show initialData={saved} onSave={onSave} onHide={vi.fn()} />);
 
         fireEvent.click(await screen.findByRole('button', { name: 'Remove group Board games' }));
         fireEvent.click(screen.getByRole('button', { name: 'Save' }));
@@ -192,7 +192,7 @@ test('the organizer sees who answered what, with names even for people who are n
         ],
         responses: { 2: 'accepted', 3: 'declined', 5: 'accepted' },
     };
-    renderAs(alice, <EventModal show initialData={dinner} onSave={jest.fn()} onHide={jest.fn()} />);
+    renderAs(alice, <EventModal show initialData={dinner} onSave={vi.fn()} onHide={vi.fn()} />);
 
     const answers = await screen.findByRole('region', { name: 'Answers' });
     expect(answers).toHaveTextContent("2 going · 1 can't go · 1 not answered");
@@ -206,7 +206,7 @@ test('the organizer sees who answered what, with names even for people who are n
 });
 
 test('new events have no answers yet', () => {
-    renderAs(alice, <EventModal show isNewEvent initialData={{ ...ownEvent, participants: [{ id: '2' }] }} onSave={jest.fn()} onHide={jest.fn()} />);
+    renderAs(alice, <EventModal show isNewEvent initialData={{ ...ownEvent, participants: [{ id: '2' }] }} onSave={vi.fn()} onHide={vi.fn()} />);
 
     expect(screen.queryByRole('region', { name: 'Answers' })).not.toBeInTheDocument();
 });
@@ -236,7 +236,7 @@ describe("who's invited, as an invitee sees it (Alice's birthday)", () => {
             data: url === '/v1/groups' ? groups
                 : friends.map((f, i) => ({ id: 100 + i, status: 'accepted', userA: viewer, userB: f })),
         }));
-        renderAs(viewer, <EventModal show initialData={birthday(viewer, groupIds)} onSave={jest.fn()} onHide={jest.fn()} readOnly />);
+        renderAs(viewer, <EventModal show initialData={birthday(viewer, groupIds)} onSave={vi.fn()} onHide={vi.fn()} readOnly />);
     };
 
     // Each line's pill: "First name · answer" and "@username"
@@ -285,8 +285,8 @@ describe("who's invited, as an invitee sees it (Alice's birthday)", () => {
 });
 
 test('a tag in the details closes them and shows more events with that tag on Discover', () => {
-    const onHide = jest.fn();
-    renderAs(bob, <EventModal show initialData={invitedEvent} onSave={jest.fn()} onHide={onHide} readOnly />);
+    const onHide = vi.fn();
+    renderAs(bob, <EventModal show initialData={invitedEvent} onSave={vi.fn()} onHide={onHide} readOnly />);
 
     fireEvent.click(screen.getByRole('button', { name: 'Show more #sport events' }));
 
@@ -306,8 +306,8 @@ describe('Export to calendar', () => {
     };
 
     test('exporting a public event also joins it, so it is in the PlanMate calendar as going', async () => {
-        const onAttend = jest.fn().mockResolvedValue({});
-        renderAs(bob, <EventModal show initialData={concert} onSave={jest.fn()} onHide={jest.fn()} readOnly onAttend={onAttend} />);
+        const onAttend = vi.fn().mockResolvedValue({});
+        renderAs(bob, <EventModal show initialData={concert} onSave={vi.fn()} onHide={vi.fn()} readOnly onAttend={onAttend} />);
 
         await exportTo('Google Calendar');
         expect(onAttend).toHaveBeenCalledWith('accepted');
@@ -315,26 +315,26 @@ describe('Export to calendar', () => {
     });
 
     test('exporting an invitation accepts it', async () => {
-        const onRespond = jest.fn().mockResolvedValue();
+        const onRespond = vi.fn().mockResolvedValue();
         const invite = { ...invitedEvent, start: concert.start, end: concert.end, viewerRole: 'invited', myResponse: 'pending' };
-        renderAs(bob, <EventModal show initialData={invite} onSave={jest.fn()} onHide={jest.fn()} readOnly onRespond={onRespond} />);
+        renderAs(bob, <EventModal show initialData={invite} onSave={vi.fn()} onHide={vi.fn()} readOnly onRespond={onRespond} />);
 
         await exportTo('Outlook');
         expect(onRespond).toHaveBeenCalledWith('accepted');
     });
 
     test('people already going, guests and past events are left as they are', async () => {
-        const onAttend = jest.fn().mockResolvedValue({});
-        const { unmount } = renderAs(bob, <EventModal show initialData={{ ...concert, viewerRole: 'going' }} onSave={jest.fn()} onHide={jest.fn()} readOnly onAttend={onAttend} />);
+        const onAttend = vi.fn().mockResolvedValue({});
+        const { unmount } = renderAs(bob, <EventModal show initialData={{ ...concert, viewerRole: 'going' }} onSave={vi.fn()} onHide={vi.fn()} readOnly onAttend={onAttend} />);
         await exportTo('Google Calendar');
         unmount();
 
         const past = { ...concert, start: new Date('2020-01-01T19:00:00Z'), end: new Date('2020-01-01T22:00:00Z') };
-        const view = renderAs(bob, <EventModal show initialData={past} onSave={jest.fn()} onHide={jest.fn()} readOnly onAttend={onAttend} />);
+        const view = renderAs(bob, <EventModal show initialData={past} onSave={vi.fn()} onHide={vi.fn()} readOnly onAttend={onAttend} />);
         await exportTo('Google Calendar');
         view.unmount();
 
-        renderAs(null, <EventModal show initialData={concert} onSave={jest.fn()} onHide={jest.fn()} readOnly onAttend={onAttend} />);
+        renderAs(null, <EventModal show initialData={concert} onSave={vi.fn()} onHide={vi.fn()} readOnly onAttend={onAttend} />);
         await exportTo('Google Calendar');
         expect(onAttend).not.toHaveBeenCalled();
     });
@@ -349,8 +349,8 @@ describe('the toolbar and your answer', () => {
     };
 
     test('editing puts Export, Share, Save and close in the toolbar, without a heading', () => {
-        const onSave = jest.fn().mockResolvedValue();
-        const onHide = jest.fn();
+        const onSave = vi.fn().mockResolvedValue();
+        const onHide = vi.fn();
         renderAs(bob, <EventModal show initialData={own} onSave={onSave} onHide={onHide} />);
         const toolbar = screen.getByRole('group', { name: 'Event actions' });
         expect(within(toolbar).getAllByRole('button').map(b => b.textContent.trim() || b.getAttribute('aria-label')))
@@ -364,15 +364,15 @@ describe('the toolbar and your answer', () => {
     });
 
     test('new events only have Save and close', () => {
-        renderAs(bob, <EventModal show isNewEvent initialData={{ ...own, id: null }} onSave={jest.fn()} onHide={jest.fn()} />);
+        renderAs(bob, <EventModal show isNewEvent initialData={{ ...own, id: null }} onSave={vi.fn()} onHide={vi.fn()} />);
         expect(screen.getByRole('dialog', { name: 'New event' })).toBeInTheDocument();
         expect(screen.queryByRole('button', { name: 'Share' })).not.toBeInTheDocument();
         expect(screen.getByRole('button', { name: 'Save' })).toBeInTheDocument();
     });
 
     test('a public event you joined can be answered Going, Maybe or Can\'t go from the details', async () => {
-        const onAttend = jest.fn().mockResolvedValue({});
-        renderAs(bob, <EventModal show initialData={concert} onSave={jest.fn()} onHide={jest.fn()} readOnly onAttend={onAttend} />);
+        const onAttend = vi.fn().mockResolvedValue({});
+        renderAs(bob, <EventModal show initialData={concert} onSave={vi.fn()} onHide={vi.fn()} readOnly onAttend={onAttend} />);
 
         const answer = screen.getByRole('region', { name: 'Your answer' });
         expect(within(answer).getAllByRole('button').map(b => b.textContent)).toEqual(['Going', 'Maybe', "Can't go"]);
@@ -388,26 +388,26 @@ describe('the toolbar and your answer', () => {
     });
 
     test('a public event you have not answered has nothing chosen yet, and a Maybe shows as Maybe', () => {
-        const { unmount } = renderAs(bob, <EventModal show initialData={{ ...concert, viewerRole: null }} onSave={jest.fn()} onHide={jest.fn()} readOnly onAttend={jest.fn()} />);
+        const { unmount } = renderAs(bob, <EventModal show initialData={{ ...concert, viewerRole: null }} onSave={vi.fn()} onHide={vi.fn()} readOnly onAttend={vi.fn()} />);
         expect(screen.queryByRole('button', { pressed: true })).not.toBeInTheDocument();
         unmount();
-        renderAs(bob, <EventModal show initialData={{ ...concert, viewerRole: 'maybe' }} onSave={jest.fn()} onHide={jest.fn()} readOnly onAttend={jest.fn()} />);
+        renderAs(bob, <EventModal show initialData={{ ...concert, viewerRole: 'maybe' }} onSave={vi.fn()} onHide={vi.fn()} readOnly onAttend={vi.fn()} />);
         expect(screen.getByRole('button', { name: 'Maybe' })).toHaveAttribute('aria-pressed', 'true');
     });
 
     test('a failed answer is reported and keeps the old one', async () => {
-        const onAttend = jest.fn().mockRejectedValue(new Error('offline'));
-        renderAs(bob, <EventModal show initialData={concert} onSave={jest.fn()} onHide={jest.fn()} readOnly onAttend={onAttend} />);
+        const onAttend = vi.fn().mockRejectedValue(new Error('offline'));
+        renderAs(bob, <EventModal show initialData={concert} onSave={vi.fn()} onHide={vi.fn()} readOnly onAttend={onAttend} />);
         fireEvent.click(screen.getByRole('button', { name: "Can't go" }));
         expect(await screen.findByText(/could not be saved/i)).toHaveAttribute('id', 'rsvp-error');
         expect(screen.getByRole('button', { name: 'Going' })).toHaveAttribute('aria-pressed', 'true');
     });
 
     test('guests and cancelled events have no answer section', () => {
-        const { unmount } = renderAs(null, <EventModal show initialData={concert} onSave={jest.fn()} onHide={jest.fn()} readOnly onAttend={jest.fn()} />);
+        const { unmount } = renderAs(null, <EventModal show initialData={concert} onSave={vi.fn()} onHide={vi.fn()} readOnly onAttend={vi.fn()} />);
         expect(screen.queryByRole('region', { name: 'Your answer' })).not.toBeInTheDocument();
         unmount();
-        renderAs(bob, <EventModal show initialData={{ ...concert, cancelled: true }} onSave={jest.fn()} onHide={jest.fn()} readOnly onAttend={jest.fn()} />);
+        renderAs(bob, <EventModal show initialData={{ ...concert, cancelled: true }} onSave={vi.fn()} onHide={vi.fn()} readOnly onAttend={vi.fn()} />);
         expect(screen.queryByRole('region', { name: 'Your answer' })).not.toBeInTheDocument();
     });
 });

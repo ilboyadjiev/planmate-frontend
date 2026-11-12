@@ -3,9 +3,9 @@ import moment from 'moment';
 import GamePlan from './GamePlan';
 import api from '../api/client';
 
-jest.mock('../api/client', () => ({ __esModule: true, default: { get: jest.fn() } }));
+vi.mock('../api/client', () => ({ __esModule: true, default: { get: vi.fn() } }));
 // react-markdown is ESM-only and Jest (CRA) cannot load it; rendering markdown is not what is tested here
-jest.mock('react-markdown', () => ({ children }) => <div>{children}</div>);
+vi.mock('react-markdown', () => ({ default: ({ children }) => <div>{children}</div> }));
 
 const alice = { id: 1, username: 'alice' };
 const inMinutes = (m) => new Date(Date.now() + m * 60000).toISOString();
@@ -26,7 +26,7 @@ const cachePlan = (overrides = {}) => localStorage.setItem('planmate_game_plan_1
 }));
 
 beforeEach(() => {
-    jest.resetAllMocks();
+    vi.resetAllMocks();
     localStorage.clear();
 });
 

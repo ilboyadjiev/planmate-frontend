@@ -23,7 +23,7 @@ test('clicking the line opens the range calendar, and clicking again closes it',
 });
 
 test('"This weekend" picks the upcoming Saturday and Sunday and closes', () => {
-    const onChange = jest.fn();
+    const onChange = vi.fn();
     render(<DateRangeFilter from="" to="" onChange={onChange} today={TODAY} />);
     openPanel();
 
@@ -34,7 +34,7 @@ test('"This weekend" picks the upcoming Saturday and Sunday and closes', () => {
 });
 
 test('picking a start then an end day applies the range on Done', () => {
-    const onChange = jest.fn();
+    const onChange = vi.fn();
     render(<DateRangeFilter from="" to="" onChange={onChange} today={TODAY} />);
     openPanel();
 
@@ -47,7 +47,7 @@ test('picking a start then an end day applies the range on Done', () => {
 });
 
 test('a single day picked on its own applies as that one day', () => {
-    const onChange = jest.fn();
+    const onChange = vi.fn();
     render(<DateRangeFilter from="" to="" onChange={onChange} today={TODAY} />);
     openPanel();
 
@@ -65,7 +65,7 @@ test('past days before today cannot be picked', () => {
 });
 
 test('a set range shows on the collapsed line and can be cleared', () => {
-    const onChange = jest.fn();
+    const onChange = vi.fn();
     render(<DateRangeFilter from="2026-11-20" to="2026-11-22" onChange={onChange} today={TODAY} />);
     const trigger = screen.getByRole('button', { name: /Nov/ });
     expect(trigger).toHaveTextContent('20');

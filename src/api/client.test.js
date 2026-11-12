@@ -37,8 +37,8 @@ test('attaches the stored access token', async () => {
 
 test('concurrent 401s trigger a single refresh and every request is retried with the new token', async () => {
     tokenStore.set('expired', 'refresh-1');
-    const onTokenRefreshed = jest.fn();
-    configureAuthHandlers({ onTokenRefreshed, onSessionExpired: jest.fn() });
+    const onTokenRefreshed = vi.fn();
+    configureAuthHandlers({ onTokenRefreshed, onSessionExpired: vi.fn() });
 
     server = (req, auth) => {
         if (req.url.endsWith('/auth/refresh')) {
@@ -58,7 +58,7 @@ test('concurrent 401s trigger a single refresh and every request is retried with
 
 test('a failed refresh clears tokens and reports the expired session', async () => {
     tokenStore.set('expired', 'revoked');
-    const onSessionExpired = jest.fn();
+    const onSessionExpired = vi.fn();
     configureAuthHandlers({ onSessionExpired });
 
     server = (req) => respond(req, 401);
@@ -72,7 +72,7 @@ test('a failed refresh clears tokens and reports the expired session', async () 
 });
 
 test('guest requests (no token) and auth endpoints never trigger a refresh', async () => {
-    const onSessionExpired = jest.fn();
+    const onSessionExpired = vi.fn();
     configureAuthHandlers({ onSessionExpired });
     server = (req) => respond(req, 401);
 

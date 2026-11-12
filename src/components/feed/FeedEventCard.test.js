@@ -25,7 +25,7 @@ const boardGames = {
 
 const renderCard = (props) => render(
     <MemoryRouter>
-        <FeedEventCard event={boardGames} loggedIn pending={false} onToggleGoing={jest.fn()} {...props} />
+        <FeedEventCard event={boardGames} loggedIn pending={false} onToggleGoing={vi.fn()} {...props} />
     </MemoryRouter>
 );
 
@@ -72,7 +72,7 @@ test('the card shows host, place, tags and up to three friend avatars', () => {
 });
 
 test("I'm going joins, and Going leaves", () => {
-    const onToggleGoing = jest.fn();
+    const onToggleGoing = vi.fn();
     const { unmount } = renderCard({ onToggleGoing });
     fireEvent.click(screen.getByRole('button', { name: /i'm going/i }));
     expect(onToggleGoing).toHaveBeenCalledWith(boardGames);
@@ -97,7 +97,7 @@ test('own events have no button, and guests are sent to log in', () => {
 test('a cancelled event says so instead of offering to join', () => {
     render(
         <MemoryRouter>
-            <FeedEventCard event={{ ...boardGames, cancelled: true }} loggedIn onToggleGoing={jest.fn()} />
+            <FeedEventCard event={{ ...boardGames, cancelled: true }} loggedIn onToggleGoing={vi.fn()} />
         </MemoryRouter>
     );
     expect(screen.getByText('Cancelled')).toBeInTheDocument();

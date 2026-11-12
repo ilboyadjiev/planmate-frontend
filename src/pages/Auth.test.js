@@ -4,15 +4,15 @@ import Login from './Login';
 import Register from './Register';
 import { AuthContext } from '../context/AuthContext';
 
-jest.mock('../api/client', () => ({ __esModule: true, default: { get: jest.fn() } }));
-jest.mock('@react-oauth/google', () => ({ GoogleLogin: () => <button type="button">Sign in with Google</button> }));
+vi.mock('../api/client', () => ({ __esModule: true, default: { get: vi.fn() } }));
+vi.mock('@react-oauth/google', () => ({ GoogleLogin: () => <button type="button">Sign in with Google</button> }));
 
-const mockNavigate = jest.fn();
-jest.mock('react-router-dom', () => ({ ...jest.requireActual('react-router-dom'), useNavigate: () => mockNavigate }));
+const mockNavigate = vi.hoisted(() => vi.fn());
+vi.mock('react-router-dom', async (importOriginal) => ({ ...(await importOriginal()), useNavigate: () => mockNavigate }));
 
 const renderPage = (page, auth = {}) => render(
     <MemoryRouter>
-        <AuthContext.Provider value={{ login: jest.fn(), googleLogin: jest.fn(), register: jest.fn(), ...auth }}>
+        <AuthContext.Provider value={{ login: vi.fn(), googleLogin: vi.fn(), register: vi.fn(), ...auth }}>
             {page}
         </AuthContext.Provider>
     </MemoryRouter>
@@ -27,7 +27,7 @@ test('Login is one glass panel, named by its heading, with a way to create an ac
 });
 
 test('Login still logs in and shows a failure at the form', async () => {
-    const login = jest.fn().mockRejectedValue({ response: { data: { error: 'Wrong password.' } } });
+    const login = vi.fn().mockRejectedValue({ response: { data: { error: 'Wrong password.' } } });
     renderPage(<Login />, { login });
     fireEvent.change(screen.getByLabelText('Email Address'), { target: { value: 'a@example.com' } });
     fireEvent.change(screen.getByLabelText('Password'), { target: { value: 'secret' } });

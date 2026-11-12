@@ -4,9 +4,9 @@ import FriendGroups from './FriendGroups';
 import { AuthContext } from '../context/AuthContext';
 import api from '../api/client';
 
-jest.mock('../api/client', () => ({
+vi.mock('../api/client', () => ({
     __esModule: true,
-    default: { get: jest.fn(), post: jest.fn(), patch: jest.fn(), delete: jest.fn() },
+    default: { get: vi.fn(), post: vi.fn(), patch: vi.fn(), delete: vi.fn() },
 }));
 
 const alice = { id: 1, firstName: 'Alice', username: 'alice' };
@@ -25,7 +25,7 @@ const renderPage = () => render(
 );
 
 beforeEach(() => {
-    jest.resetAllMocks();
+    vi.resetAllMocks();
     api.get.mockImplementation(url => Promise.resolve({
         data: url === '/v1/groups' ? [sports] : [bob, charlie, david].map(f => ({ status: 'accepted', userA: alice, userB: f })),
     }));

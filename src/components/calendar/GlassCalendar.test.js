@@ -22,7 +22,7 @@ const Harness = (props) => {
 
 const setup = (props = {}) => {
     navigations = [];
-    const handlers = { onSelectEvent: jest.fn(), onSelectSlot: jest.fn(), onCreateEvent: jest.fn() };
+    const handlers = { onSelectEvent: vi.fn(), onSelectSlot: vi.fn(), onCreateEvent: vi.fn() };
     render(<Harness {...handlers} {...props} />);
     return handlers;
 };

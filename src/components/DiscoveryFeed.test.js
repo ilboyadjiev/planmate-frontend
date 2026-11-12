@@ -7,15 +7,15 @@ import { resetPreferences, setPreferences } from '../services/preferences';
 
 // The date filter uses MUI's glass date pickers (its own test covers them); here a light stand-in exposes
 // From/To as plain inputs so these tests can check the params the feed sends.
-jest.mock('./feed/DateRangeFilter', () => ({ from, to, onChange }) => (
+vi.mock('./feed/DateRangeFilter', () => ({ default: ({ from, to, onChange }) => (
     <div>
         <input aria-label="From" value={from} onChange={(e) => onChange(e.target.value, to)} />
         <input aria-label="To" value={to} onChange={(e) => onChange(from, e.target.value)} />
         {(from || to) && <button type="button" onClick={() => onChange('', '')}>Clear dates</button>}
     </div>
-));
+) }));
 
-jest.mock('../api/client', () => ({ __esModule: true, default: { get: jest.fn(), post: jest.fn(), put: jest.fn(), delete: jest.fn() } }));
+vi.mock('../api/client', () => ({ __esModule: true, default: { get: vi.fn(), post: vi.fn(), put: vi.fn(), delete: vi.fn() } }));
 
 const card = (id, extra = {}) => ({
     id, title: `Event ${id}`, startTime: '2026-11-06T18:00:00Z', endTime: '2026-11-06T20:00:00Z',
@@ -25,7 +25,7 @@ const card = (id, extra = {}) => ({
 const renderFeed = (props = {}, url = '/dashboard') => render(
     <MemoryRouter initialEntries={[url]}>
         <AuthContext.Provider value={{ user: { id: 1, email: 'alice@example.com' } }}>
-            <DiscoveryFeed onAttendanceChange={jest.fn()} onError={jest.fn()} {...props} />
+            <DiscoveryFeed onAttendanceChange={vi.fn()} onError={vi.fn()} {...props} />
         </AuthContext.Provider>
     </MemoryRouter>
 );
@@ -36,7 +36,7 @@ let groupsResponse = [];
 const feedCalls = () => api.get.mock.calls.filter(([url]) => url === '/v2/events/feed');
 
 beforeEach(() => {
-    jest.resetAllMocks();
+    vi.resetAllMocks();
     resetPreferences();
     feedResponses = [];
     groupsResponse = [];
@@ -70,7 +70,7 @@ describe('infinite scrolling', () => {
     let observers;
     beforeEach(() => {
         observers = [];
-        window.IntersectionObserver = jest.fn(function observe(callback) {
+        window.IntersectionObserver = vi.fn(function observe(callback) {
             const self = { callback, elements: [], observe: el => self.elements.push(el), disconnect: () => { self.gone = true; } };
             observers.push(self);
             return self;
@@ -143,7 +143,7 @@ test('a tag chip reloads the feed for that tag', async () => {
 });
 
 test("joining updates the card in place and tells the dashboard", async () => {
-    const onAttendanceChange = jest.fn();
+    const onAttendanceChange = vi.fn();
     feedResponses = [{ data: { events: [card('a', { attendeeCount: 3 })], hasMore: false } }];
     const joined = card('a', { attendeeCount: 4, going: true });
     api.post.mockResolvedValue({ data: joined });
@@ -158,7 +158,7 @@ test("joining updates the card in place and tells the dashboard", async () => {
 });
 
 test('a failed join is reported and the card stays as it was', async () => {
-    const onError = jest.fn();
+    const onError = vi.fn();
     feedResponses = [{ data: { events: [card('a')], hasMore: false } }];
     api.post.mockRejectedValue({ response: { status: 500 } });
     renderFeed({ onError });
@@ -185,7 +185,7 @@ describe('friend groups in the feed', () => {
     });
 
     test('invitations are answered right on the card', async () => {
-        const onRespond = jest.fn();
+        const onRespond = vi.fn();
         groupsResponse = [boardGames];
         feedResponses = [{ data: { events: [invite], hasMore: false } }];
         api.put.mockResolvedValue({ data: {} });
@@ -284,7 +284,7 @@ describe('opening a card', () => {
     });
 
     test('invitations can be answered in the details, and the card follows', async () => {
-        const onRespond = jest.fn();
+        const onRespond = vi.fn();
         api.get.mockImplementation(url => {
             if (url === '/v1/groups') return Promise.resolve({ data: [] });
             if (url === '/v2/events/a') return Promise.resolve({ data: serverEvent({ viewerRole: 'invited', participantIds: ['1'], responses: {} }) });
@@ -317,7 +317,7 @@ test('a tag picked in an event\'s details opens that tag\'s feed, as a chip, and
     render(
         <MemoryRouter initialEntries={['/dashboard?tag=%23christmasmarket&calendar=open']}>
             <AuthContext.Provider value={{ user: { id: 1, email: 'alice@example.com' } }}>
-                <Routes><Route path="/dashboard" element={<><DiscoveryFeed onAttendanceChange={jest.fn()} onError={jest.fn()} /><Where /></>} /></Routes>
+                <Routes><Route path="/dashboard" element={<><DiscoveryFeed onAttendanceChange={vi.fn()} onError={vi.fn()} /><Where /></>} /></Routes>
             </AuthContext.Provider>
         </MemoryRouter>
     );

@@ -5,12 +5,12 @@ import { AuthContext } from '../context/AuthContext';
 import api from '../api/client';
 import { getPreferences, resetPreferences } from '../services/preferences';
 
-jest.mock('../api/client', () => ({
+vi.mock('../api/client', () => ({
     __esModule: true,
-    default: { get: jest.fn(), put: jest.fn(), patch: jest.fn(), post: jest.fn(), delete: jest.fn() },
+    default: { get: vi.fn(), put: vi.fn(), patch: vi.fn(), post: vi.fn(), delete: vi.fn() },
 }));
-const mockConnect = jest.fn();
-jest.mock('@react-oauth/google', () => ({ useGoogleLogin: () => mockConnect }));
+const mockConnect = vi.fn();
+vi.mock('@react-oauth/google', () => ({ useGoogleLogin: () => mockConnect }));
 
 const DEFAULTS = {
     weekStart: 'monday', timeFormat: '24h', calendarView: 'auto', goingVisibility: 'friends', showInSuggestions: true,
@@ -20,7 +20,7 @@ const alice = { id: 1, username: 'alice', contactData: { city: 'Munich', mobile:
 
 let serverSettings;
 
-const renderSettings = ({ logout = jest.fn(), updateCurrentUser = jest.fn() } = {}) => render(
+const renderSettings = ({ logout = vi.fn(), updateCurrentUser = vi.fn() } = {}) => render(
     <MemoryRouter>
         <AuthContext.Provider value={{ user: alice, logout, updateCurrentUser }}>
             <Settings />
@@ -35,7 +35,7 @@ const serverSaves = () => api.patch.mockImplementation((url, changes) => {
 });
 
 beforeEach(() => {
-    jest.resetAllMocks();
+    vi.resetAllMocks();
     resetPreferences();
     serverSettings = { ...DEFAULTS };
     api.get.mockImplementation(url => (url === '/v1/settings'
@@ -46,7 +46,7 @@ beforeEach(() => {
 const loaded = () => screen.findByRole('heading', { name: 'Discover' });
 
 test('settings has the way back, a link to edit the profile, and log out', async () => {
-    const logout = jest.fn();
+    const logout = vi.fn();
     renderSettings({ logout });
     await loaded();
 
@@ -105,7 +105,7 @@ test('a refused change goes back and says why', async () => {
 
 test('the home city has its own Save button and updates the cached profile', async () => {
     serverSaves();
-    const updateCurrentUser = jest.fn();
+    const updateCurrentUser = vi.fn();
     renderSettings({ updateCurrentUser });
     await loaded();
 
@@ -177,10 +177,10 @@ test('Google accounts see why there is no password to change', async () => {
 test('download my data saves a JSON file', async () => {
     const exported = { account: { email: 'alice@example.com' } };
     api.get.mockImplementation(url => Promise.resolve({ data: url === '/v1/account/export' ? exported : serverSettings }));
-    const createObjectURL = jest.fn(() => 'blob:export');
+    const createObjectURL = vi.fn(() => 'blob:export');
     URL.createObjectURL = createObjectURL;
-    URL.revokeObjectURL = jest.fn();
-    const click = jest.spyOn(HTMLAnchorElement.prototype, 'click').mockImplementation(() => {});
+    URL.revokeObjectURL = vi.fn();
+    const click = vi.spyOn(HTMLAnchorElement.prototype, 'click').mockImplementation(() => {});
 
     renderSettings();
     await loaded();
@@ -214,7 +214,7 @@ test('Google Calendar is connected from settings', async () => {
 });
 
 test('deleting the account asks first, then deletes and logs out', async () => {
-    const logout = jest.fn();
+    const logout = vi.fn();
     api.delete.mockResolvedValue({});
     renderSettings({ logout });
     await loaded();
@@ -232,7 +232,7 @@ test('deleting the account asks first, then deletes and logs out', async () => {
 });
 
 test('a failed delete says so and keeps you logged in', async () => {
-    const logout = jest.fn();
+    const logout = vi.fn();
     api.delete.mockRejectedValue(new Error('down'));
     renderSettings({ logout });
     await loaded();

@@ -4,22 +4,22 @@ import EditProfile from './EditProfile';
 import { AuthContext } from '../context/AuthContext';
 import api from '../api/client';
 
-jest.mock('../api/client', () => ({ __esModule: true, default: { get: jest.fn(), put: jest.fn(), patch: jest.fn(), post: jest.fn(), delete: jest.fn() } }));
+vi.mock('../api/client', () => ({ __esModule: true, default: { get: vi.fn(), put: vi.fn(), patch: vi.fn(), post: vi.fn(), delete: vi.fn() } }));
 
 const alice = { id: 1, firstName: 'Alice', lastName: 'Meier', email: 'alice@example.com', contactData: { city: 'Munich' } };
 
-const renderPage = (updateCurrentUser = jest.fn()) => render(
+const renderPage = (updateCurrentUser = vi.fn()) => render(
     <MemoryRouter>
-        <AuthContext.Provider value={{ user: alice, logout: jest.fn(), updateCurrentUser }}>
+        <AuthContext.Provider value={{ user: alice, logout: vi.fn(), updateCurrentUser }}>
             <EditProfile />
         </AuthContext.Provider>
     </MemoryRouter>
 );
 
-beforeEach(() => jest.resetAllMocks());
+beforeEach(() => vi.resetAllMocks());
 
 test('the top line has the way back on the left and Save on the right, which saves the form', async () => {
-    const updateCurrentUser = jest.fn();
+    const updateCurrentUser = vi.fn();
     api.patch.mockResolvedValue({ data: { ...alice, firstName: 'Ali' } });
     renderPage(updateCurrentUser);
 

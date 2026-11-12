@@ -3,7 +3,7 @@ import { MemoryRouter } from 'react-router-dom';
 import RelatedEvents from './RelatedEvents';
 import api from '../api/client';
 
-jest.mock('../api/client', () => ({ __esModule: true, default: { get: jest.fn() } }));
+vi.mock('../api/client', () => ({ __esModule: true, default: { get: vi.fn() } }));
 
 const date = (id, startTime, extra = {}) => ({
     id, title: 'HULLIS - Comedy. Dinner. Show.', startTime, endTime: startTime.replace('T19', 'T22'),
@@ -14,7 +14,7 @@ const renderList = (props = {}) => render(
     <MemoryRouter><RelatedEvents eventId="tm-2" {...props} /></MemoryRouter>
 );
 
-beforeEach(() => jest.resetAllMocks());
+beforeEach(() => vi.resetAllMocks());
 
 test('lists the other dates and similar events, each linking to its page', async () => {
     api.get.mockResolvedValue({ data: {
@@ -22,7 +22,7 @@ test('lists the other dates and similar events, each linking to its page', async
         similar: [{ id: 'tm-9', title: 'Stand-up Night', startTime: '2030-11-15T20:00:00', endTime: '2030-11-15T22:00:00',
             location: { name: 'Club' }, moreDates: 2 }],
     } });
-    const onNavigate = jest.fn();
+    const onNavigate = vi.fn();
     renderList({ onNavigate });
 
     expect(await screen.findByRole('heading', { name: 'More dates' })).toBeInTheDocument();

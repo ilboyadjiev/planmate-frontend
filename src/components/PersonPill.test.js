@@ -31,7 +31,7 @@ test('"You" replaces the name, and someone without a first name shows only their
 });
 
 test('is a button when it opens something', () => {
-    const onClick = jest.fn();
+    const onClick = vi.fn();
     render(<PersonPill person={bob} onClick={onClick} ariaLabel="Open Bob's profile" />);
 
     fireEvent.click(screen.getByRole('button', { name: "Open Bob's profile" }));

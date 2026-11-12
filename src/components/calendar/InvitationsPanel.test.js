@@ -1,19 +1,19 @@
 import { render, screen, fireEvent, waitFor } from '@testing-library/react';
 import InvitationsPanel from './InvitationsPanel';
 
-const mockRespond = jest.fn().mockResolvedValue({});
-const mockList = jest.fn();
-const mockDismiss = jest.fn().mockResolvedValue();
+const mockRespond = vi.fn().mockResolvedValue({});
+const mockList = vi.fn();
+const mockDismiss = vi.fn().mockResolvedValue();
 
-jest.mock('../../services/preferences', () => ({
+vi.mock('../../services/preferences', () => ({
     usePreferences: () => ({ timeFormat: '24h' }),
     formatTime: () => '18:30',
 }));
-jest.mock('../../services/eventService', () => ({
+vi.mock('../../services/eventService', () => ({
     respondToInvite: (...args) => mockRespond(...args),
     toCalendarEvent: (event) => event,
 }));
-jest.mock('../../services/inviteEvents', () => ({
+vi.mock('../../services/inviteEvents', () => ({
     listUnansweredInvites: (...args) => mockList(...args),
     dismissInvite: (...args) => mockDismiss(...args),
     notifyInvitesChanged: () => {},
@@ -26,7 +26,7 @@ const invites = () => ([
 ]);
 
 const renderPanel = (props) => render(
-    <InvitationsPanel user={{ id: 1 }} onOpen={jest.fn()} onChanged={jest.fn()} {...props} />
+    <InvitationsPanel user={{ id: 1 }} onOpen={vi.fn()} onChanged={vi.fn()} {...props} />
 );
 
 beforeEach(() => {
@@ -49,7 +49,7 @@ test('renders nothing when there are no invitations', async () => {
 });
 
 test('answering Going sends the response and removes the invitation', async () => {
-    const onChanged = jest.fn();
+    const onChanged = vi.fn();
     renderPanel({ onChanged });
     await screen.findByText('Board game night');
 
@@ -73,7 +73,7 @@ test('dismissing removes the invitation without answering', async () => {
 });
 
 test('opens the event details when a row is clicked', async () => {
-    const onOpen = jest.fn();
+    const onOpen = vi.fn();
     renderPanel({ onOpen });
     fireEvent.click(await screen.findByRole('button', { name: 'Open Board game night' }));
     expect(onOpen).toHaveBeenCalledWith(expect.objectContaining({ id: 'a' }));

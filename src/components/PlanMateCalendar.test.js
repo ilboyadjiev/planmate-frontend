@@ -5,19 +5,19 @@ import { AuthContext } from '../context/AuthContext';
 import api from '../api/client';
 import { resetPreferences, setPreferences } from '../services/preferences';
 
-jest.mock('../api/client', () => ({ __esModule: true, default: { get: jest.fn() } }));
-jest.mock('./GamePlan', () => ({ __esModule: true, default: () => <section aria-label="AI Game plan" /> }));
+vi.mock('../api/client', () => ({ __esModule: true, default: { get: vi.fn() } }));
+vi.mock('./GamePlan', () => ({ __esModule: true, default: () => <section aria-label="AI Game plan" /> }));
 
 const renderCalendar = () => render(
     <MemoryRouter>
         <AuthContext.Provider value={{ user: { id: 1, email: 'alice@example.com' } }}>
-            <PlanMateCalendar userEmail="alice@example.com" refreshKey={0} onSlotSelect={jest.fn()} onCreateEvent={jest.fn()} />
+            <PlanMateCalendar userEmail="alice@example.com" refreshKey={0} onSlotSelect={vi.fn()} onCreateEvent={vi.fn()} />
         </AuthContext.Provider>
     </MemoryRouter>
 );
 
 beforeEach(() => {
-    jest.resetAllMocks();
+    vi.resetAllMocks();
     resetPreferences();
     api.get.mockResolvedValue({ data: [] });
 });

@@ -8,15 +8,15 @@ import { requestSearchFocus } from '../services/searchFocus';
 
 // The date filter uses MUI's glass date pickers (its own test covers them); here a light stand-in exposes
 // From/To as plain inputs so these tests can check the params the feed sends.
-jest.mock('../components/feed/DateRangeFilter', () => ({ from, to, onChange }) => (
+vi.mock('../components/feed/DateRangeFilter', () => ({ default: ({ from, to, onChange }) => (
     <div>
         <input aria-label="From" value={from} onChange={(e) => onChange(e.target.value, to)} />
         <input aria-label="To" value={to} onChange={(e) => onChange(from, e.target.value)} />
         {(from || to) && <button type="button" onClick={() => onChange('', '')}>Clear dates</button>}
     </div>
-));
+) }));
 
-jest.mock('../api/client', () => ({ __esModule: true, default: { get: jest.fn(), post: jest.fn(), put: jest.fn(), delete: jest.fn() } }));
+vi.mock('../api/client', () => ({ __esModule: true, default: { get: vi.fn(), post: vi.fn(), put: vi.fn(), delete: vi.fn() } }));
 
 const card = (id, extra = {}) => ({
     id, title: `Event ${id}`, startTime: '2026-11-06T18:00:00Z', endTime: '2026-11-06T20:00:00Z',
@@ -47,7 +47,7 @@ const storedHistory = () => JSON.parse(window.localStorage.getItem(historyKey(1)
 const recentList = () => screen.queryByRole('list', { name: 'Recent searches' });
 
 beforeEach(() => {
-    jest.resetAllMocks();
+    vi.resetAllMocks();
     window.localStorage.clear();
     lastSearch = '';
     api.get.mockResolvedValue({ data: { events: [], hasMore: false, total: 0 } });

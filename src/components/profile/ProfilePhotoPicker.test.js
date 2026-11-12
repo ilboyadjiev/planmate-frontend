@@ -1,17 +1,17 @@
+import { useEffect } from 'react';
 import { render, screen, fireEvent, waitFor } from '@testing-library/react';
 import ProfilePhotoPicker from './ProfilePhotoPicker';
 import { AuthContext } from '../../context/AuthContext';
 import api from '../../api/client';
 import { cropToJpeg, loadPhoto } from '../../services/shrinkPhoto';
 
-jest.mock('../../api/client', () => ({ __esModule: true, default: { put: jest.fn(), delete: jest.fn() } }));
-jest.mock('../../services/shrinkPhoto', () => ({ loadPhoto: jest.fn(), cropToJpeg: jest.fn() }));
+vi.mock('../../api/client', () => ({ __esModule: true, default: { put: vi.fn(), delete: vi.fn() } }));
+vi.mock('../../services/shrinkPhoto', () => ({ loadPhoto: vi.fn(), cropToJpeg: vi.fn() }));
 // jsdom has no layout, so the real cropper cannot measure anything: this one reports a fixed framed square
 const mockFramed = { x: 120, y: 40, width: 600, height: 600 };
-jest.mock('react-easy-crop', () => ({
+vi.mock('react-easy-crop', () => ({
     __esModule: true,
     default: function FakeCropper({ image, onCropComplete }) {
-        const { useEffect } = jest.requireActual('react');
         useEffect(() => { onCropComplete({}, mockFramed); }, [onCropComplete]);
         return <img src={image} alt="Being framed" />;
     },
@@ -20,7 +20,7 @@ jest.mock('react-easy-crop', () => ({
 const alice = { id: 1, firstName: 'Alice', lastName: 'Meier', username: 'alice' };
 const loaded = { image: { naturalWidth: 1200, naturalHeight: 800 }, url: 'blob:photo' };
 
-const renderPicker = (user, updateCurrentUser = jest.fn()) => render(
+const renderPicker = (user, updateCurrentUser = vi.fn()) => render(
     <AuthContext.Provider value={{ user, updateCurrentUser }}>
         <ProfilePhotoPicker />
     </AuthContext.Provider>
@@ -30,12 +30,12 @@ const pick = (file = new File(['big'], 'me.jpg', { type: 'image/jpeg' })) =>
     fireEvent.change(screen.getByTestId('photo-input'), { target: { files: [file] } });
 
 beforeEach(() => {
-    jest.resetAllMocks();
-    URL.revokeObjectURL = jest.fn();
+    vi.resetAllMocks();
+    URL.revokeObjectURL = vi.fn();
 });
 
 test('a chosen photo is framed first, then the framed square is uploaded and becomes the user\'s picture', async () => {
-    const updateCurrentUser = jest.fn();
+    const updateCurrentUser = vi.fn();
     loadPhoto.mockResolvedValue(loaded);
     cropToJpeg.mockResolvedValue(new Blob(['jpeg'], { type: 'image/jpeg' }));
     api.put.mockResolvedValue({ data: { avatarKey: 'newkey' } });
@@ -107,7 +107,7 @@ test('the server\'s reason is shown when it refuses a photo', async () => {
 });
 
 test('with a photo it offers Change and Remove; Remove deletes it', async () => {
-    const updateCurrentUser = jest.fn();
+    const updateCurrentUser = vi.fn();
     api.delete.mockResolvedValue({});
     renderPicker({ ...alice, avatarKey: 'oldkey' }, updateCurrentUser);
 

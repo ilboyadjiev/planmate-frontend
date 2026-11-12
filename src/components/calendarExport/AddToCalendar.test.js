@@ -2,11 +2,11 @@ import { render, screen, fireEvent, waitFor } from '@testing-library/react';
 import AddToCalendar from './AddToCalendar';
 import api from '../../api/client';
 
-jest.mock('../../api/client', () => ({ __esModule: true, default: { get: jest.fn() } }));
+vi.mock('../../api/client', () => ({ __esModule: true, default: { get: vi.fn() } }));
 
 const jazz = { id: 'abc', title: 'Jazz night', start: '2026-11-07T18:00:00Z', end: '2026-11-07T22:00:00Z', isPublic: true };
 
-beforeEach(() => jest.resetAllMocks());
+beforeEach(() => vi.resetAllMocks());
 
 test('offers Google Calendar, Outlook and an .ics file, and closes with Escape', () => {
     render(<AddToCalendar event={jazz} />);
@@ -26,9 +26,9 @@ test('offers Google Calendar, Outlook and an .ics file, and closes with Escape',
 
 test('private events are downloaded with the login', async () => {
     api.get.mockResolvedValue({ data: new Blob(['BEGIN:VCALENDAR'], { type: 'text/calendar' }) });
-    URL.createObjectURL = jest.fn(() => 'blob:ics');
-    URL.revokeObjectURL = jest.fn();
-    const click = jest.spyOn(HTMLAnchorElement.prototype, 'click').mockImplementation(() => {});
+    URL.createObjectURL = vi.fn(() => 'blob:ics');
+    URL.revokeObjectURL = vi.fn();
+    const click = vi.spyOn(HTMLAnchorElement.prototype, 'click').mockImplementation(() => {});
 
     render(<AddToCalendar event={{ ...jazz, isPublic: false }} />);
     fireEvent.click(screen.getByRole('button', { name: 'Add to calendar' }));
@@ -40,7 +40,7 @@ test('private events are downloaded with the login', async () => {
 });
 
 test('takes its own label and says when the event was exported', () => {
-    const onExport = jest.fn();
+    const onExport = vi.fn();
     render(<AddToCalendar event={jazz} label="Export to calendar" onExport={onExport} />);
     fireEvent.click(screen.getByRole('button', { name: 'Export to calendar' }));
     expect(onExport).not.toHaveBeenCalled();

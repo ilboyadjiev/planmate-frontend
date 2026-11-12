@@ -30,9 +30,8 @@ jobs:
         run: npm run lint
 
       - name: Test
-        run: npm test -- --watchAll=false
+        run: npm test
 
-      # CI=true is set by GitHub Actions, so CRA treats build warnings as errors.
       - name: Build
         run: npm run build
 
